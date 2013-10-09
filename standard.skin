@@ -1,0 +1,154 @@
+#---------------------------------------------------------------------
+#---------------------------------------------------------------------
+#- Filename:  standard.skin
+#-
+#- Description:
+#-
+#-     This file defines the components and layout for a jQuizShow
+#-     skin.  The basic format of the configuration entries is:
+#-
+#-          keyword = value
+#-
+#-     Blank lines and lines that begins with a "pound sign" (#) are
+#-     ignored.
+#---------------------------------------------------------------------
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+#- General options
+#---------------------------------------------------------------------
+
+# - Image to display on the background
+
+backgroundImage = Images/JQSBackground.png
+
+
+#---------------------------------------------------------------------
+#- Resizable text field layouts
+#---------------------------------------------------------------------
+
+questionLabel.x = 600
+questionLabel.y = 20
+questionLabel.width = 170
+questionLabel.height = 35
+questionLabel.fontName = SansSerif
+questionLabel.fontBold = 1
+questionLabel.fontItalic = 0
+questionLabel.fadeInDelay = 1000
+
+question.x = 110
+question.y = 80
+question.width = 650
+question.height = 150
+question.fontName = SansSerif
+question.fontBold = 1
+question.fontItalic = 1
+question.fadeInDelay = 1000
+question.columns = 35
+
+timer.x = 700
+timer.y = 510
+timer.width = 70
+timer.height = 50
+timer.fontName = SansSerif
+timer.fontBold = 1
+timer.fontItalic = 0
+timer.rows = 1
+
+comment.x = 10
+comment.y = 545
+comment.width = 670
+comment.height = 30
+comment.fontName = SansSerif
+comment.fontBold = 1
+comment.fontItalic = 0
+
+transition.x = 50
+transition.y = 200
+transition.width = 700
+transition.height = 200
+transition.fontName = SansSerif
+transition.fontBold = 1
+transition.fontItalic = 0
+transition.fadeInDelay = 500
+
+answerLabel_1.x = 45
+answerLabel_1.y = 284
+answerLabel_1.width = 70
+answerLabel_1.height = 60
+answerLabel_1.fontName = SansSerif
+answerLabel_1.fontBold = 1
+answerLabel_1.fontItalic = 1
+answerLabel_1.fadeInDelay = 250
+answerLabel_1.rows = 1
+
+answer_1.x = 120
+answer_1.y = 284
+answer_1.width = 270
+answer_1.height = 60
+answer_1.fontName = SansSerif
+answer_1.fontBold = 1
+answer_1.fontItalic = 1
+answer_1.fadeInDelay = 250
+answer_1.columns = 20
+
+answerLabel_2.x = 432
+answerLabel_2.y = 284
+answerLabel_2.width = 70
+answerLabel_2.height = 60
+answerLabel_2.fontName = SansSerif
+answerLabel_2.fontBold = 1
+answerLabel_2.fontItalic = 1
+answerLabel_2.fadeInDelay = 250
+answerLabel_2.rows = 1
+
+answer_2.x = 505
+answer_2.y = 284
+answer_2.width = 270
+answer_2.height = 60
+answer_2.fontName = SansSerif
+answer_2.fontBold = 1
+answer_2.fontItalic = 1
+answer_2.fadeInDelay = 250
+answer_2.columns = 20
+
+answerLabel_3.x = 45
+answerLabel_3.y = 428
+answerLabel_3.width = 70
+answerLabel_3.height = 60
+answerLabel_3.fontName = SansSerif
+answerLabel_3.fontBold = 1
+answerLabel_3.fontItalic = 1
+answerLabel_3.fadeInDelay = 250
+answerLabel_3.rows = 1
+
+answer_3.x = 120
+answer_3.y = 428
+answer_3.width = 270
+answer_3.height = 60
+answer_3.fontName = SansSerif
+answer_3.fontBold = 1
+answer_3.fontItalic = 1
+answer_3.fadeInDelay = 250
+answer_3.columns = 20
+
+answerLabel_4.x = 432
+answerLabel_4.y = 428
+answerLabel_4.width = 70
+answerLabel_4.height = 60
+answerLabel_4.fontName = SansSerif
+answerLabel_4.fontBold = 1
+answerLabel_4.fontItalic = 1
+answerLabel_4.fadeInDelay = 250
+answerLabel_4.rows = 1
+
+answer_4.x = 505
+answer_4.y = 428
+answer_4.width = 270
+answer_4.height = 60
+answer_4.fontName = SansSerif
+answer_4.fontBold = 1
+answer_4.fontItalic = 1
+answer_4.fadeInDelay = 250
+answer_4.columns = 20
+

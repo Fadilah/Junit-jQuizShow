@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GameLevelDialog.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.game</a> &gt; <span class="el_source">GameLevelDialog.java</span></div><h1>GameLevelDialog.java</h1><pre class="source lang-java linenums">/*
+ * GameLevelDialog.java
+ *
+ * Created on May 15, 2001, 9:01 PM
+ *
+ * $Id: GameLevelDialog.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: GameLevelDialog.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.3  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.2  2002/07/15 05:41:41  sdchen
+ *    Changed to only display Close icon on dialog -- disable resizing &amp; iconizing.
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:20  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.game;
+
+/**
+ *
+ * @author  Steven D. Chen
+ */
+
+import jQuizShow.*;
+import jQuizShow.game.classic.*;
+import jQuizShow.event.*;
+
+public class GameLevelDialog
+        extends javax.swing.JInternalFrame
+        implements
+            GameStateChangeListener
+{
+    /** Creates new form GameLevelDialog */
+    public GameLevelDialog() {
+<span class="fc" id="L67">        super(Main.getMessage(&quot;title_game_level&quot;), false, true, false, false);</span>
+
+<span class="fc" id="L69">        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);</span>
+        
+<span class="fc" id="L71">        m_gameConfig = GameConfig.getInstance();</span>
+<span class="fc" id="L72">        m_gameState = GameState.getInstance();</span>
+
+<span class="fc" id="L74">        m_gameState.addGameStateChangeListener(this);</span>
+        
+<span class="fc" id="L76">        initComponents();</span>
+
+<span class="fc" id="L78">        levelSlider.setMaximum(m_gameConfig.getIntConfig(&quot;numLevels&quot;));</span>
+
+<span class="fc" id="L80">        pack();</span>
+<span class="fc" id="L81">    }</span>
+
+    public void gameStateChanged(GameStateChangeEvent evt)
+    {
+<span class="nc" id="L85">        GameStateChangeEnum  type = evt.getType();</span>
+        
+<span class="nc bnc" id="L87" title="All 10 branches missed.">        if (type == GameStateEnum.NEW_GAME ||</span>
+                type == GameStateEnum.WAIT_TO_START_ROUND ||
+                type == GameStateEnum.ANSWER_WAS_WRONG ||
+                type == GameStateEnum.TRANSITION_LEVEL ||
+                type == GameStateEnum.SET_CURRENT_LEVEL)
+        {
+<span class="nc" id="L93">            int     number = m_gameState.getCurrentLevel();</span>
+            
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (levelSlider.getValue() != number)</span>
+<span class="nc" id="L96">                levelSlider.setValue(m_gameState.getCurrentLevel());</span>
+        }
+<span class="nc" id="L98">    }    </span>
+
+    public void showIt()
+    {
+        /*
+         * Bug workaround -- 2nd and subsequent sliders are not drawn properly
+         * (Java 1.3.1).
+         */
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (firstShow)</span>
+        {
+<span class="nc" id="L108">            levelSlider.updateUI();</span>
+<span class="nc" id="L109">            firstShow = false;</span>
+        }
+        
+<span class="nc" id="L112">        super.show();</span>
+<span class="nc" id="L113">    }    </span>
+
+    /** This method is called from within the constructor to
+     * initialize the form.
+     */
+    private void initComponents() {
+<span class="fc" id="L119">        sliderLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L120">        levelSlider = new javax.swing.JSlider();</span>
+<span class="fc" id="L121">        buttonPanel = new javax.swing.JPanel();</span>
+<span class="fc" id="L122">        applyButton = new javax.swing.JButton();</span>
+<span class="fc" id="L123">        closeButton = new javax.swing.JButton();</span>
+
+<span class="fc" id="L125">        getContentPane().setLayout(new java.awt.BorderLayout());</span>
+        
+<span class="fc" id="L127">        sliderLabel.setText(Main.getMessage(&quot;label_game_level&quot;));</span>
+<span class="fc" id="L128">        sliderLabel.setBorder(new javax.swing.border.EmptyBorder(new java.awt.Insets(20, 20, 20, 20)));</span>
+<span class="fc" id="L129">        getContentPane().add(sliderLabel, java.awt.BorderLayout.NORTH);</span>
+        
+<span class="fc" id="L131">        levelSlider.setSnapToTicks(true);</span>
+<span class="fc" id="L132">        levelSlider.setMinorTickSpacing(1);</span>
+<span class="fc" id="L133">        levelSlider.setPaintLabels(true);</span>
+<span class="fc" id="L134">        levelSlider.setPaintTicks(true);</span>
+<span class="fc" id="L135">        levelSlider.setMajorTickSpacing(5);</span>
+<span class="fc" id="L136">        levelSlider.setMaximum(m_gameConfig.getNumLevels());</span>
+<span class="fc" id="L137">        levelSlider.setBorder(new javax.swing.border.CompoundBorder(new javax.swing.border.BevelBorder(javax.swing.border.BevelBorder.LOWERED), new javax.swing.border.EmptyBorder(new java.awt.Insets(20, 20, 20, 20))));</span>
+<span class="fc" id="L138">        getContentPane().add(levelSlider, java.awt.BorderLayout.CENTER);</span>
+        
+<span class="fc" id="L140">        applyButton.setText(Main.getMessage(&quot;label_apply&quot;));</span>
+<span class="fc" id="L141">        applyButton.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L143">                applyButtonActionPerformed(evt);</span>
+<span class="nc" id="L144">            }</span>
+        });
+        
+<span class="fc" id="L147">        buttonPanel.add(applyButton);</span>
+        
+<span class="fc" id="L149">        closeButton.setText(Main.getMessage(&quot;label_close&quot;));</span>
+<span class="fc" id="L150">        closeButton.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L152">                closeButtonActionPerformed(evt);</span>
+<span class="nc" id="L153">            }</span>
+        });
+        
+<span class="fc" id="L156">        buttonPanel.add(closeButton);</span>
+        
+<span class="fc" id="L158">        getContentPane().add(buttonPanel, java.awt.BorderLayout.SOUTH);</span>
+<span class="fc" id="L159">    }</span>
+
+    private void closeButtonActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L162">        setVisible(false);</span>
+<span class="nc" id="L163">    }</span>
+
+    private void applyButtonActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L166">        int  level = levelSlider.getValue();</span>
+        
+<span class="nc" id="L168">        GameController gameCtrl = GameController.getInstance();</span>
+
+<span class="nc" id="L170">        gameCtrl.discardQuestion(level);</span>
+<span class="nc" id="L171">    }</span>
+
+    // Variables declaration
+    private javax.swing.JLabel sliderLabel;
+    private javax.swing.JSlider levelSlider;
+    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JButton applyButton;
+    private javax.swing.JButton closeButton;
+
+    private GameState m_gameState;
+    
+    private GameConfig  m_gameConfig;
+
+<span class="fc" id="L184">    private boolean firstShow = true;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

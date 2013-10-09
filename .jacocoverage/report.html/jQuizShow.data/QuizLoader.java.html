@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>QuizLoader.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.data</a> &gt; <span class="el_source">QuizLoader.java</span></div><h1>QuizLoader.java</h1><pre class="source lang-java linenums">/*
+ * QuizLoader.java
+ *
+ * Created on February 7, 2004, 9:56 PM
+ *
+ * $Id: QuizLoader.java,v 1.2 2007/02/05 04:53:57 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: QuizLoader.java,v $
+ *    Revision 1.2  2007/02/05 04:53:57  sdchen
+ *    Removed end-of-line CR (Ctrl-M) from source code.
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow.data;
+
+/**
+    Loads the quiz from the specified local file or URL.
+*/
+
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+import jQuizShow.*;
+import jQuizShow.data.*;
+import jQuizShow.util.*;
+
+public class QuizLoader
+{
+    private static final int INVALID_QUESTION_FILE = -1;
+    private static final int QUESTION_ADDED = 0;
+    private static final int BLANK_LINE = 1;
+    private static final int INVALID_INDEX = 2;
+    private static final int NOT_ENOUGH_ANSWERS = 4;
+
+    public static QuizLoader  getInstance()
+    {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">	if (m_singletonInstance == null)</span>
+<span class="nc" id="L67">	    m_singletonInstance = new QuizLoader();</span>
+
+<span class="nc" id="L69">	return m_singletonInstance;</span>
+    }
+
+    private QuizLoader()
+<span class="nc" id="L73">    {</span>
+<span class="nc" id="L74">    }</span>
+
+    public void  setDebugMode(int  debugMode)
+    {
+<span class="nc" id="L78">        m_debugMode = debugMode;</span>
+<span class="nc" id="L79">    }</span>
+
+    public void  setEncoding(String  encoding)
+    {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">	if (encoding != null)</span>
+<span class="nc" id="L84">	    m_encoding = new String(encoding);</span>
+<span class="nc" id="L85">    }</span>
+    
+    public QuestionList readQuestions(String  questionFilename) throws IOException
+    {
+        // Read the list of &quot;used&quot; questions, if any
+        BufferedReader  fin;
+
+        String      line;
+
+<span class="nc" id="L94">        Set  usedQuestions = new HashSet();</span>
+
+<span class="nc" id="L96">        m_qList = new QuestionList();</span>
+
+        // Read the questions
+<span class="nc" id="L99">        int     skipCount = 0;</span>
+<span class="nc" id="L100">        int     questionCount = 0;</span>
+<span class="nc" id="L101">        int     line_num = 0;</span>
+        int     err;
+        
+<span class="nc" id="L104">        fin = openFile(questionFilename);</span>
+        
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        while ((line = fin.readLine()) != null)</span>
+        {
+<span class="nc" id="L108">            line_num++;</span>
+            
+<span class="nc bnc" id="L110" title="All 4 branches missed.">            if (line.startsWith(&quot;#&quot;) || line.length() == 0)</span>
+<span class="nc" id="L111">                continue;</span>
+
+            // Parse the line
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            if ((err = parseLine(line, usedQuestions)) == QUESTION_ADDED)</span>
+<span class="nc" id="L115">                questionCount++;</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">            else if (err == BLANK_LINE)</span>
+<span class="nc" id="L117">                /* */;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            else if (err == INVALID_INDEX)</span>
+	    {
+<span class="nc" id="L120">		Object	args[] =</span>
+		    	{
+			    new Integer(line_num)
+			};
+
+<span class="nc" id="L125">                System.out.println(Main.getMessage(&quot;msg_invalid_difficulty&quot;,</span>
+			args));
+<span class="nc" id="L127">	    }</span>
+            else
+	    {
+<span class="nc" id="L130">		Object	args[] =</span>
+		    	{
+			    new Integer(line_num)
+			};
+
+<span class="nc" id="L135">                System.out.println(Main.getMessage(&quot;msg_invalid_question&quot;,</span>
+			args));
+<span class="nc" id="L137">	    }</span>
+        }
+
+	{
+<span class="nc" id="L141">	    Object	args[] =</span>
+		    {
+			new Integer(skipCount),
+			new Integer(questionCount)
+		    };
+
+<span class="nc" id="L147">	    System.out.println(Main.getMessage(&quot;msg_num_questions_skipped&quot;,</span>
+		    args));
+<span class="nc" id="L149">	    System.out.println(Main.getMessage(&quot;msg_num_questions&quot;, args));</span>
+	}
+        
+<span class="nc" id="L152">        fin.close();        </span>
+
+<span class="nc" id="L154">        return m_qList;</span>
+    }
+    
+    public boolean  isValidFile(String  questionFilename)
+    {
+        BufferedReader  fin;
+
+        String      line;
+
+<span class="nc" id="L163">	m_qList = null;		// Don't store questions</span>
+
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if (questionFilename == null)</span>
+<span class="nc" id="L166">            return false;</span>
+        
+	try
+	{
+<span class="nc" id="L170">	    fin = openFile(questionFilename);</span>
+
+	    // Read the questions
+<span class="nc" id="L173">	    int     skipCount = 0;</span>
+<span class="nc" id="L174">	    int     questionCount = 0;</span>
+<span class="nc" id="L175">	    int     line_num = 0;</span>
+	    int     err;
+	    
+<span class="nc bnc" id="L178" title="All 2 branches missed.">	    while ((line = fin.readLine()) != null)</span>
+	    {
+<span class="nc" id="L180">		line_num++;</span>
+		
+<span class="nc bnc" id="L182" title="All 4 branches missed.">		if (line.startsWith(&quot;#&quot;) || line.length() == 0)</span>
+<span class="nc" id="L183">		    continue;</span>
+
+		// Parse the line
+<span class="nc" id="L186">		err = parseLine(line, null);</span>
+		
+<span class="nc bnc" id="L188" title="All 4 branches missed.">		if (err != QUESTION_ADDED &amp;&amp; err != BLANK_LINE)</span>
+		{
+<span class="nc" id="L190">		    fin.close();</span>
+
+<span class="nc" id="L192">		    return false;</span>
+		}
+	    }
+
+<span class="nc" id="L196">	    fin.close();</span>
+	}
+<span class="nc" id="L198">	catch (IOException  io_e)</span>
+	{
+<span class="nc" id="L200">	    return false;</span>
+<span class="nc" id="L201">	}</span>
+
+<span class="nc" id="L203">	return true;</span>
+    }
+
+    
+    private BufferedReader  openFile(String  filename)
+            throws IOException
+    {
+        BufferedReader  fin;
+        
+<span class="nc bnc" id="L212" title="All 2 branches missed.">	if (m_encoding != null)</span>
+	{
+	    // Open the specified file using the specified encoding.
+<span class="nc" id="L215">	    fin = new BufferedReader(</span>
+		    new InputStreamReader(FileUtils.openFile(filename),
+		    m_encoding));
+	}
+	else
+	{
+	    // Open the specified file using the default encoding.
+<span class="nc" id="L222">	    fin = new BufferedReader(</span>
+		    new InputStreamReader(FileUtils.openFile(filename)));
+	}
+        
+<span class="nc" id="L226">        return (fin);</span>
+    }
+    
+
+    /** Parse a line in the Question Database file.  The format of the
+      * file is:
+      * &lt;pre&gt;
+      *      questionID   question   answer1   [answer2  [...]]  correct_answer_idx  [Note]
+      * &lt;/pre&gt;
+      * Each field is separated by a tab.  Double-quote literals in the
+      * question/answer fields must be doubled (e.g. &quot;&quot;).
+      */
+
+    private int parseLine(String  s, Set  usedQuestions) throws IOException
+    {
+<span class="nc" id="L241">        StringTokenizer tok = new StringTokenizer(s, &quot;\t&quot;, true);</span>
+
+<span class="nc" id="L243">        String          id = null;</span>
+        
+<span class="nc" id="L245">        int             difficulty = 0;</span>
+<span class="nc" id="L246">        int             column = 1;</span>
+<span class="nc" id="L247">        int             correctIdx = -1;</span>
+<span class="nc" id="L248">        int             numAnswers = 0;</span>
+        
+<span class="nc" id="L250">        boolean         parsingAnswers = false;</span>
+        
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if (s.length() == 0)</span>
+<span class="nc" id="L253">            return BLANK_LINE;</span>
+
+        // Create a Question instance for the question and its answers
+<span class="nc" id="L256">        Question question = new Question(null, difficulty);</span>
+        
+<span class="nc bnc" id="L258" title="All 2 branches missed.">        while (tok.hasMoreTokens())</span>
+        {
+<span class="nc" id="L260">            String  token = tok.nextToken();</span>
+
+<span class="nc bnc" id="L262" title="All 2 branches missed.">            if (token.equals(&quot;\t&quot;))</span>
+            {
+<span class="nc" id="L264">                column++;</span>
+<span class="nc" id="L265">                continue;</span>
+            }
+            
+<span class="nc" id="L268">            String str = StringFilter.filterString(token);</span>
+
+<span class="nc bnc" id="L270" title="All 4 branches missed.">            if (column == 1 &amp;&amp; str.startsWith(&quot;#&quot;))</span>
+<span class="nc" id="L271">                return BLANK_LINE;          // Comment line</span>
+
+            // Determine if the parse state has changed
+<span class="nc bnc" id="L274" title="All 2 branches missed.">            if (column == m_colID)</span>
+            {
+<span class="nc" id="L276">                question.setQuestionID(str);</span>
+            }
+<span class="nc bnc" id="L278" title="All 2 branches missed.">            else if (column == m_colQuestion)</span>
+            {
+<span class="nc" id="L280">                question.setQuestion(str);</span>
+<span class="nc" id="L281">                parsingAnswers = false;     // Clear parsing answers state</span>
+            }
+<span class="nc bnc" id="L283" title="All 2 branches missed.">            else if (column == m_colCorrectIdx)</span>
+            {
+                int     idx;
+                
+                try {
+<span class="nc" id="L288">                    idx = Integer.parseInt(str);</span>
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">                    if (idx &lt; 1)</span>
+<span class="nc" id="L291">                        return INVALID_INDEX;</span>
+                }
+<span class="nc" id="L293">                catch (NumberFormatException  e)</span>
+                {
+<span class="nc" id="L295">                    return INVALID_INDEX;</span>
+<span class="nc" id="L296">                }</span>
+
+<span class="nc" id="L298">                correctIdx = idx - 1;       // Convert natural idx to array idx</span>
+<span class="nc" id="L299">                parsingAnswers = false;     // Clear parsing answers state</span>
+<span class="nc" id="L300">            }</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">            else if (column == m_colReference)</span>
+            {
+<span class="nc" id="L303">                question.setNote(str);</span>
+<span class="nc" id="L304">                parsingAnswers = false;     // Clear parsing answers state</span>
+            }
+<span class="nc bnc" id="L306" title="All 2 branches missed.">            else if (column == m_colAnswers)</span>
+            {
+<span class="nc" id="L308">                parsingAnswers = true;      // Start parsing answers state</span>
+            }
+
+            // If in answer parsing state, add this as an answer.
+<span class="nc bnc" id="L312" title="All 2 branches missed.">            if (parsingAnswers)</span>
+            {
+                // Add this answer
+<span class="nc" id="L315">                Answer answer = new Answer(str);</span>
+
+                // Add the answer to the Question
+<span class="nc" id="L318">                question.addAnswer(answer);</span>
+                
+<span class="nc" id="L320">                numAnswers++;</span>
+            }
+<span class="nc" id="L322">        }</span>
+
+        
+        // Add the question only if there are a reasonable number of possible
+        // answers and the correct question index is valid.
+<span class="nc bnc" id="L327" title="All 6 branches missed.">        if (numAnswers &gt; 2 &amp;&amp; correctIdx &gt;= 0 &amp;&amp; correctIdx &lt; numAnswers)</span>
+        {            
+<span class="nc bnc" id="L329" title="All 2 branches missed.">            if (m_qList != null)</span>
+<span class="nc" id="L330">                m_qList.addQuestion(question);</span>
+
+<span class="nc" id="L332">            AnswerList  answers = question.getAnswers();</span>
+            
+<span class="nc" id="L334">            answers.setCorrectAnswer(correctIdx);</span>
+            
+<span class="nc" id="L336">            return QUESTION_ADDED;</span>
+        }
+        else
+<span class="nc" id="L339">            return NOT_ENOUGH_ANSWERS;</span>
+    }
+
+
+    /**
+     *
+     * Test program entry point
+     *
+     */
+     public static void main(String[]  args) throws IOException
+     {
+<span class="nc bnc" id="L350" title="All 2 branches missed.">        if (args.length != 3)</span>
+        {
+<span class="nc" id="L352">            System.out.println(&quot;usage:  question_filename  used_question_filename  encoding&quot;);</span>
+<span class="nc" id="L353">            return;</span>
+        }
+        
+<span class="nc" id="L356">	QuestionLoader  ql = QuestionLoader.getInstance();</span>
+
+<span class="nc" id="L358">	ql.setUsedQuestionFilename(args[1]);</span>
+<span class="nc" id="L359">	ql.setEncoding(args[2]);</span>
+	
+<span class="nc" id="L361">        ql.setDebugMode(1);</span>
+        
+        QuestionList        questionList;
+        
+<span class="nc" id="L365">        questionList = ql.readQuestions(args[0]);</span>
+        
+        // Output the questions, sorted by difficulty
+        Question    question;
+        
+<span class="nc" id="L370">        int     numDifficulty = questionList.getNumLists();</span>
+       
+<span class="nc bnc" id="L372" title="All 2 branches missed.">        for (int difficulty = 0; difficulty &lt; numDifficulty; difficulty++)</span>
+        {
+            while (true)
+            {
+<span class="nc bnc" id="L376" title="All 2 branches missed.">                if (questionList.getNumQuestionsRemaining(difficulty) == 0)</span>
+<span class="nc" id="L377">                    break;</span>
+                
+<span class="nc" id="L379">                question = questionList.getQuestion(difficulty);</span>
+                
+<span class="nc" id="L381">                System.out.println(question.toString());</span>
+
+                try
+                {
+<span class="nc" id="L385">                    AnswerList  answerList = question.getAnswers();</span>
+
+<span class="nc" id="L387">                    Answer[]  answers = answerList.getPossibleAnswers();</span>
+
+<span class="nc bnc" id="L389" title="All 2 branches missed.">                    for (int  i = 0; i &lt; answers.length; i++)</span>
+                    {
+<span class="nc" id="L391">                        System.out.println(&quot;  &quot; + i + &quot;) &quot; + answers[i].getAnswer());</span>
+                    }
+                }
+<span class="nc" id="L394">                catch (NoSuchElementException  e)</span>
+                {
+                    // No answer -- skip it
+<span class="nc" id="L397">                }</span>
+            }
+        }
+<span class="nc" id="L400">     }</span>
+
+<span class="nc" id="L402">    private static QuizLoader   	m_singletonInstance = null;</span>
+    private static String		m_encoding;
+
+    private File		m_fileInst;	// File instance
+
+    private QuestionList	m_qList;
+    
+<span class="nc" id="L409">    private int                 m_colID = 1;</span>
+<span class="nc" id="L410">    private int                 m_colQuestion = 2;</span>
+<span class="nc" id="L411">    private int                 m_colAnswers = 3;</span>
+<span class="nc" id="L412">    private int                 m_colCorrectIdx = 7;</span>
+<span class="nc" id="L413">    private int                 m_colReference = 8;</span>
+    
+    private int                 m_debugMode;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

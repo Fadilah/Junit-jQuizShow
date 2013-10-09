@@ -1,0 +1,863 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>QuizState.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.quiz</a> &gt; <span class="el_source">QuizState.java</span></div><h1>QuizState.java</h1><pre class="source lang-java linenums">/*
+ * QuizState.java
+ *
+ * Created on January 31, 2004, 5:36 PM
+ *
+ * $Id: QuizState.java,v 1.1 2004/04/02 06:02:00 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: QuizState.java,v $
+ *    Revision 1.1  2004/04/02 06:02:00  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow.quiz;
+
+/** Stores the current state of the QuizShow game in session.
+ * @author Steven D. Chen
+ * @version 1.0
+ */
+
+import java.io.*;
+import java.util.*;
+import javax.swing.event.*;
+
+import jQuizShow.*;
+import jQuizShow.event.*;
+
+public class QuizState
+    implements
+        GameInputListener
+{
+    /* ---------------------------------------------------- */
+    /* Define the public index values for the toggleStates. */
+    /* ---------------------------------------------------- */
+
+    /** Game-in-session flag */    
+    public static final int GAME_IN_SESSION = 1;
+
+    /** Toggle states to control starting and stopping of the game timer */
+    public static final int START_QUESTION_TIMER = 2;
+    public static final int STOP_QUESTION_TIMER = 3;
+
+    /** Answer selectable state */
+    public static final int ANSWERS_SELECTABLE = 4;
+
+    /** Show answers after time expires */
+    public static final int SHOW_ANSWERS = 5;
+    
+    /** Reveal answer quiz mode */
+    public static final int ANSWER_MODE = 6;
+
+    /* ---------------------------------------- */
+    /* END definitions of toggleStates indices. */
+    /* ---------------------------------------- */
+
+    /** Max time limit for the timers (seconds) */
+    public static final int QUESTION_TIMER_MAX_TIME = 300;
+
+    /** Constant for setCorrectAnswer() to indicate no correct answer set */
+    public static final int NO_CORRECT_ANSWER = -1;
+
+    /** Constant for setSelectedAnswer() to indicate no selected answer */
+    public static final int NO_SELECTED_ANSWER = -1;
+
+    /** Constant for setHighlightLevel() to indicate none */
+    public static final int NO_HIGHLIGHT_LEVEL = -1;
+
+    /** Delay types for getDelayValue() */
+    public static final int DELAY_AT_START = 0;
+    public static final int DELAY_AFTER_QUESTION = 1;
+    public static final int DELAY_AFTER_TIMER_EXPIRES = 2;
+    public static final int NUM_DELAY_TYPES = 3;
+    
+<span class="nc" id="L99">    protected static EventListenerList  m_modeChangeListenerList = new EventListenerList();</span>
+<span class="nc" id="L100">    protected static EventListenerList  m_stateChangeListenerList = new EventListenerList();</span>
+<span class="nc" id="L101">    protected static EventListenerList  m_updateListenerList = new EventListenerList();</span>
+<span class="nc" id="L102">    protected static EventListenerList  m_inputListenerList = new EventListenerList();</span>
+    
+    /** Gets the QuizState singleton instance */
+    static QuizState  getInstance() {
+<span class="nc" id="L106">        return getInstance(false);</span>
+    }
+
+    
+    /** Gets a QuizState instance.  If &quot;false&quot;, gets the singleton,
+     * else, creates a local, restricted instance.
+     */
+    public static QuizState  getInstance(boolean  restricted) {
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (m_singletonGameState == null)</span>
+        {
+<span class="nc" id="L116">            m_singletonGameState = new QuizState(false);</span>
+<span class="nc" id="L117">            m_singletonGameState.initialize();</span>
+        }
+        
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (restricted)</span>
+        {
+            // A restricted QuizState is a local instance that has the local
+            // m_restricted flag set &quot;true&quot;.  This restricts the holder
+            // of the instance from accessing certain functions.
+<span class="nc" id="L125">            return new QuizState(true);</span>
+        }
+        else
+<span class="nc" id="L128">            return m_singletonGameState;</span>
+    }
+    
+    
+    /**
+     * Private default constructor
+     */
+    private QuizState(boolean restricted)
+<span class="nc" id="L136">    {</span>
+<span class="nc" id="L137">        m_restricted = restricted;</span>
+<span class="nc" id="L138">    }</span>
+
+    
+    /**
+     * Private initializer
+     */
+    private void  initialize()
+    {
+<span class="nc" id="L146">        m_gameConfig = GameConfig.getInstance();</span>
+        
+<span class="nc" id="L148">        m_toggleStates = new BitSet(32);</span>
+<span class="nc" id="L149">        m_answersVisible = new BitSet(26);</span>
+        
+<span class="nc" id="L151">        m_correctAnswer = NO_CORRECT_ANSWER;</span>
+        
+        // Set values from the config file, else use the defaults
+<span class="nc" id="L154">        setMaxNumberOfAnswers(m_gameConfig.getIntConfig(&quot;maxNumberOfAnswers&quot;, 4));</span>
+<span class="nc" id="L155">    }</span>
+    
+    
+    // Accessors
+
+    /** Get the current game state
+     * @return game state
+     */
+    public GameStateChangeEnum  getGameStateEnum() {
+<span class="nc" id="L164">        return m_gameStateEnum;</span>
+    }
+
+    /** Get the current question number (level)
+     * @return Level number (0 - last)
+     */
+    public int  getCurrentLevel() {
+<span class="nc" id="L171">        return m_currentLevel;</span>
+    }
+
+    /** Get the current &quot;title&quot; for this level.
+     * @return Title
+     */
+    public String  getLevelTitle() {
+<span class="nc" id="L178">        return m_levelTitle;</span>
+    }
+
+    /** Returns the name of the current player
+     * @return Name of the player
+     */
+    public String  getPlayerName() {
+<span class="nc" id="L185">        return m_playerName;</span>
+    }
+
+    /** Returns the maximum number of possible answers
+     * @return Maximum number
+     */
+    public int  getMaxNumberOfAnswers()
+    {
+<span class="nc" id="L193">        return m_maxNumberOfAnswers;</span>
+    }
+
+    /** Returns the maximum number of possible levels (questions)
+     * @return Maximum number
+     */
+    public int  getMaxNumberOfLevels()
+    {
+<span class="nc" id="L201">        return m_maxNumberOfLevels;</span>
+    }
+    
+    /** Gets the current boolean state of the toggle
+     */
+    public boolean  getToggleState(int  index)
+    {
+<span class="nc bnc" id="L208" title="All 4 branches missed.">        if (index &lt; 0 || index &gt; m_toggleStates.size())</span>
+<span class="nc" id="L209">            return false;</span>
+        
+<span class="nc" id="L211">        return (m_toggleStates.get(index));</span>
+    }
+    
+    /** Gets the the current toggle states
+     */
+    public BitSet  getToggleStates()
+    {
+<span class="nc" id="L218">        return (m_toggleStates);</span>
+    }
+    
+    /** Returns &quot;true&quot; if the specified answer is visible
+     */
+    public boolean  getAnswerVisible(int  index)
+    {
+<span class="nc bnc" id="L225" title="All 4 branches missed.">        if (index &lt; 0 || index &gt; m_answersVisible.size())</span>
+<span class="nc" id="L226">            return false;</span>
+        
+<span class="nc" id="L228">        return (m_answersVisible.get(index));</span>
+    }
+    
+    /** Returns the entire answerVisible BitSet
+     */
+    public BitSet  getAnswersVisible()
+    {
+<span class="nc" id="L235">        return m_answersVisible;</span>
+    }
+
+    /** Returns the ID of the current question.
+     * @return Question ID string
+     */
+    public String  getQuestionID()
+    {
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        if (m_questionID == null)</span>
+<span class="nc" id="L244">            return &quot;&quot;;</span>
+        else
+<span class="nc" id="L246">            return m_questionID;</span>
+    }
+
+    /** Returns the current question string
+     * @return Question string
+     */
+    public String  getQuestion()
+    {
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        if (m_question == null)</span>
+<span class="nc" id="L255">            return &quot;&quot;;</span>
+        else
+<span class="nc" id="L257">            return m_question;</span>
+    }
+
+    /** Returns the specified answer string
+     * @param index Answer index
+     *
+     * @return Answer string
+     */
+    public String  getAnswer(int  index)
+    {
+<span class="nc bnc" id="L267" title="All 6 branches missed.">        if (m_answers == null || index &lt; 0 || index &gt;= m_answers.length)</span>
+<span class="nc" id="L268">            return &quot;&quot;;</span>
+        
+<span class="nc" id="L270">        return m_answers[index];</span>
+    }
+
+    /** Returns the specified answer string
+     * @param index Answer index
+     *
+     * @return Answer string
+     */
+    public String[]  getAnswers()
+    {
+<span class="nc" id="L280">        return m_answers;</span>
+    }
+    
+    
+    /** Gets the Transition screen message */
+    public String  getTransitionMessage()
+    {
+<span class="nc" id="L287">        return m_transitionMessage;</span>
+    }
+    
+    /** Gets the status message */
+    public String  getStatusMessage()
+    {
+<span class="nc" id="L293">        return m_statusMessage;</span>
+    }
+    
+    /** Gets the current question timer limit. */
+    public int  getQuestionTimerLimit()
+    {
+<span class="nc" id="L299">        return m_questionTimerLimit;</span>
+    }
+    
+    /** Gets the requested delay value. */
+    public int  getDelayValue(int  delayType)
+    {
+<span class="nc bnc" id="L305" title="All 4 branches missed.">        if (delayType &gt;= 0 &amp;&amp; delayType &lt; NUM_DELAY_TYPES)</span>
+<span class="nc" id="L306">            return m_delayValues[delayType];</span>
+        else
+<span class="nc" id="L308">            return 0;</span>
+    }
+
+    
+    /** Gets the current question timer time (for manually driving the clock)
+     */
+    public int  getQuestionTimerTime()
+    {
+<span class="nc" id="L316">        return m_questionTimerTime;</span>
+    }
+
+    
+    /** Gets the index of the correct answer.  If &lt; 0, not set yet.
+     */
+    public int  getCorrectAnswer()
+    {
+<span class="nc" id="L324">        return m_correctAnswer;</span>
+    }
+
+    /** Gets the index of the currently selected answer.  If &lt; 0, not set yet.
+     */
+    public int  getSelectedAnswer()
+    {
+<span class="nc" id="L331">        return m_selectedAnswer;</span>
+    }
+
+
+
+    /** Returns GameModeChangeEvent type */
+    public GameModeEnum  getGameMode()
+    {
+<span class="nc" id="L339">        return m_gameMode;</span>
+    }
+    
+    
+    
+    
+    //
+    // Manipulators
+    //
+
+    /** Sets the current game state
+     */
+    public void  setGameStateEnum(GameStateChangeEnum  type) {
+<span class="nc bnc" id="L352" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L353">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc" id="L355">        m_gameStateEnum = type;</span>
+<span class="nc" id="L356">    }</span>
+
+    
+    /** Sets the maximum number of possible answers
+     */
+    public void  setMaxNumberOfAnswers(int  number)
+    {
+<span class="nc bnc" id="L363" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L364">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L366" title="All 4 branches missed.">        if (number &lt; 2 || number &gt; 26)</span>
+<span class="nc" id="L367">            return;</span>
+        
+<span class="nc" id="L369">        m_maxNumberOfAnswers = number;</span>
+<span class="nc" id="L370">        return;</span>
+    }
+
+    
+    /** Sets the maximum number of levels (questions)
+     */
+    public void  setMaxNumberOfLevels(int  number)
+    {
+<span class="nc bnc" id="L378" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L379">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L381" title="All 2 branches missed.">        if (number &lt; 2)</span>
+<span class="nc" id="L382">            return;</span>
+        
+<span class="nc" id="L384">        m_maxNumberOfLevels = number;</span>
+<span class="nc" id="L385">        return;</span>
+    }
+
+    
+    /** Set the current question (level) number
+     */
+    public void  setCurrentLevel(int  number) {
+<span class="nc bnc" id="L392" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L393">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L395" title="All 2 branches missed.">        if (number &lt; 0)</span>
+<span class="nc" id="L396">            number = 0;</span>
+        
+<span class="nc" id="L398">        m_currentLevel = number;</span>
+<span class="nc" id="L399">        return;</span>
+    }
+
+    /** Sets the current level &quot;title&quot;.  This title describes what level the
+     * contestant is &quot;trying&quot; for.
+     */
+    public void  setLevelTitle(String  title) {
+<span class="nc bnc" id="L406" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L407">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc" id="L409">        m_levelTitle = title;</span>
+<span class="nc" id="L410">        return;</span>
+    }
+
+    
+    /** Increments the current question (level) number by the given increment
+     */
+    public int  incrementCurrentLevel(int  increment) {
+<span class="nc bnc" id="L417" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L418">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc" id="L420">        int  number = m_currentLevel + increment;</span>
+        
+<span class="nc" id="L422">        setCurrentLevel(number);</span>
+        
+<span class="nc" id="L424">        return number;</span>
+    }
+    
+    /** Sets the name of the current player
+     */
+    public void  setPlayerName(String  name) {
+<span class="nc bnc" id="L430" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L431">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc" id="L433">        m_playerName = new String(name);</span>
+<span class="nc" id="L434">        return;</span>
+    }
+    
+    /** Sets the state of the specified toggle
+     */
+    public void  setToggleState(int  index, boolean  state)
+    {
+<span class="nc bnc" id="L441" title="All 4 branches missed.">        if (index &lt; 0 || index &gt; m_toggleStates.size())</span>
+<span class="nc" id="L442">            return;</span>
+        
+<span class="nc bnc" id="L444" title="All 2 branches missed.">        if (state)</span>
+<span class="nc" id="L445">            m_toggleStates.set(index);</span>
+        else
+<span class="nc" id="L447">            m_toggleStates.clear(index);</span>
+        
+<span class="nc" id="L449">        return;</span>
+    }
+    
+    /** Sets toggle states all at once
+     */
+    public void  setToggleStates(BitSet  states)
+    {
+<span class="nc bnc" id="L456" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L457">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc" id="L459">        m_toggleStates = states;</span>
+<span class="nc" id="L460">        return;</span>
+    }
+    
+    /** Sets the visible state of the specified answer
+     */
+    public void  setAnswerVisible(int  index, boolean  state)
+    {
+<span class="nc bnc" id="L467" title="All 4 branches missed.">        if (index &lt; 0 || index &gt; m_answersVisible.size())</span>
+<span class="nc" id="L468">            return;</span>
+        
+<span class="nc bnc" id="L470" title="All 2 branches missed.">        if (state)</span>
+<span class="nc" id="L471">            m_answersVisible.set(index);</span>
+        else
+<span class="nc" id="L473">            m_answersVisible.clear(index);</span>
+        
+<span class="nc" id="L475">        return;</span>
+    }
+    
+    /** Sets answer visible states all at once
+     */
+    public void  setAnswersVisible(BitSet  states)
+    {
+<span class="nc bnc" id="L482" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L483">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc" id="L485">        m_answersVisible = states;</span>
+<span class="nc" id="L486">        return;</span>
+    }
+
+    /**
+     * Stores the current question's ID.
+     */
+    public void  setQuestionID(String  id)
+    {
+<span class="nc bnc" id="L494" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L495">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+        
+<span class="nc" id="L497">        m_questionID = id;</span>
+<span class="nc" id="L498">    }</span>
+    
+    
+    /** Stores the current question and answer strings
+     */
+    public void  setCurrentQuestion(String  question, String[]  answers)
+    {
+<span class="nc bnc" id="L505" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L506">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L508" title="All 4 branches missed.">        if (question == null || answers == null)</span>
+        {
+<span class="nc" id="L510">            m_question = null;</span>
+<span class="nc" id="L511">            m_answers = null;</span>
+
+<span class="nc bnc" id="L513" title="All 2 branches missed.">            for (int i = 0; i &lt; m_answersVisible.size(); i++)</span>
+<span class="nc" id="L514">                setAnswerVisible(i, false);</span>
+            
+<span class="nc" id="L516">            setCorrectAnswer(-1);</span>
+        }
+        else
+        {
+<span class="nc" id="L520">            m_question = new String(question);</span>
+<span class="nc" id="L521">            m_answers = new String[answers.length];</span>
+
+<span class="nc" id="L523">            System.arraycopy(answers, 0, m_answers, 0, answers.length);</span>
+        }
+<span class="nc" id="L525">    }</span>
+
+
+    
+    /** Stores the transition screen message string
+     */
+    public void  setTransitionMessage(String  message)
+    {
+<span class="nc bnc" id="L533" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L534">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L536" title="All 2 branches missed.">        if (message == null)</span>
+<span class="nc" id="L537">            m_transitionMessage = null;</span>
+        else
+<span class="nc" id="L539">            m_transitionMessage = new String(message);</span>
+<span class="nc" id="L540">    }</span>
+
+    
+    /** Stores the current question and answer strings
+     */
+    public void  setStatusMessage(String  message)
+    {
+<span class="nc bnc" id="L547" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L548">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L550" title="All 2 branches missed.">        if (message == null)</span>
+<span class="nc" id="L551">            m_statusMessage = null;</span>
+        else
+<span class="nc" id="L553">            m_statusMessage = new String(message);</span>
+<span class="nc" id="L554">    }</span>
+
+    /** Stores a new question timer limit
+     */
+    public void  setQuestionTimerLimit(int  seconds)
+    {
+<span class="nc bnc" id="L560" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L561">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L563" title="All 4 branches missed.">        if (seconds &gt;= 0 &amp;&amp; seconds &lt;= QUESTION_TIMER_MAX_TIME)</span>
+<span class="nc" id="L564">            m_questionTimerLimit = seconds;</span>
+        else
+<span class="nc" id="L566">            m_questionTimerLimit = 0;       // Disable</span>
+<span class="nc" id="L567">    }</span>
+
+    /** Stores a new question timer limit
+     */
+    public void  setQuestionTimerTime(int  seconds)
+    {
+<span class="nc bnc" id="L573" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L574">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L576" title="All 4 branches missed.">        if (seconds &gt;= 0 &amp;&amp; seconds &lt;= m_questionTimerLimit)</span>
+<span class="nc" id="L577">            m_questionTimerTime = seconds;</span>
+<span class="nc" id="L578">    }</span>
+    
+    /** Gets the requested delay value. */
+    public void  setDelayValue(int  delayType, int  value)
+    {
+<span class="nc bnc" id="L583" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L584">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L586" title="All 4 branches missed.">        if (delayType &gt;= 0 &amp;&amp; delayType &lt; NUM_DELAY_TYPES)</span>
+<span class="nc" id="L587">            m_delayValues[delayType] = value;</span>
+
+<span class="nc" id="L589">        return;</span>
+    }
+
+    
+    /** Sets the index of the correct answer.
+     */
+    public void  setCorrectAnswer(int  index)
+    {
+<span class="nc bnc" id="L597" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L598">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L600" title="All 6 branches missed.">        if (m_answers == null || index &lt; 0 || index &gt;=  m_answers.length)</span>
+<span class="nc" id="L601">            m_correctAnswer = -1;</span>
+        else
+<span class="nc" id="L603">            m_correctAnswer = index;</span>
+<span class="nc" id="L604">    }</span>
+
+    
+    /** Sets index of the player's currently selected answer.
+     */
+    public void  setSelectedAnswer(int  index)
+    {
+<span class="nc bnc" id="L611" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L612">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+<span class="nc bnc" id="L614" title="All 6 branches missed.">        if (m_answers == null || index &lt; 0 || index &gt;=  m_answers.length)</span>
+<span class="nc" id="L615">            m_selectedAnswer = -1;</span>
+        else
+<span class="nc" id="L617">            m_selectedAnswer = index;</span>
+<span class="nc" id="L618">    }</span>
+
+
+    
+    /** Sets the game mode (standalone, master or slave)
+     */
+    public void  setGameMode(GameModeEnum  newGameMode)
+    {
+<span class="nc bnc" id="L626" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L627">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+        // Fire event only if mode is changed
+<span class="nc bnc" id="L630" title="All 2 branches missed.">        if (m_gameMode != newGameMode)</span>
+        {
+<span class="nc" id="L632">            m_gameMode = newGameMode;</span>
+            
+<span class="nc" id="L634">            this.fireGameModeChangeEvent(this, m_gameMode);</span>
+        }
+        
+<span class="nc" id="L637">        return;</span>
+    }
+
+    
+
+    //
+    // GameStateChangeEvent management functions
+    //
+    
+    /** Adds the GameStateChangeEvent listener to the listener list.
+     */
+    public void addGameStateChangeListener(GameStateChangeListener  l)
+    {
+<span class="nc" id="L650">        m_stateChangeListenerList.add(GameStateChangeListener.class, l);</span>
+<span class="nc" id="L651">    }</span>
+    
+    /** Removes the GameStateChangeEvent listener from the listener list.
+     */
+    public void removeGameStateChangeListener(GameStateChangeListener  l)
+    {
+<span class="nc" id="L657">        m_stateChangeListenerList.remove(GameStateChangeListener.class, l);</span>
+<span class="nc" id="L658">    }</span>
+
+    /** Fires a GameStateChangeEvent out to all listeners.
+     */
+    public void  fireGameStateChangeEvent(Object  source, GameStateChangeEnum  type)
+    {
+        // Guaranteed to return a non-null array
+<span class="nc" id="L665">        Object[] listeners = m_stateChangeListenerList.getListenerList();</span>
+
+<span class="nc" id="L667">        GameStateChangeEvent  event = new GameStateChangeEvent();</span>
+<span class="nc" id="L668">        event.setSource(source);</span>
+<span class="nc" id="L669">        event.setType(type);</span>
+        
+        // Store a local copy of this event for sending to remote nodes
+<span class="nc" id="L672">        m_gameStateEnum = type;</span>
+        
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+<span class="nc bnc" id="L676" title="All 2 branches missed.">        for (int i = listeners.length - 2; i &gt;= 0; i -= 2)</span>
+        {
+<span class="nc bnc" id="L678" title="All 4 branches missed.">            if (listeners[i] == GameStateChangeListener.class &amp;&amp;</span>
+                    listeners[i] != source)
+            {
+<span class="nc" id="L681">                ((GameStateChangeListener)listeners[i+1]).gameStateChanged(event);</span>
+            }
+        }
+<span class="nc" id="L684">    }</span>
+
+
+    //
+    // GameUpdateEvent management functions
+    //
+    
+    /** Adds the GameUpdateEvent listener to the listener list.
+     */
+    public void addGameUpdateListener(GameUpdateListener  l)
+    {
+<span class="nc" id="L695">        m_updateListenerList.add(GameUpdateListener.class, l);</span>
+<span class="nc" id="L696">    }</span>
+    
+    /** Removes the GameUpdateEvent listener from the listener list.
+     */
+    public void removeGameUpdateListener(GameUpdateListener  l)
+    {
+<span class="nc" id="L702">        m_updateListenerList.remove(GameUpdateListener.class, l);</span>
+<span class="nc" id="L703">    }</span>
+
+    /** Fires a GameUpdateEvent out to all listeners.
+     */
+    public void  fireGameUpdateEvent(Object  source, GameUpdateEnum  type)
+    {
+        // Guaranteed to return a non-null array
+<span class="nc" id="L710">        Object[] listeners = m_updateListenerList.getListenerList();</span>
+
+<span class="nc" id="L712">        GameUpdateEvent  event = new GameUpdateEvent();</span>
+<span class="nc" id="L713">        event.setSource(source);</span>
+<span class="nc" id="L714">        event.setType(type);</span>
+        
+        // Store a local copy of this event for sending to remote nodes
+<span class="nc" id="L717">        m_gameUpdateEnum = type;</span>
+        
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+<span class="nc bnc" id="L721" title="All 2 branches missed.">        for (int i = listeners.length - 2; i &gt;= 0; i -= 2)</span>
+        {
+<span class="nc bnc" id="L723" title="All 4 branches missed.">            if (listeners[i] == GameUpdateListener.class &amp;&amp;</span>
+                    listeners[i] != source)
+            {
+<span class="nc" id="L726">                ((GameUpdateListener)listeners[i+1]).gameUpdated(event);</span>
+            }
+        }
+<span class="nc" id="L729">    }</span>
+
+    //
+    // GameInputEvent management functions
+    //
+
+    /** Adds the GameInputEvent listener to the listener list.
+     */
+    public void addGameInputListener(GameInputListener  l)
+    {
+<span class="nc" id="L739">        m_inputListenerList.add(GameInputListener.class, l);</span>
+<span class="nc" id="L740">    }</span>
+    
+    
+    /** Removes the GameInputEvent listener from the listener list.
+     */
+    public void removeGameInputListener(GameInputListener  l)
+    {
+<span class="nc" id="L747">        m_inputListenerList.remove(GameInputListener.class, l);</span>
+<span class="nc" id="L748">    }</span>
+    
+    
+    /** Fires a GameInputEvent out to all listeners.
+     */
+    public void  fireGameInputEvent(GameInputEvent  event)
+    {
+<span class="nc" id="L755">        Object[] listeners = m_inputListenerList.getListenerList();</span>
+
+<span class="nc bnc" id="L757" title="All 2 branches missed.">        if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_INPUTS) != 0)</span>
+        {
+<span class="nc" id="L759">            System.out.println(&quot;--&gt; QuizState::fireGameInputEvent(&quot;</span>
+                    + event.getType() + &quot;), keyCode=&quot;
+                    + event.getKeyCode() + &quot;, keyChar=&quot;
+                    + event.getKeyChar() + &quot;, selectedIndex=&quot;
+                    + event.getSelectedIndex());
+        }
+
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+<span class="nc bnc" id="L768" title="All 2 branches missed.">        for (int i = listeners.length - 2; i &gt;= 0; i -= 2)</span>
+        {
+<span class="nc bnc" id="L770" title="All 4 branches missed.">            if (listeners[i] == GameInputListener.class &amp;&amp;</span>
+                    listeners[i] != event.getSource())
+            {
+<span class="nc" id="L773">                ((GameInputListener)listeners[i+1]).gameInputReceived(event);</span>
+            }
+        }        
+<span class="nc" id="L776">    }</span>
+
+    
+    /**
+     * Implementation of the GameInputListener interface.  This is called by
+     * input sources in order to inform QuizState listeners of inputs.
+     */
+    public void gameInputReceived(GameInputEvent evt)
+    {
+<span class="nc" id="L785">        fireGameInputEvent(evt);</span>
+<span class="nc" id="L786">    }</span>
+
+    
+    // Methods for managing and firing the GameInputEvent
+    public void addGameModeChangeListener(GameModeChangeListener  l)
+    {
+<span class="nc" id="L792">        m_modeChangeListenerList.add(GameModeChangeListener.class, l);</span>
+<span class="nc" id="L793">    }</span>
+    
+    public void removeGameModeChangeListener(GameModeChangeListener  l)
+    {
+<span class="nc" id="L797">        m_modeChangeListenerList.remove(GameModeChangeListener.class, l);</span>
+<span class="nc" id="L798">    }</span>
+
+    public void  fireGameModeChangeEvent(Object  source, GameModeEnum  type)
+    {
+        // Guaranteed to return a non-null array
+<span class="nc" id="L803">        Object[] listeners = m_modeChangeListenerList.getListenerList();</span>
+
+<span class="nc" id="L805">        GameModeChangeEvent  event = new GameModeChangeEvent();</span>
+<span class="nc" id="L806">        event.setSource(source);</span>
+<span class="nc" id="L807">        event.setType(type);</span>
+        
+        // Store a local copy of this event for sending to remote nodes
+        
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+<span class="nc bnc" id="L813" title="All 2 branches missed.">        for (int i = listeners.length - 2; i &gt;= 0; i -= 2)</span>
+        {
+<span class="nc bnc" id="L815" title="All 4 branches missed.">            if (listeners[i] == GameModeChangeListener.class &amp;&amp;</span>
+                    listeners[i] != source)
+            {
+<span class="nc" id="L818">                ((GameModeChangeListener)listeners[i+1]).gameModeChanged(event);</span>
+            }
+        }        
+<span class="nc" id="L821">    }</span>
+    
+<span class="nc" id="L823">    private boolean  m_restricted = false;</span>
+    
+<span class="nc" id="L825">    private static QuizState  m_singletonGameState = null;</span>
+    
+<span class="nc" id="L827">    private static GameConfig  m_gameConfig = null;</span>
+
+<span class="nc" id="L829">    private static GameInputEnum  m_gameInputEnum = GameInputEnum.NOP;</span>
+    private static GameStateChangeEnum  m_gameStateEnum;
+    private static GameUpdateEnum  m_gameUpdateEnum;
+    
+<span class="nc" id="L833">    private static GameModeEnum  m_gameMode = GameModeEnum.STANDALONE;</span>
+    
+    private static String  m_playerName;
+
+<span class="nc" id="L837">    private static int  m_maxNumberOfAnswers = 4;</span>
+<span class="nc" id="L838">    private static int  m_maxNumberOfLevels = 15;</span>
+    
+    private static String  m_questionID;
+    private static String  m_question;
+    private static String[]  m_answers;
+
+    private static String  m_transitionMessage;
+    private static String  m_statusMessage;
+    
+    private static int  m_currentLevel;
+    private static String  m_levelTitle;
+    
+    private static int  m_selectedAnswer;
+    private static int  m_correctAnswer;
+
+    private static BitSet  m_answersVisible;
+    private static BitSet  m_toggleStates;
+    
+<span class="nc" id="L856">    private static int  m_questionTimerLimit = 0;</span>
+    private static int  m_questionTimerTime;
+<span class="nc" id="L858">    private static int[]  m_delayValues = new int[NUM_DELAY_TYPES];</span>
+
+    private static int  m_keyCode;
+    private static char  m_keyChar;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

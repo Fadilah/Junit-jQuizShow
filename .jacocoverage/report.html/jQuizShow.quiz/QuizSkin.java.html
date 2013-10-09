@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>QuizSkin.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.quiz</a> &gt; <span class="el_source">QuizSkin.java</span></div><h1>QuizSkin.java</h1><pre class="source lang-java linenums">/*
+ * QuizSkin.java
+ *
+ * Created on February 4, 2004, 7:22 PM
+ *
+ * $Id: QuizSkin.java,v 1.1 2004/04/02 06:02:00 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: QuizSkin.java,v $
+ *    Revision 1.1  2004/04/02 06:02:00  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow.quiz;
+
+import java.awt.*;
+import java.awt.image.*;
+import java.io.*;
+import java.util.*;
+import javax.imageio.*;
+
+import jQuizShow.*;
+import jQuizShow.util.*;
+
+/**
+ *
+ * @author  Steve
+ */
+public class QuizSkin extends QuizShowSkin {
+    
+    private static final String PROP_BACKGROUND_IMAGE = &quot;backgroundImage&quot;;
+    
+    private static final String PROP_QUESTION_LABEL_BASE = &quot;questionLabel&quot;;
+    private static final String PROP_QUESTION_BASE = &quot;question&quot;;
+    private static final String PROP_TIMER_BASE = &quot;timer&quot;;
+    private static final String PROP_COMMENT_BASE = &quot;comment&quot;;
+    private static final String PROP_ANSWER_LABEL_BASE = &quot;answerLabel_&quot;;
+    private static final String PROP_ANSWER_BASE = &quot;answer_&quot;;
+    private static final String PROP_TRANSITION_BASE = &quot;transition&quot;;
+
+    private static final String X_SUFFIX = &quot;.x&quot;;
+    private static final String Y_SUFFIX = &quot;.y&quot;;
+    private static final String WIDTH_SUFFIX = &quot;.width&quot;;
+    private static final String HEIGHT_SUFFIX = &quot;.height&quot;;
+    private static final String FADE_IN_DELAY_SUFFIX = &quot;.fadeInDelay&quot;;
+    private static final String ROWS_SUFFIX = &quot;.rows&quot;;
+    private static final String COLUMNS_SUFFIX = &quot;.columns&quot;;
+    
+    private static final String FONT_NAME_SUFFIX = &quot;.fontName&quot;;
+    private static final String FONT_BOLD_SUFFIX = &quot;.fontBold&quot;;
+    private static final String FONT_ITALIC_SUFFIX = &quot;.fontItalic&quot;;   
+
+    private static final String FONT_COLOR_SUFFIX = &quot;.fontColor&quot;;
+    private static final String BG_COLOR_SUFFIX = &quot;.bgColor&quot;;
+
+    private static final String PROP_NUM_ANSWERS = &quot;numAnswers&quot;;
+    
+    /** Creates a new instance of QuizSkin */
+<span class="nc" id="L84">    public QuizSkin() {</span>
+<span class="nc" id="L85">    }</span>
+    
+    public void load(String name, String filename) throws IOException
+    {
+<span class="nc" id="L89">        m_name = name;</span>
+<span class="nc" id="L90">        m_filename = filename;</span>
+        
+<span class="nc" id="L92">        Properties  props = new Properties();</span>
+        
+        String  property;
+        
+<span class="nc" id="L96">        props.load(FileUtils.openFile(filename));</span>
+
+        // Load the background image
+<span class="nc" id="L99">        String  filepath = props.getProperty(PROP_BACKGROUND_IMAGE);</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (filepath != null)</span>
+        {
+            try
+            {
+<span class="nc" id="L105">                filepath = FileUtils.searchForFile(filepath);</span>
+
+<span class="nc" id="L107">                System.out.println(&quot;Loading background image:  &quot; + filepath);</span>
+                
+<span class="nc" id="L109">                BufferedImage  image = ImageIO.read(FileUtils.openFile(filepath));</span>
+                
+<span class="nc" id="L111">                setBkgImage(image);</span>
+                
+<span class="nc" id="L113">                System.out.println(&quot;Background image loaded.&quot;);</span>
+            }
+<span class="nc" id="L115">            catch (FileNotFoundException  fnf_e)</span>
+            {
+<span class="nc" id="L117">                System.out.println(&quot;Background image -- FileNotFoundException.&quot;);</span>
+            }
+<span class="nc" id="L119">            catch (IOException  io_e)</span>
+            {
+<span class="nc" id="L121">                System.out.println(&quot;Background image -- IOException.&quot;);</span>
+<span class="nc" id="L122">            }</span>
+        }
+
+        // Set the bounds for the resizable text regions.
+        TextBoxConfig  bounds;
+
+<span class="nc" id="L128">        bounds = getBounds(props, PROP_QUESTION_LABEL_BASE);</span>
+<span class="nc" id="L129">        setQuestionLabelBox(bounds);</span>
+        
+<span class="nc" id="L131">        bounds = getBounds(props, PROP_QUESTION_BASE);</span>
+<span class="nc" id="L132">        setQuestionBox(bounds);</span>
+        
+<span class="nc" id="L134">        bounds = getBounds(props, PROP_TIMER_BASE);</span>
+<span class="nc" id="L135">        setTimerBox(bounds);</span>
+        
+<span class="nc" id="L137">        bounds = getBounds(props, PROP_COMMENT_BASE);</span>
+<span class="nc" id="L138">        setCommentBox(bounds);</span>
+        
+<span class="nc" id="L140">        bounds = getBounds(props, PROP_TRANSITION_BASE);</span>
+<span class="nc" id="L141">        setTransitionBox(bounds);</span>
+        
+<span class="nc" id="L143">        property = props.getProperty(PROP_NUM_ANSWERS, &quot;4&quot;);</span>
+<span class="nc" id="L144">        int  numAnswers = Integer.decode(property).intValue();</span>
+        
+<span class="nc" id="L146">        this.setNumAnswers(numAnswers);</span>
+        
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        for (int  i = 0; i &lt; numAnswers; i++)</span>
+        {
+<span class="nc" id="L150">            bounds = getBounds(props, PROP_ANSWER_LABEL_BASE + (i + 1));</span>
+<span class="nc" id="L151">            addAnswerLabelBox(bounds);</span>
+
+<span class="nc" id="L153">            bounds = getBounds(props, PROP_ANSWER_BASE + (i + 1));</span>
+<span class="nc" id="L154">            addAnswerBox(bounds);</span>
+        }
+<span class="nc" id="L156">    }</span>
+ 
+    private TextBoxConfig  getBounds(Properties  props, String  propBase)
+    {
+<span class="nc" id="L160">        TextBoxConfig  bounds = new TextBoxConfig();</span>
+
+        String  property;
+        
+<span class="nc bnc" id="L164" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + X_SUFFIX)) != null)</span>
+<span class="nc" id="L165">            bounds.x = Integer.decode(property).intValue();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + Y_SUFFIX)) != null)</span>
+<span class="nc" id="L167">            bounds.y = Integer.decode(property).intValue();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + WIDTH_SUFFIX)) != null)</span>
+<span class="nc" id="L169">            bounds.width = Integer.decode(property).intValue();</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + HEIGHT_SUFFIX)) != null)</span>
+<span class="nc" id="L171">            bounds.height = Integer.decode(property).intValue();</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + FADE_IN_DELAY_SUFFIX)) != null)</span>
+<span class="nc" id="L173">            bounds.fadeInDelay = Integer.decode(property).intValue();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + ROWS_SUFFIX)) != null)</span>
+<span class="nc" id="L175">            bounds.rows = Integer.decode(property).intValue();</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + COLUMNS_SUFFIX)) != null)</span>
+<span class="nc" id="L177">            bounds.columns = Integer.decode(property).intValue();</span>
+
+                // Get the font preferences
+<span class="nc" id="L180">        bounds.fontName = &quot;SansSerif&quot;;</span>
+<span class="nc" id="L181">        bounds.fontStyle = Font.BOLD;</span>
+<span class="nc" id="L182">        bounds.fontColor = Color.YELLOW;</span>
+<span class="nc" id="L183">        bounds.bgColor = null;</span>
+        
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + FONT_NAME_SUFFIX)) != null)</span>
+<span class="nc" id="L186">            bounds.fontName = property;</span>
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + FONT_BOLD_SUFFIX)) != null)</span>
+        {
+<span class="nc bnc" id="L190" title="All 2 branches missed.">            if (Integer.decode(property).intValue() != 0)</span>
+<span class="nc" id="L191">                bounds.fontStyle = Font.BOLD;</span>
+            else
+<span class="nc" id="L193">                bounds.fontStyle = Font.PLAIN;</span>
+        }        
+
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + FONT_ITALIC_SUFFIX)) != null)</span>
+        {
+<span class="nc bnc" id="L198" title="All 2 branches missed.">            if (Integer.decode(property).intValue() != 0)</span>
+<span class="nc" id="L199">                bounds.fontStyle |= Font.ITALIC;</span>
+        }        
+
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + FONT_COLOR_SUFFIX)) != null)</span>
+<span class="nc" id="L203">            bounds.fontColor = new Color(Integer.decode(property).intValue());</span>
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">        if ((property = props.getProperty(propBase + BG_COLOR_SUFFIX)) != null)</span>
+        {
+<span class="nc" id="L207">            int  value = Integer.decode(property).intValue();</span>
+            
+<span class="nc bnc" id="L209" title="All 2 branches missed.">            if (value &lt; 0)</span>
+<span class="nc" id="L210">                bounds.bgColor = null;</span>
+            else
+<span class="nc" id="L212">                bounds.bgColor = new Color(value);</span>
+        }
+        
+<span class="nc" id="L215">        return bounds;</span>
+    }
+    
+    
+    public void  setBkgColor(Color  color)
+    {
+<span class="nc" id="L221">        super.setBkgColor(color);</span>
+<span class="nc" id="L222">    }</span>
+
+    public void  setBkgImage(BufferedImage  image)
+    {
+<span class="nc" id="L226">        super.setBkgImage(image);</span>
+<span class="nc" id="L227">    }    </span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

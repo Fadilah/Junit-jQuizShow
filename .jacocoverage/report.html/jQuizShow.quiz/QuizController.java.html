@@ -1,0 +1,1322 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>QuizController.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.quiz</a> &gt; <span class="el_source">QuizController.java</span></div><h1>QuizController.java</h1><pre class="source lang-java linenums">/*
+ * QuizController.java
+ *
+ * Created on January 28, 2004, 9:12 PM
+ *
+ * $Id: QuizController.java,v 1.2 2007/02/05 03:55:49 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: QuizController.java,v $
+ *    Revision 1.2  2007/02/05 03:55:49  sdchen
+ *    Removed CR (Ctrl-M) from lines.
+ *
+ *    Revision 1.1  2004/04/02 06:02:00  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow.quiz;
+
+/** Primary event manager class for the quiz mode. This class
+ * maintains the game states and handles the user input events.
+ *
+ * @author  Steven D. Chen
+ * @version 
+ */
+
+import java.lang.*;
+import java.io.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+
+import jQuizShow.*;
+import jQuizShow.data.*;
+import jQuizShow.net.*;
+import jQuizShow.util.*;
+import jQuizShow.event.*;
+
+public class QuizController
+        implements
+            GameModeChangeListener,
+            GameStateChangeListener,
+            GameInputListener,
+            GameTimerListener
+{
+    /** Gets the QuizController singleton */
+    public static QuizController  getInstance()
+    {
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (m_QuizControllerSingleton == null)</span>
+<span class="nc" id="L74">            m_QuizControllerSingleton = new QuizController();</span>
+        
+<span class="nc" id="L76">        return m_QuizControllerSingleton;</span>
+    }
+    
+    /** Creates new QuizController */
+    private QuizController()
+<span class="nc" id="L81">    {</span>
+        // Instantiate the QuestionTimer inner class
+<span class="nc" id="L83">        m_questionTimer = new QuestionTimer();</span>
+
+<span class="nc" id="L85">        m_desktopPane = Main.getDesktopPane();</span>
+        
+<span class="nc" id="L87">        m_quizState = QuizState.getInstance(false);</span>
+
+        // Add self as listeners to the required events
+<span class="nc" id="L90">        m_quizState.addGameModeChangeListener(this);</span>
+<span class="nc" id="L91">        m_quizState.addGameStateChangeListener(this);</span>
+<span class="nc" id="L92">        m_quizState.addGameInputListener(this);</span>
+
+        // Create the game timer instance.  This timer is not visible, but
+        // used for internal timing events.
+<span class="nc" id="L96">        m_gameTimer = new GameTimer();</span>
+<span class="nc" id="L97">        m_gameTimer.addGameTimerListener(this);</span>
+
+        // Set the default game state
+<span class="nc" id="L100">        m_state = QuizPhaseEnum.S_INACTIVE;</span>
+        
+        // Get the GameConfig singleton instance
+<span class="nc" id="L103">        m_gameConfig = GameConfig.getInstance();</span>
+
+        // Get the SoundPlayer singleton
+<span class="nc" id="L106">        m_soundPlayer = SoundPlayer.getInstance();</span>
+
+        // Get the default question timer limit
+<span class="nc" id="L109">        m_questionTimerLimit = m_gameConfig.getIntConfig(&quot;quizQuestionTimerLimit&quot;, 30);</span>
+
+        // Get the max number of possible answers
+<span class="nc" id="L112">        m_maxNumberOfAnswers = m_quizState.getMaxNumberOfAnswers();</span>
+        
+        // Create instances of the StatePacket and EventPacket.
+<span class="nc" id="L115">        m_statePacket = new StatePacket();</span>
+<span class="nc" id="L116">        m_eventPacket = new EventPacket();</span>
+        
+        // Get the PacketProcessor instance
+<span class="nc" id="L119">        m_packetProcessor = PacketProcessor.getInstance();</span>
+
+        // Start at first level
+<span class="nc" id="L122">        m_currentLevel = 0;</span>
+
+        /* Set the question timer limit */
+<span class="nc" id="L125">        m_statePacket.setType(QuizStateEnum.SET_QUESTION_TIMER_LIMIT);</span>
+<span class="nc" id="L126">        m_statePacket.setQuestionTimerLimit(m_questionTimerLimit);</span>
+
+<span class="nc" id="L128">        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+<span class="nc" id="L129">    }</span>
+
+
+    /**
+     * Load questions from the specified database file
+     */
+    public int  loadQuestions(String  filename)
+            throws FileNotFoundException, IOException
+    {
+        // Load the questions from the Q &amp; A database
+<span class="nc" id="L139">        String  questionFilepath = null;</span>
+        QuizLoader  qLoader;
+        
+<span class="nc" id="L142">        stopGame();</span>
+        
+<span class="nc" id="L144">        String  encoding = m_gameConfig.getConfig(&quot;questionEncoding&quot;);</span>
+
+<span class="nc" id="L146">        m_questionList = null;          // Clear current questions</span>
+        
+<span class="nc" id="L148">        questionFilepath = FileUtils.searchForFile(filename);</span>
+
+<span class="nc" id="L150">	System.out.println(Main.getMessage(&quot;msg_reading_questions&quot;)</span>
+		+ &quot;  &quot; + questionFilepath);
+
+<span class="nc" id="L153">	qLoader = QuizLoader.getInstance();</span>
+<span class="nc" id="L154">	qLoader.setEncoding(encoding);</span>
+<span class="nc" id="L155">        qLoader.setDebugMode(m_gameConfig.getIntConfig(&quot;debugMode&quot;));</span>
+
+<span class="nc" id="L157">        m_questionList = qLoader.readQuestions(questionFilepath);</span>
+
+<span class="nc" id="L159">	System.out.println(Main.getMessage(&quot;msg_quiz_questions_read&quot;));</span>
+
+        // Get the total number of questions
+<span class="nc" id="L162">        m_numberOfQuestions = m_questionList.getNumQuestionsRemaining(0);</span>
+        
+<span class="nc" id="L164">        return m_numberOfQuestions;</span>
+    }
+    
+    
+    /**
+     * Start a new game
+     */
+    public void startGame()
+    {
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        if (m_gameMode == GameModeEnum.SLAVE)</span>
+        {
+            /* Display &quot;is slave&quot; message */
+<span class="nc" id="L176">            JOptionPane.showMessageDialog(m_desktopPane,</span>
+		    Main.getMessage(&quot;msg_slave_game_start&quot;));
+<span class="nc" id="L178">            return;</span>
+        }
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (m_questionList == null)</span>
+        {
+<span class="nc" id="L183">            JOptionPane.showMessageDialog(m_desktopPane,</span>
+		    Main.getMessage(&quot;msg_start_no_questions&quot;));
+<span class="nc" id="L185">            return;</span>
+        }       
+        
+        // Start at first level
+<span class="nc" id="L189">        m_currentLevel = 0;</span>
+
+        // Reset the toggle states
+<span class="nc" id="L192">        m_quizState.setToggleState(QuizState.ANSWERS_SELECTABLE, false);</span>
+
+<span class="nc" id="L194">        m_eventPacket.setType(QuizUpdateEnum.TOGGLE_STATE);</span>
+<span class="nc" id="L195">        m_eventPacket.setToggleStates(m_quizState.getToggleStates());</span>
+        
+<span class="nc" id="L197">        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+        /* Initialize for a new game */
+<span class="nc" id="L200">        m_statePacket.setType(QuizStateEnum.NEW_GAME);</span>
+<span class="nc" id="L201">        m_statePacket.setMaxNumberOfLevels(m_numberOfQuestions);</span>
+<span class="nc" id="L202">        m_statePacket.setCurrentLevel(0);</span>
+
+<span class="nc" id="L204">        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+        // Set the starting message
+<span class="nc" id="L207">        m_eventPacket.setType(QuizUpdateEnum.TRANSITION_MSG);</span>
+<span class="nc" id="L208">        m_eventPacket.setTransitionMessage(Main.getMessage(&quot;msg_ready&quot;));</span>
+
+<span class="nc" id="L210">        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+        /* Clear the status text */
+<span class="nc" id="L213">        m_eventPacket.setType(QuizUpdateEnum.STATUS_MSG);</span>
+<span class="nc" id="L214">        m_eventPacket.setStatusMessage(&quot;&quot;);</span>
+
+<span class="nc" id="L216">        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+        // Stop all sounds
+<span class="nc" id="L219">        m_soundPlayer.stop(SoundPlayer.ALL_CHANNELS);</span>
+        
+        // Play new player sound
+<span class="nc" id="L222">        m_soundPlayer.loadSound(SoundIDEnum.NEW_PLAYER,</span>
+                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L224">        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+        
+<span class="nc" id="L227">        m_soundPlayer.loadSound(SoundIDEnum.BACKGROUND1,</span>
+                SoundPlayer.BACKGROUND_CHANNEL, true);
+/*
+        // Set the background soundtrack playlist
+        SoundIDEnum[]       playList =
+        {
+            SoundIDEnum.BACKGROUND4,
+            SoundIDEnum.BACKGROUND5,
+            SoundIDEnum.BACKGROUND6
+        };
+        
+        m_soundPlayer.loadPlayList(playList);
+*/
+        
+        // Set the initial phase
+<span class="nc" id="L242">        m_state = QuizPhaseEnum.S_WAITING_TO_START;</span>
+<span class="nc" id="L243">    }</span>
+    
+    
+    /** Stops (aborts) the game. */
+    public void stopGame()
+    {
+        // Stop the game - go to inactive mode
+<span class="nc" id="L250">        m_state = QuizPhaseEnum.S_INACTIVE;</span>
+
+        // Stop all sounds
+<span class="nc" id="L253">        m_soundPlayer.stop(SoundPlayer.ALL_CHANNELS);</span>
+
+        // Stop the timers
+<span class="nc" id="L256">        m_questionTimer.stopTimer();</span>
+<span class="nc" id="L257">        m_gameTimer.stopTimer();</span>
+
+        // Clear the &quot;game in session&quot; flag
+<span class="nc" id="L260">        m_quizState.setToggleState(QuizState.GAME_IN_SESSION, false);</span>
+
+        // Inform everyone this is the end of the game
+<span class="nc" id="L263">        m_statePacket.setType(QuizStateEnum.END_OF_GAME);</span>
+
+<span class="nc" id="L265">        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+<span class="nc" id="L266">    }</span>
+
+    
+    /**
+     * Set the quiz mode to be either normal or &quot;show answers&quot; mode.
+     *
+     * @param showAnswers   true = show answers mode, false = normal quiz mode
+     */
+    public void setShowAnswersMode(boolean  showAnswers)
+    {
+        // Set the show answers mode state.
+<span class="nc" id="L277">        m_quizState.setToggleState(QuizState.ANSWER_MODE, showAnswers);</span>
+
+        // Inform everyone that the show answers mode has changed.
+<span class="nc" id="L280">        m_statePacket.setType(QuizStateEnum.SET_SHOW_ANSWERS_MODE);</span>
+
+<span class="nc" id="L282">        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        if (m_quizState.getToggleState(QuizState.GAME_IN_SESSION) == false)</span>
+<span class="nc" id="L285">            return;</span>
+
+        // Stop the timers
+<span class="nc" id="L288">        m_questionTimer.stopTimer();</span>
+<span class="nc" id="L289">        m_gameTimer.stopTimer();</span>
+
+        /* Set the initial phase */
+<span class="nc" id="L292">        m_state = QuizPhaseEnum.S_WAITING_TO_START;</span>
+
+<span class="nc" id="L294">        nextPhase();</span>
+<span class="nc" id="L295">    }</span>
+
+    
+    /**
+     * Sets whether the answers should be shown or not after the timer runs out.
+     *
+     * @param showAnswers   true = show answers, false = questions only
+     */
+    public void setShowAnswers(boolean  showAnswers)
+    {
+        // Set the show answers mode state.
+<span class="nc" id="L306">        m_quizState.setToggleState(QuizState.SHOW_ANSWERS, showAnswers);</span>
+<span class="nc" id="L307">    }</span>
+
+    
+    /**
+     * Sets the current quiz question.
+     */
+    public void  setQuestion(String  id) throws IllegalArgumentException
+    {
+        Question  question;
+        
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        if (m_quizState.getToggleState(QuizState.GAME_IN_SESSION) == false)</span>
+<span class="nc" id="L318">            throw new IllegalArgumentException(Main.getMessage(&quot;err_quiz_not_in_session&quot;));</span>
+
+<span class="nc bnc" id="L320" title="All 2 branches missed.">        for (int  newLevel = 0; newLevel &lt; m_numberOfQuestions; newLevel++)</span>
+        {
+<span class="nc" id="L322">            question = m_questionList.getQuestion(0, newLevel);</span>
+            
+<span class="nc bnc" id="L324" title="All 2 branches missed.">            if (id.compareToIgnoreCase(question.getQuestionID()) == 0)</span>
+            {
+<span class="nc" id="L326">                setQuestionImpl(newLevel);</span>
+<span class="nc" id="L327">                return;</span>
+            }
+        }
+
+        try
+        {
+<span class="nc" id="L333">            int  newLevel = Integer.parseInt(id);</span>
+            
+<span class="nc bnc" id="L335" title="All 4 branches missed.">            if (newLevel &gt;= 0 &amp;&amp; newLevel &lt;= m_numberOfQuestions)</span>
+            {
+<span class="nc" id="L337">                setQuestionImpl(newLevel);</span>
+<span class="nc" id="L338">                return;</span>
+            }
+        }
+<span class="nc" id="L341">        catch (NumberFormatException  nf_e)</span>
+        {
+<span class="nc" id="L343">        }</span>
+        
+<span class="nc" id="L345">        throw new IllegalArgumentException(Main.getMessage(&quot;err_quiz_no_matching_question&quot;));</span>
+    }
+
+    
+    private void  setQuestionImpl(int  questionIdx)
+    {
+        // Matching question found -- set as the current question
+<span class="nc" id="L352">        m_currentLevel = questionIdx;</span>
+
+        // Stop the timers
+<span class="nc" id="L355">        m_questionTimer.stopTimer();</span>
+<span class="nc" id="L356">        m_gameTimer.stopTimer();</span>
+
+        /* Set the initial phase */
+<span class="nc" id="L359">        m_state = QuizPhaseEnum.S_WAITING_TO_START;</span>
+
+<span class="nc" id="L361">        nextPhase();</span>
+
+<span class="nc" id="L363">        return;</span>
+    }
+    
+
+    /**
+     * Changes the game mode. Implements the GameModeChangeListener interface.
+     */
+    public void gameModeChanged(GameModeChangeEvent evt) {
+<span class="nc" id="L371">        GameModeEnum  evtType = evt.getType();</span>
+
+<span class="nc" id="L373">        m_gameMode = evtType;</span>
+        
+<span class="nc bnc" id="L375" title="All 4 branches missed.">        if (evtType == GameModeEnum.STANDALONE ||</span>
+                evtType == GameModeEnum.MASTER)
+        {
+            // Reset to standalone/master mode
+        }
+<span class="nc bnc" id="L380" title="All 2 branches missed.">        else if (evtType == GameModeEnum.SLAVE)</span>
+        {
+            // Reset for slave mode
+        }
+<span class="nc bnc" id="L384" title="All 2 branches missed.">        else if (evtType == GameModeEnum.RESET)</span>
+        {
+<span class="nc" id="L386">            stopGame();</span>
+        }
+<span class="nc" id="L388">    }    </span>
+
+
+    public void gameStateChanged(GameStateChangeEvent evt)
+    {
+<span class="nc" id="L393">        QuizStateEnum  type = (QuizStateEnum) evt.getType();</span>
+        
+<span class="nc bnc" id="L395" title="All 2 branches missed.">        if (type == QuizStateEnum.SET_QUESTION_TIMER_LIMIT)</span>
+        {
+            // Get the limit from the global instance
+<span class="nc" id="L398">            m_questionTimerLimit = QuizState.getInstance(false).getQuestionTimerLimit();</span>
+            
+            // Set the question timer limit
+<span class="nc" id="L401">            m_questionTimer.setupTimer(m_questionTimerLimit, 0);</span>
+        }
+<span class="nc bnc" id="L403" title="All 2 branches missed.">        else if (type == QuizStateEnum.QUESTION_TIMER_EXPIRED)</span>
+        {
+<span class="nc bnc" id="L405" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == false)</span>
+            {
+<span class="nc bnc" id="L407" title="All 2 branches missed.">                if (m_quizState.getToggleState(QuizState.SHOW_ANSWERS) == true)</span>
+                {
+                    // In show answers mode, a space bar in this phase will
+                    // cause a jump to the &quot;correct answer&quot; phase.
+<span class="nc bnc" id="L411" title="All 2 branches missed.">                    for (int  index = 0; index &lt; m_answers.length; index++)</span>
+                    {
+<span class="nc bnc" id="L413" title="All 2 branches missed.">                        if (m_answers[index].getCorrect())</span>
+                        {
+                            // Set the correct answer
+<span class="nc" id="L416">                            m_selectedIndex = index;</span>
+<span class="nc" id="L417">                            break;</span>
+                        }
+                    }
+
+                    // Switch state flag to next state
+<span class="nc" id="L422">                    m_state = QuizPhaseEnum.S_CORRECT_ANSWER;</span>
+
+<span class="nc" id="L424">                    nextPhase();</span>
+                }
+                else
+                {
+                    // Switch state flag to next state
+<span class="nc" id="L429">                    m_state = QuizPhaseEnum.S_RESET_FOR_NEXT_ROUND;</span>
+
+<span class="nc" id="L431">                    nextPhase();</span>
+                }
+            }
+        }
+<span class="nc" id="L435">    }</span>
+    
+    
+    /** Process game input events.  Examples include:  selection of an
+     * answer (letter key), hot-key pressed.
+     */
+    public void gameInputReceived(GameInputEvent evt)
+    {
+<span class="nc" id="L443">        GameInputEnum  evtType = evt.getType();</span>
+
+<span class="nc bnc" id="L445" title="All 2 branches missed.">        if (m_gameMode == GameModeEnum.SLAVE)</span>
+<span class="nc" id="L446">            return;     // In slave mode -- ignore all inputs</span>
+        
+<span class="nc bnc" id="L448" title="All 2 branches missed.">        if (evtType == GameInputEnum.ANSWER_SELECTED)</span>
+        {
+<span class="nc bnc" id="L450" title="All 6 branches missed.">            if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == true &amp;&amp;</span>
+                    (m_state == QuizPhaseEnum.S_ANSWERS_DISPLAYED ||
+                    m_state == QuizPhaseEnum.S_ANSWER_SELECTED))
+            {
+                /* An answer was selected.  Get its index. */
+<span class="nc" id="L455">                m_selectedIndex = evt.getSelectedIndex();</span>
+
+<span class="nc bnc" id="L457" title="All 2 branches missed.">                if (m_quizState.getAnswerVisible(m_selectedIndex) == true)</span>
+                {
+<span class="nc" id="L459">                    m_state = QuizPhaseEnum.S_ANSWER_SELECTED;</span>
+
+                    /* Transition to next phase */
+<span class="nc" id="L462">                    nextPhase();</span>
+                }
+            }
+        }
+<span class="nc bnc" id="L466" title="All 2 branches missed.">        else if (evtType == GameInputEnum.KEY_TYPED)</span>
+        {            
+<span class="nc" id="L468">            char  keyChar = Character.toLowerCase(evt.getKeyChar());</span>
+<span class="nc" id="L469">            int  keyCode = evt.getKeyCode();</span>
+            
+<span class="nc bnc" id="L471" title="All 4 branches missed.">            if (keyCode == KeyEvent.VK_LEFT || keyCode == KeyEvent.VK_KP_LEFT)</span>
+            {
+<span class="nc bnc" id="L473" title="All 2 branches missed.">                if (m_currentLevel &gt; 0)</span>
+<span class="nc" id="L474">                    setQuestionImpl(m_currentLevel - 1);</span>
+            }
+<span class="nc bnc" id="L476" title="All 4 branches missed.">            else if (keyCode == KeyEvent.VK_RIGHT || keyCode == KeyEvent.VK_KP_RIGHT)</span>
+            {
+<span class="nc bnc" id="L478" title="All 2 branches missed.">                if (m_currentLevel &lt; m_numberOfQuestions - 1)</span>
+<span class="nc" id="L479">                    setQuestionImpl(m_currentLevel + 1);</span>
+            }
+<span class="nc bnc" id="L481" title="All 6 branches missed.">            else if (m_answers != null &amp;&amp; keyChar &gt;= 'a' &amp;&amp; keyChar &lt;= ('a' + m_answers.length - 1))</span>
+            {
+<span class="nc bnc" id="L483" title="All 6 branches missed.">                if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == true &amp;&amp;</span>
+                        (m_state == QuizPhaseEnum.S_ANSWERS_DISPLAYED ||
+                        m_state == QuizPhaseEnum.S_ANSWER_SELECTED))
+                {
+                    /* An answer was selected.  Get its index. */
+<span class="nc" id="L488">                    m_selectedIndex = keyChar - 'a';</span>
+
+<span class="nc bnc" id="L490" title="All 2 branches missed.">                    if (m_quizState.getAnswerVisible(m_selectedIndex) == true)</span>
+                    {
+<span class="nc" id="L492">                        m_state = QuizPhaseEnum.S_ANSWER_SELECTED;</span>
+
+                        /* Transition to next phase */
+<span class="nc" id="L495">                        nextPhase();</span>
+                    }
+                }
+            }
+            else
+            {
+                /* Process special event keys */
+<span class="nc bnc" id="L502" title="All 15 branches missed.">                switch (keyChar)</span>
+                {
+		    // Sound clip hotkeys (Numpad 0-9)
+                    case '0' :
+                    {
+<span class="nc" id="L507">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_0,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L509">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L510">                        break;</span>
+                    }
+                    
+                    case '1' :
+                    {
+<span class="nc" id="L515">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_1,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L517">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L518">                        break;</span>
+                    }
+                    
+                    case '2' :
+                    {
+<span class="nc" id="L523">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_2,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L525">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L526">                        break;</span>
+                    }
+                    
+                    case '3' :
+                    {
+<span class="nc" id="L531">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_3,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L533">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L534">                        break;</span>
+                    }
+                    
+                    case '4' :
+                    {
+<span class="nc" id="L539">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_4,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L541">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L542">                        break;</span>
+                    }
+                    
+                    case '5' :
+                    {
+<span class="nc" id="L547">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_5,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L549">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L550">                        break;</span>
+                    }
+                    
+                    case '6' :
+                    {
+<span class="nc" id="L555">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_6,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L557">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L558">                        break;</span>
+                    }
+                    
+                    case '7' :
+                    {
+<span class="nc" id="L563">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_7,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L565">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L566">                        break;</span>
+                    }
+                    
+                    case '8' :
+                    {
+<span class="nc" id="L571">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_8,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L573">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L574">                        break;</span>
+                    }
+                    
+                    case '9' :
+                    {
+<span class="nc" id="L579">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_9,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L581">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L582">                        break;</span>
+                    }
+                    
+                    case '\n' :         // Enter key -- &quot;Final answer&quot;
+                    {
+                        /* Confirm key -- validity depending on the current game state
+                         * and context (e.g. if an answer is selected)
+                         */
+<span class="nc bnc" id="L590" title="All 2 branches missed.">                        if (m_state == QuizPhaseEnum.S_ANSWER_SELECTED)</span>
+                        {
+<span class="nc" id="L592">                            m_state = QuizPhaseEnum.S_ANSWER_FINALIZED;</span>
+<span class="nc" id="L593">                            nextPhase();</span>
+                        }
+                        break;
+                    }
+
+                    case '\b' :         // Backspace key
+                    {
+                        /* This key is used clear the selected lifeline or
+			 * to backout a supposedly &quot;final&quot; answer.  The
+			 * latter is against the &quot;official&quot; rules, but...
+                         */
+<span class="nc bnc" id="L604" title="All 6 branches missed.">                        if (m_state == QuizPhaseEnum.S_ANSWER_SELECTED</span>
+                                || m_state == QuizPhaseEnum.S_CORRECT_ANSWER
+                                || m_state == QuizPhaseEnum.S_WRONG_ANSWER)
+                        {
+                            /* Re-enable selection */
+<span class="nc" id="L609">                            m_quizState.setToggleState(QuizState.ANSWERS_SELECTABLE, true);</span>
+
+<span class="nc" id="L611">                            m_eventPacket.setType(QuizUpdateEnum.TOGGLE_STATE);</span>
+<span class="nc" id="L612">                            m_eventPacket.setToggleStates(m_quizState.getToggleStates());</span>
+
+<span class="nc" id="L614">                            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+                            // Clear the selection
+<span class="nc" id="L617">                            m_eventPacket.setType(QuizUpdateEnum.SELECTED_ANSWER);</span>
+<span class="nc" id="L618">                            m_eventPacket.setSelectedAnswer(-1);</span>
+
+<span class="nc" id="L620">                            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc" id="L622">                            m_state = QuizPhaseEnum.S_ANSWERS_DISPLAYED;</span>
+
+<span class="nc" id="L624">                            m_questionTimer.startTimer();        // Restart the question timer</span>
+                        }
+                        break;
+                    }
+
+                    case '.' :          // Period key -- toggle question timer pause
+                    {
+<span class="nc bnc" id="L631" title="All 2 branches missed.">                        if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == false)</span>
+                        {
+<span class="nc bnc" id="L633" title="All 2 branches missed.">                            if (m_questionTimer.isActive())</span>
+                            {
+<span class="nc bnc" id="L635" title="All 2 branches missed.">                                if (m_questionTimer.isPaused())</span>
+<span class="nc" id="L636">                                    m_questionTimer.startTimer();</span>
+                                else
+<span class="nc" id="L638">                                    m_questionTimer.stopTimer();</span>
+                            }
+                        }
+                        break;
+                    }
+                    
+                    case ' ' :          // Space key -- next phase
+                    {
+                        /* &quot;Transition to next phase&quot; key */
+<span class="nc" id="L647">                        nextPhase();</span>
+                        break;
+                    }
+                }
+            }
+        }
+<span class="nc" id="L653">    }</span>
+
+    
+    /** Transition to the next game phase */
+    private void nextPhase()
+    {
+<span class="nc bnc" id="L659" title="All 2 branches missed.">        if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_BASIC) != 0)</span>
+<span class="nc" id="L660">            System.out.println(&quot;--&gt; QuizController::nextPhase() = &quot; + m_state);</span>
+
+<span class="nc bnc" id="L662" title="All 2 branches missed.">        if (m_state == QuizPhaseEnum.S_INACTIVE)</span>
+        {
+            /* No change.  Must be set to an active state for a transition to occur */
+        }
+<span class="nc bnc" id="L666" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_WAITING_TO_START)</span>
+        {       
+            // Set the &quot;game in session&quot; flag
+<span class="nc" id="L669">            m_quizState.setToggleState(QuizState.GAME_IN_SESSION, true);</span>
+
+            {
+<span class="nc" id="L672">                m_soundPlayer.loadSound(SoundIDEnum.SHOW_QUESTION,</span>
+                        SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L674">                m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+            }
+
+<span class="nc bnc" id="L677" title="All 2 branches missed.">            if (m_soundPlayer.isPlaying(SoundPlayer.BACKGROUND_CHANNEL) == false)</span>
+            {
+<span class="nc" id="L679">                m_soundPlayer.start(SoundPlayer.BACKGROUND_CHANNEL);              </span>
+            }
+
+            /* Start the background sound if it isn't playing */
+<span class="nc bnc" id="L683" title="All 4 branches missed.">            if (m_soundPlayer.isPlaying(SoundPlayer.BACKGROUND_CHANNEL) == false &amp;&amp;</span>
+                    m_bkgSoundId != null)
+            {
+<span class="nc" id="L686">                m_bkgSoundId = SoundIDEnum.BACKGROUND1;</span>
+                
+<span class="nc" id="L688">                m_soundPlayer.loadSound(m_bkgSoundId,</span>
+                        SoundPlayer.BACKGROUND_CHANNEL, false);
+<span class="nc" id="L690">                m_soundPlayer.start(SoundPlayer.BACKGROUND_CHANNEL);</span>
+            }
+
+            // Hide all answers
+<span class="nc bnc" id="L694" title="All 2 branches missed.">            for (int  i = 0; i &lt; m_maxNumberOfAnswers; i++)</span>
+            {
+<span class="nc" id="L696">                m_quizState.setAnswerVisible(i, false);</span>
+            }
+
+            // Set the Transition panel text to the current level title.
+            {
+                String  title;
+            
+<span class="nc" id="L703">                Question  question = m_questionList.getQuestion(0, m_currentLevel);</span>
+
+<span class="nc" id="L705">                Object	args[] = </span>
+                        {
+                            question.getQuestionID()
+                        };
+
+<span class="nc" id="L710">                title = Main.getMessage(&quot;msg_quiz_transition&quot;, args);</span>
+
+<span class="nc bnc" id="L712" title="All 2 branches missed.">                if (title != null)</span>
+                {
+                    // Send event to update the transition text
+<span class="nc" id="L715">                    m_eventPacket.setType(QuizUpdateEnum.TRANSITION_MSG);</span>
+<span class="nc" id="L716">                    m_eventPacket.setTransitionMessage(title);</span>
+
+<span class="nc" id="L718">                    m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+                }
+            }
+            
+            // Set up for next question
+            {
+<span class="nc" id="L724">                int  numRemaining = m_questionList.getNumQuestionsRemaining(0);</span>
+
+<span class="nc bnc" id="L726" title="All 2 branches missed.">                if (numRemaining == 0)</span>
+                {
+<span class="nc" id="L728">                    String  msg = Main.getMessage(&quot;err_no_more_questions&quot;)</span>
+                            + &quot; &quot; + 0;
+
+<span class="nc" id="L731">                    System.out.println(msg);</span>
+
+<span class="nc" id="L733">                    Main.setStatusLabel(msg);</span>
+
+<span class="nc" id="L735">                    JOptionPane.showMessageDialog(m_desktopPane, msg);</span>
+
+<span class="nc" id="L737">                    m_state = QuizPhaseEnum.S_INACTIVE;</span>
+
+<span class="nc" id="L739">                    return;</span>
+                }
+
+<span class="nc" id="L742">                m_question = m_questionList.getQuestion(0, m_currentLevel);</span>
+            }
+
+            // Fire an event to update the game
+
+<span class="nc" id="L747">            m_statePacket.setType(QuizStateEnum.WAIT_TO_START_ROUND);</span>
+<span class="nc" id="L748">            m_statePacket.setCorrectAnswer(QuizState.NO_CORRECT_ANSWER);</span>
+<span class="nc" id="L749">            m_statePacket.setQuestion(&quot;&quot;);</span>
+<span class="nc" id="L750">            m_statePacket.setAnswers(null);</span>
+
+<span class="nc" id="L752">            m_statePacket.setAnswersVisible(m_quizState.getAnswersVisible());</span>
+<span class="nc" id="L753">            m_statePacket.setCurrentLevel(m_currentLevel);</span>
+<span class="nc" id="L754">            m_statePacket.setQuestionID(m_question.getQuestionID());</span>
+
+<span class="nc" id="L756">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+<span class="nc" id="L758">            m_state = QuizPhaseEnum.S_STARTING_NEXT_ROUND;</span>
+            
+            // If in quiz mode, start timer for transition delay
+<span class="nc bnc" id="L761" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == false)</span>
+            {
+<span class="nc" id="L763">                m_gameTimer.setTimer(</span>
+                    m_quizState.getDelayValue(QuizState.DELAY_AT_START),
+                    0, true);
+<span class="nc" id="L766">                m_gameTimer.startTimer();</span>
+            }
+        }
+<span class="nc bnc" id="L769" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_STARTING_NEXT_ROUND)</span>
+        {
+            /* Start the next round.  First, get a question from the available
+             * questions list */
+
+            String[]  answerStr;        // Shuffled list of possible answers
+
+            // Clear the transition text
+<span class="nc" id="L777">            m_eventPacket.setType(QuizUpdateEnum.TRANSITION_MSG);</span>
+<span class="nc" id="L778">            m_eventPacket.setTransitionMessage(null);</span>
+
+<span class="nc" id="L780">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            {
+
+<span class="nc" id="L784">                AnswerList  answers = m_question.getAnswers();</span>
+
+                /* Get the array of possible answers */
+<span class="nc" id="L787">                m_answers = answers.getOrderedAnswers();</span>
+
+<span class="nc" id="L789">                answerStr = new String[m_answers.length];</span>
+
+<span class="nc bnc" id="L791" title="All 2 branches missed.">                for (int  i = 0; i &lt; m_answers.length; i++)</span>
+                {
+<span class="nc" id="L793">                    answerStr[i] = m_answers[i].getAnswer();</span>
+                }
+            }
+
+            /* Zero the number of answers currently displayed counter. */
+<span class="nc" id="L798">            m_numAnswersDisplayed = 0;</span>
+
+            /* Disable answer selections */
+<span class="nc" id="L801">            m_quizState.setToggleState(QuizState.ANSWERS_SELECTABLE, false);</span>
+
+<span class="nc" id="L803">            m_eventPacket.setType(QuizUpdateEnum.TOGGLE_STATE);</span>
+<span class="nc" id="L804">            m_eventPacket.setToggleStates(m_quizState.getToggleStates());</span>
+
+<span class="nc" id="L806">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Clear any selected answer index */
+<span class="nc" id="L809">            m_eventPacket.setType(QuizUpdateEnum.SELECTED_ANSWER);</span>
+<span class="nc" id="L810">            m_eventPacket.setSelectedAnswer(QuizState.NO_SELECTED_ANSWER);</span>
+
+<span class="nc" id="L812">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Play the &quot;show question&quot; sound */
+<span class="nc" id="L815">            m_soundPlayer.loadSound(SoundIDEnum.SHOW_QUESTION,</span>
+                    SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L817">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+            // Set the question and possible answers
+<span class="nc" id="L820">            m_statePacket.setType(QuizStateEnum.DISPLAY_QUESTION);</span>
+<span class="nc" id="L821">            m_statePacket.setQuestion(m_question.getQuestion());</span>
+<span class="nc" id="L822">            m_statePacket.setAnswers(answerStr);</span>
+
+<span class="nc" id="L824">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+            /* Switch state flag to next state */
+<span class="nc" id="L827">            m_state = QuizPhaseEnum.S_QUESTION_DISPLAYED;</span>
+            
+            // If in quiz mode, start timer for transition delay
+<span class="nc bnc" id="L830" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == false)</span>
+            {
+<span class="nc" id="L832">                m_gameTimer.setTimer(</span>
+                    m_quizState.getDelayValue(QuizState.DELAY_AFTER_QUESTION),
+                    0, true);
+<span class="nc" id="L835">                m_gameTimer.startTimer();</span>
+            }
+            else
+<span class="nc" id="L838">                nextPhase();</span>
+<span class="nc" id="L839">        }</span>
+<span class="nc bnc" id="L840" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_QUESTION_DISPLAYED)</span>
+        {
+<span class="nc" id="L842">            for (m_numAnswersDisplayed = 0;</span>
+<span class="nc bnc" id="L843" title="All 2 branches missed.">                    m_numAnswersDisplayed &lt; m_answers.length;</span>
+<span class="nc" id="L844">                    m_numAnswersDisplayed++)</span>
+            {
+                // Show the next answer
+<span class="nc" id="L847">                m_quizState.setAnswerVisible(m_numAnswersDisplayed, true);</span>
+            }
+
+<span class="nc" id="L850">            m_statePacket.setType(QuizStateEnum.DISPLAY_ANSWER);</span>
+<span class="nc" id="L851">            m_statePacket.setAnswersVisible(m_quizState.getAnswersVisible());</span>
+
+<span class="nc" id="L853">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+            // Play the &quot;show answer&quot; sound
+<span class="nc" id="L856">            m_soundPlayer.loadSound(SoundIDEnum.SHOW_ANSWER,</span>
+                    SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L858">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+            // All answers now displayed.
+<span class="nc" id="L861">            m_statePacket.setType(QuizStateEnum.WAIT_FOR_ANSWER);</span>
+
+<span class="nc" id="L863">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+<span class="nc bnc" id="L865" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == false)</span>
+            {
+                // Start the question timer in quiz mode.  There is no
+                // time limit in show answer mode.               
+<span class="nc" id="L869">                m_questionTimer.setupTimer(-1, 0);  // Reset the question timer</span>
+<span class="nc" id="L870">                m_questionTimer.startTimer();</span>
+            }
+            
+            // Switch state flag to next state
+<span class="nc" id="L874">            m_state = QuizPhaseEnum.S_ANSWERS_DISPLAYED;</span>
+        }
+<span class="nc bnc" id="L876" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_ANSWERS_DISPLAYED)</span>
+        {
+<span class="nc bnc" id="L878" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == true)</span>
+            {
+                // In show answers mode, a space bar in this phase will
+                // cause a jump to the &quot;correct answer&quot; phase.
+<span class="nc bnc" id="L882" title="All 2 branches missed.">                for (int  index = 0; index &lt; m_answers.length; index++)</span>
+                {
+<span class="nc bnc" id="L884" title="All 2 branches missed.">                    if (m_answers[index].getCorrect())</span>
+                    {
+                        // Set the correct answer
+<span class="nc" id="L887">                        m_selectedIndex = index;</span>
+<span class="nc" id="L888">                        break;</span>
+                    }
+                }
+
+                // Switch state flag to next state
+<span class="nc" id="L893">                m_state = QuizPhaseEnum.S_CORRECT_ANSWER;</span>
+                
+<span class="nc" id="L895">                nextPhase();</span>
+            }
+            else
+            {
+                /* Input is ignored until the timer runs out */
+            }
+        }
+<span class="nc bnc" id="L902" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_ANSWER_SELECTED)</span>
+        {
+            // This state does not change until the Enter key is pressed.
+            // See the gameInputReceived()
+
+            
+            // Highlight the selection
+<span class="nc" id="L909">            m_eventPacket.setType(QuizUpdateEnum.SELECTED_ANSWER);</span>
+<span class="nc" id="L910">            m_eventPacket.setSelectedAnswer(m_selectedIndex);</span>
+
+<span class="nc" id="L912">            m_packetProcessor.processEventPacket(m_eventPacket);</span>
+
+            // Play selected sound
+<span class="nc" id="L915">            m_soundPlayer.loadSound(SoundIDEnum.SELECTION_MADE, SoundPlayer.FOREGROUND_CHANNEL, false);</span>
+<span class="nc" id="L916">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+        }
+<span class="nc bnc" id="L918" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_ANSWER_FINALIZED)</span>
+        {
+            // Play answer finalized sound.
+<span class="nc" id="L921">            m_soundPlayer.loadSound(SoundIDEnum.ANSWER_FINALIZED, SoundPlayer.FOREGROUND_CHANNEL, false);</span>
+<span class="nc" id="L922">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+            /* Fire off an event to QuizState listeners to update their state */
+<span class="nc" id="L925">            m_quizState.fireGameStateChangeEvent(this, QuizStateEnum.WAIT_TO_REVEAL_ANSWER);</span>
+
+             /* Check if the answer is correct or incorrect.  This method
+             * sets the next phase based on the result.
+             */
+<span class="nc" id="L930">            processFinalAnswer();</span>
+        }
+<span class="nc bnc" id="L932" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_CORRECT_ANSWER)</span>
+        {
+<span class="nc" id="L934">            m_questionTimer.stopTimer();        // Stop the question timer</span>
+
+            // Play the correct answer sound.
+<span class="nc" id="L937">            m_soundPlayer.loadSound(SoundIDEnum.ANSWER_CORRECT, SoundPlayer.FOREGROUND_CHANNEL, false);</span>
+<span class="nc" id="L938">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+            // If there is a note associated with the question, display it now.
+<span class="nc" id="L941">            String  note = m_question.getNote();</span>
+
+<span class="nc bnc" id="L943" title="All 4 branches missed.">            if (note != null &amp;&amp; note.length() &gt; 0)</span>
+            {
+<span class="nc" id="L945">                m_eventPacket.setType(QuizUpdateEnum.STATUS_MSG);</span>
+<span class="nc" id="L946">                m_eventPacket.setStatusMessage(note);</span>
+
+<span class="nc" id="L948">                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+            }
+
+            /* Fire off an event to QuizState listeners to update their state */
+<span class="nc" id="L952">            m_statePacket.setType(QuizStateEnum.ANSWER_WAS_CORRECT);</span>
+<span class="nc" id="L953">            m_statePacket.setCorrectAnswer(m_selectedIndex);</span>
+
+<span class="nc" id="L955">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+            /* Switch state flag to next state */
+<span class="nc" id="L958">            m_state = QuizPhaseEnum.S_RESET_FOR_NEXT_ROUND;</span>
+            
+            // If in quiz mode, jump to next phase
+<span class="nc bnc" id="L961" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.SHOW_ANSWERS) == true)</span>
+<span class="nc" id="L962">                nextPhase();</span>
+<span class="nc" id="L963">        }</span>
+<span class="nc bnc" id="L964" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_WRONG_ANSWER)</span>
+        {
+<span class="nc" id="L966">            int     correctAnswerIndex = QuizState.NO_CORRECT_ANSWER;</span>
+
+<span class="nc" id="L968">            m_questionTimer.stopTimer();        // Stop the question timer</span>
+
+            // Play the wrong answer sound
+<span class="nc" id="L971">            m_soundPlayer.loadSound(SoundIDEnum.ANSWER_WRONG, SoundPlayer.FOREGROUND_CHANNEL, false);</span>
+<span class="nc" id="L972">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+<span class="nc bnc" id="L974" title="All 2 branches missed.">            for (int  index = 0; index &lt; m_answers.length; index++)</span>
+            {
+<span class="nc bnc" id="L976" title="All 2 branches missed.">                if (m_answers[index].getCorrect())</span>
+                {
+                    // Set the correct answer
+<span class="nc" id="L979">                    correctAnswerIndex = index;</span>
+<span class="nc" id="L980">                    break;</span>
+                }
+            }
+
+            // If there is a note associated with the question, display it now.
+<span class="nc" id="L985">            String  note = m_question.getNote();</span>
+
+<span class="nc bnc" id="L987" title="All 4 branches missed.">            if (note != null &amp;&amp; note.length() &gt; 0)</span>
+            {
+<span class="nc" id="L989">                m_eventPacket.setType(QuizUpdateEnum.STATUS_MSG);</span>
+<span class="nc" id="L990">                m_eventPacket.setStatusMessage(note);</span>
+
+<span class="nc" id="L992">                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+            }
+
+            /* Fire off an event to QuizState listeners to update their state */
+<span class="nc" id="L996">            m_statePacket.setType(QuizStateEnum.ANSWER_WAS_WRONG);</span>
+<span class="nc" id="L997">            m_statePacket.setCorrectAnswer(correctAnswerIndex);</span>
+
+<span class="nc" id="L999">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+            /* Switch state flag to next state */
+<span class="nc" id="L1002">            m_state = QuizPhaseEnum.S_RESET_FOR_NEXT_ROUND;</span>
+            
+<span class="nc bnc" id="L1004" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.SHOW_ANSWERS) == true)</span>
+<span class="nc" id="L1005">                nextPhase();</span>
+<span class="nc" id="L1006">        }</span>
+<span class="nc bnc" id="L1007" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_RESET_FOR_NEXT_ROUND)</span>
+        {
+            int  questionNum;
+
+            /* Increment to next question */
+<span class="nc" id="L1012">            questionNum = ++m_currentLevel;</span>
+
+            // Set the current level
+<span class="nc" id="L1015">            m_statePacket.setType(QuizStateEnum.SET_CURRENT_LEVEL);</span>
+<span class="nc" id="L1016">            m_statePacket.setCurrentLevel(questionNum);</span>
+
+<span class="nc" id="L1018">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+            // Hide all answers
+<span class="nc bnc" id="L1021" title="All 2 branches missed.">            for (int  i = 0; i &lt; m_maxNumberOfAnswers; i++)</span>
+<span class="nc" id="L1022">                m_quizState.setAnswerVisible(i, false);</span>
+
+            /* Fire off an event to QuizState listeners to update their state */
+<span class="nc" id="L1025">            m_statePacket.setCorrectAnswer(QuizState.NO_CORRECT_ANSWER);</span>
+<span class="nc" id="L1026">            m_statePacket.setQuestion(&quot;&quot;);</span>
+<span class="nc" id="L1027">            m_statePacket.setAnswers(null);</span>
+
+<span class="nc" id="L1029">            m_statePacket.setAnswersVisible(m_quizState.getAnswersVisible());</span>
+
+<span class="nc" id="L1031">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+<span class="nc bnc" id="L1033" title="All 2 branches missed.">            if (questionNum &gt;= m_numberOfQuestions)</span>
+            {
+                // Last question was displayed!  Switch state flag to end of game state.
+<span class="nc" id="L1036">                m_state = QuizPhaseEnum.S_ENDING_GAME;</span>
+            }
+            else
+            {
+                // Switch state flag to next state
+<span class="nc" id="L1041">                m_state = QuizPhaseEnum.S_TRANSITION_TO_NEXT_ROUND;</span>
+            }
+            
+            // If in quiz mode, start timer for transition delay
+<span class="nc bnc" id="L1045" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == false)</span>
+            {
+<span class="nc" id="L1047">                m_gameTimer.setTimer(</span>
+                    m_quizState.getDelayValue(QuizState.DELAY_AFTER_TIMER_EXPIRES),
+                    0, true);
+<span class="nc" id="L1050">                m_gameTimer.startTimer();</span>
+            }
+            else
+<span class="nc" id="L1053">                nextPhase();</span>
+<span class="nc" id="L1054">        }</span>
+<span class="nc bnc" id="L1055" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_ENDING_GAME)</span>
+        {
+            // Ending game -- Display the winnings and play &quot;Winner&quot; sound
+
+            // Stop background sound
+<span class="nc" id="L1060">            m_soundPlayer.stop(SoundPlayer.BACKGROUND_CHANNEL);</span>
+
+            // Play the &quot;Winner&quot; sound
+<span class="nc" id="L1063">            m_soundPlayer.loadSound(SoundIDEnum.WINNER,</span>
+                    SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L1065">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+            // Switch game to inactive mode
+<span class="nc" id="L1068">            m_quizState.setToggleState(QuizState.GAME_IN_SESSION, false);</span>
+
+            /* Set the Transition panel text to the current level title. */
+<span class="nc" id="L1071">            String  title = Main.getMessage(&quot;msg_quiz_over&quot;);</span>
+
+<span class="nc bnc" id="L1073" title="All 2 branches missed.">            if (title != null)</span>
+            {
+                // Send event to update the transition text
+<span class="nc" id="L1076">                m_eventPacket.setType(QuizUpdateEnum.TRANSITION_MSG);</span>
+<span class="nc" id="L1077">                m_eventPacket.setTransitionMessage(title);</span>
+
+<span class="nc" id="L1079">                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+            }
+
+            // Switch state flag to next state
+<span class="nc" id="L1083">            m_state = QuizPhaseEnum.S_TRANSITION_TO_NEXT_ROUND;</span>
+<span class="nc" id="L1084">        }</span>
+<span class="nc bnc" id="L1085" title="All 2 branches missed.">        else if (m_state == QuizPhaseEnum.S_TRANSITION_TO_NEXT_ROUND)</span>
+        {
+            // Clear the status message
+<span class="nc" id="L1088">            m_eventPacket.setType(QuizUpdateEnum.STATUS_MSG);</span>
+<span class="nc" id="L1089">            m_eventPacket.setStatusMessage(&quot;&quot;);</span>
+
+<span class="nc" id="L1091">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc bnc" id="L1093" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.GAME_IN_SESSION) == true)</span>
+            {
+                // Transition to the next level
+<span class="nc" id="L1096">                m_state = QuizPhaseEnum.S_WAITING_TO_START;</span>
+<span class="nc" id="L1097">                nextPhase();</span>
+            }
+            else
+            {
+                // Game over - go to inactive mode
+<span class="nc" id="L1102">                m_state = QuizPhaseEnum.S_INACTIVE;</span>
+
+                // Stop all sounds
+<span class="nc" id="L1105">                m_soundPlayer.stop(SoundPlayer.ALL_CHANNELS);</span>
+
+                // Inform everyone this is the end of the game
+<span class="nc" id="L1108">                m_statePacket.setType(QuizStateEnum.END_OF_GAME);</span>
+
+<span class="nc" id="L1110">                m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+            }
+        }
+
+        // If in quiz mode (i.e. not in &quot;show answer mode&quot;), the system
+        // runs on its own once started.
+<span class="nc bnc" id="L1116" title="All 2 branches missed.">        if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == false)</span>
+        {
+
+        }
+<span class="nc" id="L1120">    }</span>
+   
+    
+    /** Called when the player confirms the selected answer is the final
+     * answer. */
+    private void processFinalAnswer()
+    {
+<span class="nc bnc" id="L1127" title="All 2 branches missed.">        if (m_answers[m_selectedIndex].getCorrect())</span>
+<span class="nc" id="L1128">            m_state = QuizPhaseEnum.S_CORRECT_ANSWER;</span>
+        else
+<span class="nc" id="L1130">            m_state = QuizPhaseEnum.S_WRONG_ANSWER;</span>
+
+<span class="nc" id="L1132">        return;</span>
+    }
+
+    
+    /** Called when a game timer event occurs */
+    public void gameTimerActionPerformed(GameTimerEvent  evt)
+    {
+<span class="nc bnc" id="L1139" title="All 2 branches missed.">        if (evt.getType() == GameTimerEvent.TIMER_ELAPSED)</span>
+        {
+<span class="nc bnc" id="L1141" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == false)</span>
+            {
+<span class="nc" id="L1143">                nextPhase();</span>
+            }
+        }
+<span class="nc" id="L1146">    }</span>
+    
+    /** Called whenever each second while timer is running */
+    public void gameTimerOneSecond(GameTimerEvent  evt)
+    {
+<span class="nc" id="L1151">    }</span>
+    
+    private class QuestionTimer
+            implements ActionListener
+    {
+        public  QuestionTimer()
+<span class="nc" id="L1157">        {</span>
+<span class="nc" id="L1158">            m_timer = new Timer(1000, this);</span>
+<span class="nc" id="L1159">            m_timer.setRepeats(true);</span>
+<span class="nc" id="L1160">        }</span>
+
+        /** Setup/reset the timer.  If timeLimit &lt; 0, use the time limit
+         * that was used last time.
+         */
+        public void  setupTimer(int  timeLimit, int  currentTime)
+        {
+            // If timeLimit &gt;= 0, use its value, else use previous limit
+<span class="nc bnc" id="L1168" title="All 2 branches missed.">            if (timeLimit &gt;= 0)</span>
+<span class="nc" id="L1169">                m_timeLimit = timeLimit;</span>
+            
+<span class="nc" id="L1171">            m_elapsedTime = currentTime;</span>
+
+            /* Sanity checks */
+<span class="nc bnc" id="L1174" title="All 2 branches missed.">            if (m_timeLimit &lt; 0)</span>
+<span class="nc" id="L1175">                m_timeLimit = 0;</span>
+
+<span class="nc bnc" id="L1177" title="All 2 branches missed.">            if (currentTime &gt; m_timeLimit)</span>
+<span class="nc" id="L1178">                m_elapsedTime = m_timeLimit;</span>
+
+<span class="nc" id="L1180">            m_eventPacket.setType(QuizUpdateEnum.UPDATE_QUESTION_CLOCK);</span>
+<span class="nc" id="L1181">            m_eventPacket.setQuestionTimerTime(m_elapsedTime);</span>
+            
+<span class="nc" id="L1183">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+<span class="nc" id="L1184">        }</span>
+    
+        /** Starts the timer running */
+        public void startTimer()
+        {
+<span class="nc bnc" id="L1189" title="All 2 branches missed.">            if (m_timeLimit == 0)</span>
+<span class="nc" id="L1190">                m_timer.setInitialDelay(10);</span>
+            else
+<span class="nc" id="L1192">                m_timer.setInitialDelay(1000);</span>
+            
+<span class="nc" id="L1194">            m_timer.start();</span>
+<span class="nc" id="L1195">            m_paused = false;</span>
+
+<span class="nc" id="L1197">            m_eventPacket.setType(QuizUpdateEnum.UPDATE_QUESTION_CLOCK);</span>
+<span class="nc" id="L1198">            m_eventPacket.setQuestionTimerTime(m_elapsedTime);</span>
+            
+<span class="nc" id="L1200">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+<span class="nc" id="L1201">        }</span>
+
+        /** Stops/pauses the timer */
+        public void stopTimer()
+        {
+<span class="nc" id="L1206">            m_timer.stop();</span>
+<span class="nc" id="L1207">            m_paused = true;</span>
+<span class="nc" id="L1208">        }</span>
+
+        /** Gets the current time limit */
+        public int  getLimit()
+        {
+<span class="nc" id="L1213">            return m_timeLimit;</span>
+        }
+
+        /** Gets the current elapsed time */
+        public int  getElapsedTime()
+        {
+<span class="nc" id="L1219">            return m_elapsedTime;</span>
+        }
+
+        /** Gets the current pause state */
+        public boolean  isPaused()
+        {
+<span class="nc" id="L1225">            return m_paused;</span>
+        }
+
+        /** Gets the current timer active state */
+        public boolean  isActive()
+        {
+<span class="nc bnc" id="L1231" title="All 2 branches missed.">            return (m_elapsedTime &lt; m_timeLimit);</span>
+        }
+        
+        public void actionPerformed(ActionEvent  evt)
+        {
+<span class="nc bnc" id="L1236" title="All 2 branches missed.">            if (evt.getSource() == m_timer)</span>
+            {
+<span class="nc" id="L1238">                m_elapsedTime++;</span>
+
+<span class="nc bnc" id="L1240" title="All 2 branches missed.">                if (m_elapsedTime &gt;= m_timeLimit)</span>
+                {
+                    /* Time elapsed.  Stop timer and fire off an event. */
+<span class="nc" id="L1243">                    m_timer.stop();</span>
+<span class="nc" id="L1244">                    m_paused = true;</span>
+<span class="nc" id="L1245">                    m_elapsedTime = m_timeLimit;</span>
+
+<span class="nc bnc" id="L1247" title="All 4 branches missed.">                    if (m_state != QuizPhaseEnum.S_CORRECT_ANSWER &amp;&amp;</span>
+                            m_state != QuizPhaseEnum.S_WRONG_ANSWER)
+                    {
+                        // Play the &quot;Time's up!&quot; sound
+<span class="nc" id="L1251">                        m_soundPlayer.loadSound(SoundIDEnum.QUESTION_TIME_UP,</span>
+                                SoundPlayer.EFFECTS_CHANNEL, false);
+<span class="nc" id="L1253">                        m_soundPlayer.start(SoundPlayer.EFFECTS_CHANNEL);</span>
+
+                        // Set the question timer expired event
+<span class="nc" id="L1256">                        m_statePacket.setType(QuizStateEnum.QUESTION_TIMER_EXPIRED);</span>
+
+<span class="nc" id="L1258">                        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+                    }
+                }
+
+<span class="nc" id="L1262">                m_eventPacket.setType(QuizUpdateEnum.UPDATE_QUESTION_CLOCK);</span>
+<span class="nc" id="L1263">                m_eventPacket.setQuestionTimerTime(m_elapsedTime);</span>
+
+<span class="nc" id="L1265">                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+            }
+<span class="nc" id="L1267">        }</span>
+        
+        private Timer  m_timer;
+        
+        private int  m_timeLimit;
+        
+        private int  m_elapsedTime;
+        
+        private boolean  m_paused;
+    }
+
+<span class="nc" id="L1278">    static QuizController  m_QuizControllerSingleton = null;        // Singleton</span>
+    
+    private GameTimer  m_gameTimer;
+    
+    private QuizPhaseEnum  m_state;               /* Current game phase */
+
+    private StatePacket     m_statePacket;
+    private EventPacket     m_eventPacket;
+    
+    private PacketProcessor m_packetProcessor;
+
+<span class="nc" id="L1289">    private GameModeEnum  m_gameMode = GameModeEnum.STANDALONE;     /* Standalone/master/slave node */</span>
+    
+    private JDesktopPane  m_desktopPane;
+    
+    private QuestionTimer  m_questionTimer;
+    
+    private GameConfig  m_gameConfig;
+    
+    private QuizState  m_quizState;
+
+    private jQuizShow.util.SoundPlayer  m_soundPlayer;
+    
+    private int  m_questionTimerLimit;       // Number of seconds for question countdown timer
+    
+    private int  m_selectedIndex;         /* Index of selected answer */
+
+    private int  m_numberOfQuestions;       // Max. number of possible levels (questions)
+    
+    private int  m_numAnswersDisplayed;     /* Index of last answer displayed */
+    
+    private int  m_maxNumberOfAnswers;      /* Max. number of possible answers */
+   
+    private int  m_currentLevel;        /* Current question level */
+    
+    private QuestionList  m_questionList;   /* Question list */
+    
+    private Question  m_question;       /* Current question */
+    private Answer[]  m_answers;        /* Current possible answers */
+;
+    
+    private SoundIDEnum  m_bkgSoundId;		/* Current bkg sound ID */
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

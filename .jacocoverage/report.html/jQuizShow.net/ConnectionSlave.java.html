@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ConnectionSlave.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.net</a> &gt; <span class="el_source">ConnectionSlave.java</span></div><h1>ConnectionSlave.java</h1><pre class="source lang-java linenums">/*
+ * ConnectionSlave.java
+ *
+ * Created on June 9, 2001, 6:21 PM
+ *
+ * $Id: ConnectionSlave.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ConnectionSlave.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.3  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.2  2002/06/06 04:45:43  sdchen
+ *    Made Main.setStatusLabel() static -- resulting change here.
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:42  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.net;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 
+ */
+
+import java.io.*;
+import java.net.*;
+import javax.swing.*;
+
+import jQuizShow.*;
+
+public class ConnectionSlave implements ConnectionInterface
+{
+    static public ConnectionSlave  getInstance(int  myPort)
+    {
+<span class="nc" id="L67">        ConnectionSlave  instance = getInstance();</span>
+        
+<span class="nc" id="L69">        instance.setPort(myPort);</span>
+        
+<span class="nc" id="L71">        return instance;</span>
+    }
+
+
+    static public ConnectionSlave  getInstance()
+    {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (m_singletonInstance == null)</span>
+<span class="nc" id="L78">            m_singletonInstance = new ConnectionSlave();</span>
+        
+<span class="nc" id="L80">        return m_singletonInstance;</span>
+    }
+
+    
+<span class="nc" id="L84">    private ConnectionSlave() {</span>
+<span class="nc" id="L85">    }</span>
+    
+    /** Creates new ConnectionSlave */
+    private void setPort(int myPort) {
+<span class="nc" id="L89">        m_myPort = myPort;</span>
+<span class="nc" id="L90">    }</span>
+
+    public int getPort() {
+<span class="nc" id="L93">        return m_myPort;</span>
+    }
+
+    public void start()
+    {
+<span class="nc" id="L98">        m_done = false;</span>
+        
+<span class="nc" id="L100">        final jQuizShow.util.SwingWorker worker = new jQuizShow.util.SwingWorker() {</span>
+            public Object construct()
+            {
+                try
+                {
+<span class="nc" id="L105">                    open();</span>
+                }
+<span class="nc" id="L107">                catch (IOException  exception)</span>
+                {
+<span class="nc" id="L109">                    String  message = &quot;IOException ConnectionSlave.open().  &quot;</span>
+                            + exception.getLocalizedMessage();
+
+<span class="nc" id="L112">                    JOptionPane.showMessageDialog(Main.getMain(), message,</span>
+                            Main.getMessage(&quot;title_error&quot;),
+			    JOptionPane.ERROR_MESSAGE);
+
+<span class="nc" id="L116">                    return null;</span>
+<span class="nc" id="L117">                }</span>
+                
+<span class="nc" id="L119">                return this;</span>
+            }
+        };
+<span class="nc" id="L122">        worker.start();        </span>
+<span class="nc" id="L123">    }</span>
+    
+    public void stop()
+    {
+<span class="nc" id="L127">    }</span>
+    
+    public String getNote()
+    {
+<span class="nc" id="L131">        return m_note;</span>
+    }
+    
+    public int  getProgress()
+    {
+<span class="nc" id="L136">        return m_progress;</span>
+    }
+    
+    public boolean done()
+    {
+<span class="nc" id="L141">        return m_done;</span>
+    }
+    
+    public void open()
+            throws IOException
+    {
+        InetAddress  inetAddr;
+        
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (m_serverSocket == null)</span>
+<span class="nc" id="L150">            m_serverSocket = new ServerSocket(m_myPort);</span>
+
+<span class="nc" id="L152">        m_progress = 20;</span>
+	{
+<span class="nc" id="L154">	    Object  args[] =</span>
+		    {
+			new Integer(m_myPort)
+		    };
+
+<span class="nc" id="L159">	    m_note = Main.getMessage(&quot;msg_slave_connect&quot;, args);</span>
+	}
+        
+        // Wait for a connection from the controller
+<span class="nc" id="L163">        m_socket = m_serverSocket.accept();</span>
+        
+        // Connected.  Get info regarding the remote connection
+<span class="nc" id="L166">        inetAddr = m_socket.getInetAddress();</span>
+<span class="nc" id="L167">        m_hostname = inetAddr.getHostName();</span>
+<span class="nc" id="L168">        m_port = m_socket.getPort();</span>
+        
+<span class="nc" id="L170">        m_progress = 40;</span>
+
+	{
+<span class="nc" id="L173">	    Object  args[] =</span>
+		    {
+			m_hostname,
+		        inetAddr.getHostAddress()
+		    };
+
+<span class="nc" id="L179">	    m_note = Main.getMessage(&quot;msg_slave_established&quot;, args);</span>
+	}
+        
+<span class="nc" id="L182">        Main.setStatusLabel(m_note);</span>
+<span class="nc" id="L183">	System.out.println(m_note);</span>
+        
+<span class="nc" id="L185">        m_objInput = new ObjectInputStream(m_socket.getInputStream());</span>
+
+<span class="nc" id="L187">        m_progress = 60;</span>
+<span class="nc" id="L188">        m_note = Main.getMessage(&quot;msg_slave_connect_setup&quot;);</span>
+        
+<span class="nc" id="L190">        m_listener = new ConnectionListener(m_objInput);</span>
+
+        // Start the ConnectionListener
+<span class="nc" id="L193">        m_progress = 80;</span>
+<span class="nc" id="L194">        m_note = Main.getMessage(&quot;msg_slave_listener_setup&quot;);</span>
+        
+<span class="nc" id="L196">        m_listener.start();</span>
+
+        // Set to SLAVE mode
+<span class="nc" id="L199">        m_progress = 90;</span>
+<span class="nc" id="L200">        m_note = Main.getMessage(&quot;msg_slave_mode&quot;);</span>
+
+<span class="nc" id="L202">        PacketProcessor  packetProcessor = PacketProcessor.getInstance();</span>
+        
+<span class="nc" id="L204">        ModeChangePacket  modePacket = new ModeChangePacket();</span>
+//        modePacket.setMode(GameModeEnum.SLAVE);
+        
+<span class="nc" id="L207">        packetProcessor.processModeChangePacket(modePacket);    // Do it</span>
+        
+<span class="nc" id="L209">        m_progress = 100;</span>
+<span class="nc" id="L210">        m_note = Main.getMessage(&quot;msg_slave_ready&quot;);</span>
+<span class="nc" id="L211">        m_done = true;</span>
+
+<span class="nc" id="L213">        return;</span>
+    }
+    
+    public boolean isConnected() {
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        return (m_objInput != null);</span>
+    }
+    
+    public void close()
+            throws IOException
+    {
+        // Reset to STANDALONE mode
+<span class="nc" id="L224">        PacketProcessor  packetProcessor = PacketProcessor.getInstance();</span>
+        
+<span class="nc" id="L226">        ModeChangePacket  modePacket = new ModeChangePacket();</span>
+//        modePacket.setMode(GameModeEnum.STANDALONE);
+        
+<span class="nc" id="L229">        packetProcessor.processModeChangePacket(modePacket);    // Do it</span>
+
+<span class="nc" id="L231">        System.out.println(</span>
+		Main.getMessage(&quot;msg_closing_connect&quot;)
+		+ &quot; &quot; + m_hostname + &quot;:&quot; + m_port);
+        
+<span class="nc" id="L235">        Main.setStatusLabel(null);      // Clear the status label</span>
+        
+<span class="nc bnc" id="L237" title="All 2 branches missed.">        if (m_objInput != null)</span>
+        {
+<span class="nc" id="L239">            m_objInput.close();</span>
+<span class="nc" id="L240">            m_objInput = null;</span>
+        }
+
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        if (m_socket != null)</span>
+        {
+<span class="nc" id="L245">            m_socket.close();</span>
+<span class="nc" id="L246">            m_socket = null;</span>
+        }
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        if (m_serverSocket != null)</span>
+        {
+<span class="nc" id="L251">            m_serverSocket.close();</span>
+<span class="nc" id="L252">            m_serverSocket = null;</span>
+        }
+<span class="nc" id="L254">    }</span>
+
+
+
+    private static ConnectionSlave  m_singletonInstance;
+    
+    private String m_hostname;
+    
+    private int m_port;
+    
+    private int m_myPort;
+
+<span class="nc" id="L266">    private int  m_progress = 0;</span>
+    
+    private String  m_note;
+    
+<span class="nc" id="L270">    private boolean m_done = false;</span>
+    
+    private ServerSocket  m_serverSocket;
+    
+    private Socket  m_socket;
+    
+    private ObjectInputStream m_objInput;
+    
+    private ConnectionListener  m_listener;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

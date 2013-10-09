@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ExternClassLoader.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.util</a> &gt; <span class="el_source">ExternClassLoader.java</span></div><h1>ExternClassLoader.java</h1><pre class="source lang-java linenums">/*
+ * ExternClassLoader.java
+ *
+ * Created on June 17, 2002, 7:59 PM
+ *
+ * $Id: ExternClassLoader.java,v 1.1 2004/04/02 06:02:00 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2002  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ExternClassLoader.java,v $
+ *    Revision 1.1  2004/04/02 06:02:00  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.1  2002/06/22 18:58:31  sdchen
+ *    Extends ClassLoader for loading an external class from a file.
+ *
+ *
+ */
+
+package jQuizShow.util;
+
+import java.io.*;
+import java.util.*;
+import java.util.jar.*;
+
+/**
+ *
+ * @author  Steven D. Chen
+ *
+ */
+
+public class ExternClassLoader extends ClassLoader
+{
+    /** Constructor for loading classes from a JarFile.
+     */
+    public ExternClassLoader(String basePath, JarFile  jarFile)
+<span class="nc" id="L59">    {</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">	if (basePath == null)</span>
+<span class="nc" id="L61">	    m_classBasePath = &quot;&quot;;</span>
+	else
+<span class="nc" id="L63">	    m_classBasePath = basePath;</span>
+
+<span class="nc" id="L65">	m_jarFile = jarFile;</span>
+<span class="nc" id="L66">    }</span>
+
+    /** Constructor for loading classes from a file or URL.
+     */
+    public ExternClassLoader(String basePath)
+<span class="nc" id="L71">    {</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">	if (basePath == null)</span>
+<span class="nc" id="L73">	    m_classBasePath = &quot;&quot;;</span>
+	else
+<span class="nc" id="L75">	    m_classBasePath = basePath;</span>
+<span class="nc" id="L76">    }</span>
+
+    /** Overrides the ClassLoader's findClass().
+     */
+    public Class  findClass(String name)
+	    throws ClassNotFoundException
+    {
+<span class="nc" id="L83">    	byte[]  bytes = loadClassData(name);</span>
+
+<span class="nc" id="L85">	return defineClass(name, bytes, 0, bytes.length);</span>
+    }
+
+    /** Loads the bytes from the class file.
+     */
+    private byte[]  loadClassData(String name)
+	    throws ClassNotFoundException
+    {
+        String  filename;
+        String  filePath;
+
+<span class="nc" id="L96">	filename = m_classBasePath + name.replace('.', File.separatorChar) +</span>
+		&quot;.class&quot;;
+
+        try
+	{
+<span class="nc" id="L101">	    filePath = FileUtils.searchForFile(filename, m_jarFile);</span>
+	}
+<span class="nc" id="L103">	catch (FileNotFoundException  fnf_e)</span>
+	{
+<span class="nc" id="L105">	    throw new ClassNotFoundException(&quot;class '&quot; + name + &quot;' not found.&quot;);</span>
+<span class="nc" id="L106">	}</span>
+
+<span class="nc" id="L108">        InputStream  fin = null;</span>
+
+        try
+	{
+<span class="nc" id="L112">	    fin = FileUtils.openFile(filePath, m_jarFile);</span>
+
+	    // NOTE:  InputStream.available() is only valid for &quot;small&quot;
+	    // files.  But, what is &quot;small&quot;?
+<span class="nc" id="L116">	    int  nbytes = fin.available();</span>
+<span class="nc" id="L117">	    int  bytesRead = 0;</span>
+
+<span class="nc" id="L119">	    byte  buffer[] = new byte[nbytes];</span>
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">	    while (bytesRead &lt; nbytes)</span>
+	    {
+<span class="nc" id="L123">		bytesRead += fin.read(buffer, bytesRead, nbytes - bytesRead);</span>
+	    }
+
+<span class="nc" id="L126">	    return buffer;</span>
+	}
+<span class="nc" id="L128">	catch (IOException  io_e)</span>
+	{
+	    try
+	    {
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if (fin != null)</span>
+<span class="nc" id="L133">		    fin.close();</span>
+	    }
+<span class="nc" id="L135">	    catch (Exception  e)</span>
+	    {
+<span class="nc" id="L137">	    }</span>
+
+<span class="nc" id="L139">	    throw new ClassNotFoundException(&quot;reading class file &quot; +</span>
+		    name + &quot; (&quot; + io_e + &quot;)&quot;);
+	}
+    }
+
+    private String  m_classBasePath;
+    private JarFile  m_jarFile;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

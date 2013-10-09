@@ -1,0 +1,1815 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GameController.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.game.classic</a> &gt; <span class="el_source">GameController.java</span></div><h1>GameController.java</h1><pre class="source lang-java linenums">/*
+ * GameController.java
+ *
+ * Created on April 29, 2001, 8:56 PM
+ *
+ * $Id: GameController.java,v 1.2 2007/02/05 03:55:48 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: GameController.java,v $
+ *    Revision 1.2  2007/02/05 03:55:48  sdchen
+ *    Removed CR (Ctrl-M) from lines.
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.7  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.6  2002/07/06 06:13:38  sdchen
+ *    Completed implementation of a workaround for Java2 1.4 KeyEvent processing
+ *    change.  With Java2 1.4, the GameScreen must have focus in order for
+ *    jQuizShow to receive keyboard events.  This is a change from v1.3 behavior
+ *    which passed uncaught KeyEvents up to the parent classes (Main's JFrame).
+ *
+ *    Revision 1.5  2002/06/23 04:18:38  sdchen
+ *    Changed game control key definitions to only use standard ASCII
+ *    characters.  Supports non-101+ key keyboards (e.g. laptops) and
+ *    also moves toward support for i18n.
+ *
+ *    Revision 1.4  2002/06/06 05:25:29  sdchen
+ *    Changed to display a dialog if no more questions for current difficulty
+ *    level.  Also, output countdown of num questions remaining to the
+ *    main status label.
+ *
+ *    Revision 1.3  2002/06/04 02:53:09  sdchen
+ *    Added code to play SHOW_QUESTION and SHOW_ANSWER sounds in the appropriate
+ *    locations.
+ *
+ *    Revision 1.2  2002/05/28 00:29:42  sdchen
+ *    Added question file database name to message output.
+ *    Moved &quot;difficultyBreakpoint&quot; output to DEBUG_BASIC level.
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:19  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.game.classic;
+
+/** Primary event manager class for the classic game mode. This class
+ * maintains the game states and handles the user input events.
+ *
+ * @author  Steven D. Chen
+ * @version 
+ */
+
+import java.lang.*;
+import java.io.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+
+import jQuizShow.*;
+import jQuizShow.data.*;
+import jQuizShow.game.*;
+import jQuizShow.net.*;
+import jQuizShow.util.*;
+import jQuizShow.event.*;
+
+public class GameController
+        implements
+            GameModeChangeListener,
+            GameStateChangeListener,
+            GameInputListener,
+            GameTimerListener
+{
+    /** Gets the GameController singleton */
+    public static GameController  getInstance()
+    {
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        if (m_gameControllerSingleton == null)</span>
+<span class="fc" id="L106">            m_gameControllerSingleton = new GameController();</span>
+        
+<span class="fc" id="L108">        return m_gameControllerSingleton;</span>
+    }
+    
+    /** Creates new GameController */
+    private GameController()
+<span class="fc" id="L113">    {</span>
+        // Instantiate the QuestionTimer inner class
+<span class="fc" id="L115">        m_questionTimer = new QuestionTimer();</span>
+
+<span class="fc" id="L117">        m_desktopPane = Main.getDesktopPane();</span>
+        
+<span class="fc" id="L119">        m_gameState = GameState.getInstance(false);</span>
+
+        // Add self as listeners to the required events
+<span class="fc" id="L122">        m_gameState.addGameModeChangeListener(this);</span>
+<span class="fc" id="L123">        m_gameState.addGameStateChangeListener(this);</span>
+<span class="fc" id="L124">        m_gameState.addGameInputListener(this);</span>
+
+        // Set the default game state
+<span class="fc" id="L127">        m_state = GamePhaseEnum.S_INACTIVE;</span>
+        
+        // Get the GameConfig singleton instance
+<span class="fc" id="L130">        m_gameConfig = GameConfig.getInstance();</span>
+
+        // Get the SoundPlayer singleton
+<span class="fc" id="L133">        m_soundPlayer = SoundPlayer.getInstance();</span>
+
+        // Get the default question timer limit from the Config
+<span class="fc" id="L136">        m_questionTimerLimit = m_gameConfig.getIntConfig(&quot;questionTimerLimit&quot;, 60);</span>
+
+        // Get the max number of possible answers
+<span class="fc" id="L139">        m_maxNumberOfAnswers = m_gameState.getMaxNumberOfAnswers();</span>
+        
+        // Get the max number of levels
+<span class="fc" id="L142">        m_maxNumberOfLevels = m_gameConfig.getNumLevels();</span>
+        
+        // Get the level titles
+<span class="fc" id="L145">        m_titles = new String[m_maxNumberOfLevels + 1];</span>
+        
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        for (int  i = 1; i &lt;= m_maxNumberOfLevels; i++)</span>
+<span class="fc" id="L148">            m_titles[i - 1] = Main.getMessage(&quot;msg_trying_for&quot;)</span>
+	    		+ &quot;  &quot; + m_gameConfig.getConfig(&quot;levelName&quot; + i,
+			Main.getMessage(&quot;msg_level&quot;) + &quot; &quot; + i);
+
+<span class="fc" id="L152">        m_titles[m_maxNumberOfLevels] = Main.getMessage(&quot;msg_congratulations&quot;);</span>
+
+        // Get the max lifeline timer time
+<span class="fc" id="L155">        m_lifelineTimerLimit = m_gameConfig.getIntConfig(&quot;lifelineTimerLimit&quot;, 30);</span>
+        
+        // Create instances of the StatePacket and EventPacket.
+<span class="fc" id="L158">        m_statePacket = new StatePacket();</span>
+<span class="fc" id="L159">        m_eventPacket = new EventPacket();</span>
+        
+        // Get the PacketProcessor instance
+<span class="fc" id="L162">        m_packetProcessor = PacketProcessor.getInstance();</span>
+
+        /* Make a local copy of the transition levels */
+<span class="fc" id="L165">	int  numTransitions = m_gameConfig.getIntConfig(&quot;numTransitions&quot;);</span>
+
+<span class="fc" id="L167">        m_transitions = new int[numTransitions];</span>
+
+<span class="fc bfc" id="L169" title="All 2 branches covered.">	for (int  i = 1; i &lt;= numTransitions; i++)</span>
+<span class="fc" id="L170">	    m_transitions[i-1] = m_gameConfig.getIntConfig(&quot;transitionLevel&quot; + i);</span>
+
+        // Start at first level
+<span class="fc" id="L173">        m_currentLevel = 0;</span>
+
+        // Initialize the final level (&gt;= 0 when win/lose)
+<span class="fc" id="L176">        m_finalLevel = -1;</span>
+<span class="fc" id="L177">    }</span>
+
+
+    /** Load questions from the specified database file
+     */
+    public int  loadQuestions(String  filename)
+            throws FileNotFoundException, IOException
+    {
+        // Load the questions from the Q &amp; A database
+<span class="fc" id="L186">        String  questionFilepath = null;</span>
+        QuestionLoader  qLoader;
+
+<span class="fc" id="L189">        int  numQuestions = 0;</span>
+        
+<span class="fc" id="L191">        String  encoding = m_gameConfig.getConfig(&quot;questionEncoding&quot;);</span>
+
+<span class="fc" id="L193">        String  usedQuestionFilename = m_gameConfig.getConfig(&quot;usedQuestionFile&quot;, &quot;usedQuestions.txt&quot;);</span>
+
+<span class="fc" id="L195">        m_questionList = null;          // Clear current questions</span>
+        
+<span class="fc" id="L197">        questionFilepath = FileUtils.searchForFile(filename);</span>
+
+<span class="fc" id="L199">	System.out.println(Main.getMessage(&quot;msg_reading_questions&quot;)</span>
+		+ &quot;  &quot; + questionFilepath);
+
+<span class="fc" id="L202">	qLoader = QuestionLoader.getInstance();</span>
+<span class="fc" id="L203">        qLoader.setUsedQuestionFilename(usedQuestionFilename);</span>
+<span class="fc" id="L204">	qLoader.setEncoding(encoding);</span>
+<span class="fc" id="L205">        qLoader.setDebugMode(m_gameConfig.getIntConfig(&quot;debugMode&quot;));</span>
+
+<span class="fc" id="L207">        m_questionList = qLoader.readQuestions(questionFilepath);</span>
+
+<span class="fc" id="L209">	System.out.println(Main.getMessage(&quot;msg_game_questions_read&quot;));</span>
+
+        /* Get local copies of the difficulty breakpoint information defined
+         * in the configuration file. */
+        try
+        {
+<span class="fc" id="L215">            m_numBreakpoints = m_gameConfig.getIntConfig(&quot;numDifficultyBreakpoints&quot;);</span>
+
+<span class="fc" id="L217">            m_breakpoints = new int[m_numBreakpoints];</span>
+
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            for (int  i = 1; i &lt;= m_numBreakpoints; i++)</span>
+            {
+<span class="fc" id="L221">                m_breakpoints[i-1] = m_gameConfig.getIntConfig(&quot;difficultyBreakpoint&quot; + i);</span>
+
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">		if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_BASIC) != 0)</span>
+<span class="nc" id="L224">		    System.out.println(&quot;    difficultyBreakpoint&quot; + i + &quot; = &quot; + m_breakpoints[i-1]);</span>
+            }
+        }
+<span class="nc" id="L227">        catch (NumberFormatException  e)</span>
+        {
+<span class="nc" id="L229">            System.out.println(Main.getMessage(&quot;msg_invalid_breakpoint&quot;));</span>
+            
+<span class="nc" id="L231">            m_numBreakpoints = m_questionList.getNumLists();</span>
+
+<span class="nc" id="L233">            m_breakpoints = new int[m_numBreakpoints];</span>
+
+<span class="nc bnc" id="L235" title="All 2 branches missed.">            for (int  i = 1; i &lt;= m_numBreakpoints; i++)</span>
+            {
+<span class="nc" id="L237">                m_breakpoints[i-1] = m_maxNumberOfLevels / (m_numBreakpoints + 1) * i;</span>
+                
+<span class="nc bnc" id="L239" title="All 2 branches missed.">		if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_BASIC) != 0)</span>
+<span class="nc" id="L240">		    System.out.println(&quot;    difficultyBreakpoint&quot; + i + &quot; = &quot; + m_breakpoints[i-1]);</span>
+            }
+<span class="fc" id="L242">        }</span>
+        
+        // Count the total number of questions
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        for (int  difficulty = 0; difficulty &lt;= m_numBreakpoints; difficulty++)</span>
+        {
+<span class="fc" id="L247">            numQuestions += m_questionList.getNumQuestionsRemaining(difficulty);</span>
+        }
+        
+<span class="fc" id="L250">        return numQuestions;</span>
+    }
+    
+    
+    /** Start a new game */
+    public void startGame()
+    {
+<span class="nc bnc" id="L257" title="All 2 branches missed.">        if (m_gameMode == GameModeEnum.SLAVE)</span>
+        {
+            /* Display &quot;is slave&quot; message */
+<span class="nc" id="L260">            JOptionPane.showMessageDialog(m_desktopPane,</span>
+		    Main.getMessage(&quot;msg_slave_game_start&quot;));
+<span class="nc" id="L262">            return;</span>
+        }
+
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        if (m_questionList == null)</span>
+        {
+<span class="nc" id="L267">            JOptionPane.showMessageDialog(m_desktopPane,</span>
+		    Main.getMessage(&quot;msg_start_no_questions&quot;));
+<span class="nc" id="L269">            return;</span>
+        }
+        
+        
+        // Start at first level
+<span class="nc" id="L274">        m_currentLevel = 0;</span>
+
+        // Reset the toggle states
+<span class="nc" id="L277">        m_gameState.setToggleState(GameState.ANSWERS_SELECTABLE, false);</span>
+<span class="nc" id="L278">        m_gameState.setToggleState(GameState.ASK_THE_AUDIENCE, true);</span>
+<span class="nc" id="L279">        m_gameState.setToggleState(GameState.FIFTY_FIFTY, true);</span>
+<span class="nc" id="L280">        m_gameState.setToggleState(GameState.PHONE_A_FRIEND, true);</span>
+<span class="nc" id="L281">        m_gameState.setToggleState(GameState.SCORES_SHOWN, true);</span>
+<span class="nc" id="L282">        m_gameState.setToggleState(GameState.TRANSITION_SCREEN_SHOWN, true);</span>
+<span class="nc" id="L283">        m_gameState.setToggleState(GameState.LIFELINE_TIMER_SHOWN, false);</span>
+
+<span class="nc" id="L285">        m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L286">        m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+        
+<span class="nc" id="L288">        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+        /* Set the question timer limit */
+<span class="nc" id="L291">        m_statePacket.setType(GameStateEnum.SET_QUESTION_TIMER_LIMIT);</span>
+<span class="nc" id="L292">        m_statePacket.setQuestionTimerLimit(m_questionTimerLimit);</span>
+
+<span class="nc" id="L294">        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+        /* Initialize for a new game */
+<span class="nc" id="L297">        m_statePacket.setType(GameStateEnum.NEW_GAME);</span>
+<span class="nc" id="L298">        m_statePacket.setMaxNumberOfLevels(m_maxNumberOfLevels);</span>
+<span class="nc" id="L299">        m_statePacket.setCurrentLevel(0);</span>
+
+<span class="nc" id="L301">        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+        // Set the starting message
+<span class="nc" id="L304">        m_eventPacket.setType(GameUpdateEnumGame.TRANSITION_MSG);</span>
+<span class="nc" id="L305">        m_eventPacket.setTransitionMessage(Main.getMessage(&quot;msg_ready&quot;));</span>
+
+<span class="nc" id="L307">        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+        /* Clear the status text */
+<span class="nc" id="L310">        m_eventPacket.setType(GameUpdateEnumGame.STATUS_MSG);</span>
+<span class="nc" id="L311">        m_eventPacket.setStatusMessage(&quot;&quot;);</span>
+
+<span class="nc" id="L313">        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+        // Reset the level being attempted
+<span class="nc" id="L316">        m_eventPacket.setType(GameUpdateEnumGame.HIGHLIGHT_LEVEL);</span>
+<span class="nc" id="L317">        m_eventPacket.setHighlightLevel(0);</span>
+
+<span class="nc" id="L319">        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+        // Initialize the final level (&gt;= 0 when win/lose)
+<span class="nc" id="L322">        m_finalLevel = -1;</span>
+
+        // Stop all sounds
+<span class="nc" id="L325">        m_soundPlayer.stop(SoundPlayer.ALL_CHANNELS);</span>
+        
+        // Play new player sound
+<span class="nc" id="L328">        m_soundPlayer.loadSound(SoundIDEnum.NEW_PLAYER,</span>
+                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L330">        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+        
+        // Set the initial phase
+<span class="nc" id="L333">        m_state = GamePhaseEnum.S_WAITING_TO_START;</span>
+<span class="nc" id="L334">    }</span>
+    
+    
+    /** Stops (aborts) the game. */
+    public void stopGame()
+    {
+        // Stop the game - go to inactive mode
+<span class="nc" id="L341">        m_state = GamePhaseEnum.S_INACTIVE;</span>
+
+        // Stop all sounds
+<span class="nc" id="L344">        m_soundPlayer.stop(SoundPlayer.ALL_CHANNELS);</span>
+
+        // Inform everyone this is the end of the game
+<span class="nc" id="L347">        m_statePacket.setType(GameStateEnum.END_OF_GAME);</span>
+
+<span class="nc" id="L349">        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+<span class="nc" id="L350">    }</span>
+    
+    
+    /** Discards the current in-game question */
+    public void discardQuestion(int  newLevel)
+    {
+<span class="nc bnc" id="L356" title="All 4 branches missed.">        if (newLevel &gt;= 0 &amp;&amp; newLevel &lt; m_maxNumberOfLevels)</span>
+<span class="nc" id="L357">            m_currentLevel = newLevel;</span>
+
+<span class="nc bnc" id="L359" title="All 2 branches missed.">        if (m_currentLevel == m_maxNumberOfLevels)</span>
+<span class="nc" id="L360">            m_currentLevel = m_maxNumberOfLevels - 1;   // Can't redo winning level</span>
+        
+        /* Initialize the final level (&gt;= 0 when win/lose) */
+<span class="nc" id="L363">        m_finalLevel = -1;</span>
+
+        /* Set the initial phase */
+<span class="nc" id="L366">        m_state = GamePhaseEnum.S_WAITING_TO_START;</span>
+
+<span class="nc" id="L368">        nextPhase();</span>
+<span class="nc" id="L369">    }</span>
+
+    
+    public void gameModeChanged(GameModeChangeEvent evt) {
+<span class="nc" id="L373">        GameModeEnum  evtType = evt.getType();</span>
+
+<span class="nc" id="L375">        m_gameMode = evtType;</span>
+        
+<span class="nc bnc" id="L377" title="All 4 branches missed.">        if (evtType == GameModeEnum.STANDALONE ||</span>
+                evtType == GameModeEnum.MASTER)
+        {
+            // Reset to standalone/master mode
+        }
+<span class="nc bnc" id="L382" title="All 2 branches missed.">        else if (evtType == GameModeEnum.SLAVE)</span>
+        {
+            // Reset for slave mode
+        }
+<span class="nc" id="L386">    }    </span>
+
+
+    public void gameStateChanged(GameStateChangeEvent evt)
+    {
+<span class="nc" id="L391">        GameStateEnum  type = (GameStateEnum) evt.getType();</span>
+        
+<span class="nc bnc" id="L393" title="All 2 branches missed.">        if (type == GameStateEnum.SET_QUESTION_TIMER_LIMIT)</span>
+        {
+            // Get the limit from the global instance
+<span class="nc" id="L396">            m_questionTimerLimit = GameState.getInstance(false).getQuestionTimerLimit();</span>
+            
+            // Set the question timer limit
+<span class="nc" id="L399">            m_questionTimer.setupTimer(m_questionTimerLimit, 0);</span>
+        }
+<span class="nc" id="L401">    }</span>
+    
+    
+    /** Process game input events.  Examples include:  selection of an
+     * answer (letter key), hot-key pressed.
+     */
+    public void gameInputReceived(GameInputEvent evt)
+    {
+<span class="nc" id="L409">        GameInputEnum  evtType = evt.getType();</span>
+
+<span class="nc bnc" id="L411" title="All 2 branches missed.">        if (m_gameMode == GameModeEnum.SLAVE)</span>
+<span class="nc" id="L412">            return;     // In slave mode -- ignore all inputs</span>
+        
+<span class="nc bnc" id="L414" title="All 2 branches missed.">        if (evtType == GameInputEnum.ANSWER_SELECTED)</span>
+        {
+<span class="nc bnc" id="L416" title="All 4 branches missed.">            if (m_state == GamePhaseEnum.S_ANSWERS_DISPLAYED ||</span>
+                    m_state == GamePhaseEnum.S_ANSWER_SELECTED)
+            {
+                /* An answer was selected.  Get its index. */
+<span class="nc" id="L420">                m_selectedIndex = evt.getSelectedIndex();</span>
+
+<span class="nc bnc" id="L422" title="All 2 branches missed.">                if (m_gameState.getAnswerVisible(m_selectedIndex) == true)</span>
+                {
+<span class="nc" id="L424">                    m_state = GamePhaseEnum.S_ANSWER_SELECTED;</span>
+
+                    /* Transition to next phase */
+<span class="nc" id="L427">                    nextPhase();</span>
+                }
+            }
+        }
+<span class="nc bnc" id="L431" title="All 2 branches missed.">        else if (evtType == GameInputEnum.LIFELINE_SELECTED)</span>
+        {
+<span class="nc bnc" id="L433" title="All 6 branches missed.">            if (m_state == GamePhaseEnum.S_ANSWERS_DISPLAYED || m_state == GamePhaseEnum.S_ANSWER_SELECTED ||</span>
+                    m_state == GamePhaseEnum.S_CONFIRM_LIFELINE)
+            {
+<span class="nc" id="L436">                int  lifeline = evt.getSelectedIndex();</span>
+                
+<span class="nc bnc" id="L438" title="All 6 branches missed.">                if (lifeline == GameState.FIFTY_FIFTY ||</span>
+                        lifeline == GameState.ASK_THE_AUDIENCE ||
+                        lifeline == GameState.PHONE_A_FRIEND)
+                {
+                    // Valid lifeline.  Check if active.
+<span class="nc bnc" id="L443" title="All 2 branches missed.">                    if (m_gameState.getToggleState(lifeline) == true)</span>
+                    {
+<span class="nc" id="L445">                        m_lifelineSelected = lifeline;</span>
+
+                        // Show lifeline selected
+<span class="nc" id="L448">                        m_eventPacket.setType(GameUpdateEnumGame.SELECTED_LIFELINE);</span>
+<span class="nc" id="L449">                        m_eventPacket.setSelectedLifeline(m_lifelineSelected);</span>
+                        
+<span class="nc" id="L451">                        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+                        
+<span class="nc" id="L453">                        m_state = GamePhaseEnum.S_CONFIRM_LIFELINE;</span>
+<span class="nc" id="L454">                        nextPhase();</span>
+                    }
+                }
+<span class="nc" id="L457">            }</span>
+        }
+<span class="nc bnc" id="L459" title="All 2 branches missed.">        else if (evtType == GameInputEnum.KEY_TYPED)</span>
+        {
+<span class="nc" id="L461">            char  keyChar = Character.toLowerCase(evt.getKeyChar());</span>
+            
+<span class="nc bnc" id="L463" title="All 6 branches missed.">            if (m_answers != null &amp;&amp; keyChar &gt;= 'a' &amp;&amp; keyChar &lt;= ('a' + m_answers.length - 1))</span>
+            {
+<span class="nc bnc" id="L465" title="All 4 branches missed.">                if (m_state == GamePhaseEnum.S_ANSWERS_DISPLAYED ||</span>
+                        m_state == GamePhaseEnum.S_ANSWER_SELECTED)
+                {
+                    /* An answer was selected.  Get its index. */
+<span class="nc" id="L469">                    m_selectedIndex = keyChar - 'a';</span>
+
+<span class="nc bnc" id="L471" title="All 2 branches missed.">                    if (m_gameState.getAnswerVisible(m_selectedIndex) == true)</span>
+                    {
+<span class="nc" id="L473">                        m_state = GamePhaseEnum.S_ANSWER_SELECTED;</span>
+
+                        /* Transition to next phase */
+<span class="nc" id="L476">                        nextPhase();</span>
+                    }
+                }
+            }
+            else
+            {
+                /* Process special event keys */
+<span class="nc bnc" id="L483" title="All 19 branches missed.">                switch (keyChar)</span>
+                {
+		    // Sound clip hotkeys (Numpad 0-9)
+                    case '0' :
+                    {
+<span class="nc" id="L488">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_0,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L490">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L491">                        break;</span>
+                    }
+                    
+                    case '1' :
+                    {
+<span class="nc" id="L496">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_1,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L498">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L499">                        break;</span>
+                    }
+                    
+                    case '2' :
+                    {
+<span class="nc" id="L504">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_2,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L506">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L507">                        break;</span>
+                    }
+                    
+                    case '3' :
+                    {
+<span class="nc" id="L512">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_3,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L514">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L515">                        break;</span>
+                    }
+                    
+                    case '4' :
+                    {
+<span class="nc" id="L520">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_4,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L522">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L523">                        break;</span>
+                    }
+                    
+                    case '5' :
+                    {
+<span class="nc" id="L528">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_5,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L530">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L531">                        break;</span>
+                    }
+                    
+                    case '6' :
+                    {
+<span class="nc" id="L536">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_6,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L538">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L539">                        break;</span>
+                    }
+                    
+                    case '7' :
+                    {
+<span class="nc" id="L544">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_7,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L546">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L547">                        break;</span>
+                    }
+                    
+                    case '8' :
+                    {
+<span class="nc" id="L552">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_8,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L554">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L555">                        break;</span>
+                    }
+                    
+                    case '9' :
+                    {
+<span class="nc" id="L560">                        m_soundPlayer.loadSound(SoundIDEnum.CLIP_9,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L562">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L563">                        break;</span>
+                    }
+                    
+                    case '`' :         // Back-quote - Toggle score screen
+                    {
+                        /* Toggle the visibility of the game score panel */
+<span class="nc bnc" id="L569" title="All 2 branches missed.">                        m_gameState.setToggleState(GameState.SCORES_SHOWN, ! m_gameState.getToggleState(GameState.SCORES_SHOWN));</span>
+
+<span class="nc" id="L571">                        m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L572">                        m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+                        
+<span class="nc" id="L574">                        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc" id="L576">                        m_soundPlayer.loadSound(SoundIDEnum.SHOW_SCORE_SCREEN,</span>
+                                SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L578">                        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L579">                        break;</span>
+                    }
+
+                    case '\n' :         // Enter key -- &quot;Final answer&quot;
+                    {
+                        /* Confirm key -- validity depending on the current game state
+                         * and context (e.g. if an answer is selected)
+                         */
+<span class="nc bnc" id="L587" title="All 2 branches missed.">                        if (m_state == GamePhaseEnum.S_ANSWER_SELECTED)</span>
+                        {
+<span class="nc" id="L589">                            m_state = GamePhaseEnum.S_ANSWER_FINALIZED;</span>
+<span class="nc" id="L590">                            nextPhase();</span>
+                        }
+<span class="nc bnc" id="L592" title="All 2 branches missed.">                        else if (m_state == GamePhaseEnum.S_CONFIRM_LIFELINE)</span>
+                        {
+<span class="nc" id="L594">                            m_state = GamePhaseEnum.S_LIFELINE_CONFIRMED;</span>
+<span class="nc" id="L595">                            nextPhase();</span>
+                        }
+<span class="nc bnc" id="L597" title="All 2 branches missed.">                        else if (m_state == GamePhaseEnum.S_PHONE_A_FRIEND_TIMER)</span>
+                        {
+<span class="nc" id="L599">                            closeLifelineTimer();</span>
+                        }
+                        break;
+                    }
+
+                    case '=' :         // Equals (=) -- Walk away
+                    {
+                        /* Check if the key is valid first, then ask for confirmation
+                         * that the player wants to &quot;walk away&quot;.
+                         */
+<span class="nc bnc" id="L609" title="All 6 branches missed.">                        if (m_gameState.getToggleState(GameState.GAME_IN_SESSION) == true &amp;&amp;</span>
+                                (m_state == GamePhaseEnum.S_ANSWERS_DISPLAYED || m_state == GamePhaseEnum.S_ANSWER_SELECTED))
+                        {
+                            /* Ask to confirm the &quot;Walk Away&quot; */
+<span class="nc bnc" id="L613" title="All 2 branches missed.">                            if (JOptionPane.showConfirmDialog(m_desktopPane,</span>
+					Main.getMessage(&quot;msg_walk_away&quot;),
+                                        Main.getMessage(&quot;title_confirmation&quot;),
+					JOptionPane.YES_NO_OPTION,
+					JOptionPane.QUESTION_MESSAGE) ==
+                                    JOptionPane.YES_OPTION)
+                            {
+<span class="nc" id="L620">                                m_soundPlayer.stop(SoundPlayer.ALL_CHANNELS);</span>
+
+                                // Set the &quot;game in session&quot; flag false -- allow to
+                                // still guess an answer and see if it is right, but
+                                // no winnings and no sounds.
+<span class="nc" id="L625">                                m_gameState.setToggleState(GameState.GAME_IN_SESSION, false);</span>
+
+<span class="nc" id="L627">                                m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L628">                                m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+
+<span class="nc" id="L630">                                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+                                // Set the final level variable to the current level
+<span class="nc" id="L633">                                m_finalLevel = m_gameState.getCurrentLevel();</span>
+
+                                /* Highlight the walk-away winnings (one less than current) */
+<span class="nc" id="L636">                                m_eventPacket.setType(GameUpdateEnumGame.HIGHLIGHT_LEVEL);</span>
+<span class="nc" id="L637">                                m_eventPacket.setHighlightLevel(m_finalLevel - 1);</span>
+
+<span class="nc" id="L639">                                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+                                // Set for next state
+<span class="nc" id="L642">                                m_state = GamePhaseEnum.S_WALKAWAY;</span>
+                            }
+                        }
+                        break;
+                    }
+
+                    case '\b' :         // Backspace key
+                    {
+                        /* This key is used clear the selected lifeline or
+			 * to backout a supposedly &quot;final&quot; answer.  The
+			 * latter is against the &quot;official&quot; rules, but...
+                         */
+<span class="nc bnc" id="L654" title="All 4 branches missed.">                        if (m_state == GamePhaseEnum.S_CORRECT_ANSWER ||</span>
+                                m_state == GamePhaseEnum.S_WRONG_ANSWER)
+                        {
+                            /* Re-enable selection */
+<span class="nc" id="L658">                            m_gameState.setToggleState(GameState.ANSWERS_SELECTABLE, true);</span>
+
+<span class="nc" id="L660">                            m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L661">                            m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+
+<span class="nc" id="L663">                            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+                            // Clear the selection
+<span class="nc" id="L666">                            m_eventPacket.setType(GameUpdateEnumGame.SELECTED_ANSWER);</span>
+<span class="nc" id="L667">                            m_eventPacket.setSelectedAnswer(-1);</span>
+
+<span class="nc" id="L669">                            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc" id="L671">                            m_state = GamePhaseEnum.S_ANSWERS_DISPLAYED;</span>
+
+<span class="nc" id="L673">                            m_questionTimer.startTimer();        // Restart the question timer</span>
+
+<span class="nc" id="L675">                            nextPhase();</span>
+                        }
+<span class="nc bnc" id="L677" title="All 2 branches missed.">                        else if (m_state == GamePhaseEnum.S_CONFIRM_LIFELINE)</span>
+                        {
+<span class="nc" id="L679">                            m_state = GamePhaseEnum.S_LIFELINE_ABORTED;</span>
+<span class="nc" id="L680">                            nextPhase();</span>
+                        }
+                        break;
+                    }
+
+                    case ' ' :          // Space key -- next phase
+                    {
+                        /* &quot;Transition to next phase&quot; key */
+<span class="nc" id="L688">                        nextPhase();</span>
+<span class="nc" id="L689">                        break;</span>
+                    }
+
+                    case ',' :       // Comma (,) = fifty-fifty
+                    {
+<span class="nc bnc" id="L694" title="All 6 branches missed.">                        if (m_state == GamePhaseEnum.S_ANSWERS_DISPLAYED || m_state == GamePhaseEnum.S_ANSWER_SELECTED ||</span>
+                                m_state == GamePhaseEnum.S_CONFIRM_LIFELINE)
+                        {
+<span class="nc bnc" id="L697" title="All 2 branches missed.">                            if (m_gameState.getToggleState(GameState.FIFTY_FIFTY) == true)</span>
+                            {
+<span class="nc" id="L699">                                m_lifelineSelected = GameState.FIFTY_FIFTY;</span>
+
+<span class="nc" id="L701">                                m_eventPacket.setType(GameUpdateEnumGame.SELECTED_LIFELINE);</span>
+<span class="nc" id="L702">                                m_eventPacket.setSelectedLifeline(m_lifelineSelected);</span>
+
+<span class="nc" id="L704">                                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc" id="L706">                                m_state = GamePhaseEnum.S_CONFIRM_LIFELINE;</span>
+<span class="nc" id="L707">                                nextPhase();</span>
+                            }
+                        }
+                        break;
+                    }
+
+                    case '.' :       // Period (.) = phone a friend
+                    {
+<span class="nc bnc" id="L715" title="All 6 branches missed.">                        if (m_state == GamePhaseEnum.S_ANSWERS_DISPLAYED || m_state == GamePhaseEnum.S_ANSWER_SELECTED ||</span>
+                                m_state == GamePhaseEnum.S_CONFIRM_LIFELINE)
+                        {
+<span class="nc bnc" id="L718" title="All 2 branches missed.">                            if (m_gameState.getToggleState(GameState.PHONE_A_FRIEND) == true)</span>
+                            {
+<span class="nc" id="L720">                                m_lifelineSelected = GameState.PHONE_A_FRIEND;</span>
+
+<span class="nc" id="L722">                                m_eventPacket.setType(GameUpdateEnumGame.SELECTED_LIFELINE);</span>
+<span class="nc" id="L723">                                m_eventPacket.setSelectedLifeline(m_lifelineSelected);</span>
+
+<span class="nc" id="L725">                                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc" id="L727">                                m_state = GamePhaseEnum.S_CONFIRM_LIFELINE;</span>
+<span class="nc" id="L728">                                nextPhase();</span>
+                            }
+                        }
+                        break;
+                    }
+
+                    case '/' :       // Forward slash (/) = poll the audience
+                    {
+<span class="nc bnc" id="L736" title="All 6 branches missed.">                        if (m_state == GamePhaseEnum.S_ANSWERS_DISPLAYED || m_state == GamePhaseEnum.S_ANSWER_SELECTED ||</span>
+                                m_state == GamePhaseEnum.S_CONFIRM_LIFELINE)
+                        {
+<span class="nc bnc" id="L739" title="All 2 branches missed.">                            if (m_gameState.getToggleState(GameState.ASK_THE_AUDIENCE) == true)</span>
+                            {
+<span class="nc" id="L741">                                m_lifelineSelected = GameState.ASK_THE_AUDIENCE;</span>
+
+<span class="nc" id="L743">                                m_eventPacket.setType(GameUpdateEnumGame.SELECTED_LIFELINE);</span>
+<span class="nc" id="L744">                                m_eventPacket.setSelectedLifeline(m_lifelineSelected);</span>
+
+<span class="nc" id="L746">                                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc" id="L748">                                m_state = GamePhaseEnum.S_CONFIRM_LIFELINE;</span>
+<span class="nc" id="L749">                                nextPhase();</span>
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+<span class="nc" id="L757">    }</span>
+
+    
+    /** Transition to the next game phase */
+    private void nextPhase()
+    {
+<span class="nc bnc" id="L763" title="All 2 branches missed.">        if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_BASIC) != 0)</span>
+<span class="nc" id="L764">            System.out.println(&quot;--&gt; GameController::nextPhase() = &quot; + m_state);</span>
+        
+<span class="nc bnc" id="L766" title="All 2 branches missed.">        if (m_state == GamePhaseEnum.S_INACTIVE)</span>
+        {
+            /* No change.  Must be set to an active state for a transition to occur */
+        }
+<span class="nc bnc" id="L770" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_WAITING_TO_START)</span>
+        {
+            /* Reset the question timer */
+<span class="nc" id="L773">            m_questionTimer.setupTimer(-1, 0);</span>
+
+            // Set the &quot;game in session&quot; flag
+<span class="nc" id="L776">            m_gameState.setToggleState(GameState.GAME_IN_SESSION, true);</span>
+
+            /* Highlight the level being attempted */
+<span class="nc" id="L779">            m_eventPacket.setType(GameUpdateEnumGame.HIGHLIGHT_LEVEL);</span>
+<span class="nc" id="L780">            m_eventPacket.setHighlightLevel(m_currentLevel);</span>
+
+<span class="nc" id="L782">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            // Display the Question screen
+<span class="nc" id="L785">            m_gameState.setToggleState(GameState.TRANSITION_SCREEN_SHOWN, false);</span>
+
+<span class="nc" id="L787">            m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L788">            m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+            
+<span class="nc" id="L790">            m_packetProcessor.processEventPacket(m_eventPacket);</span>
+
+            int  transitionLevel;
+
+<span class="nc" id="L794">            for (transitionLevel = 0; transitionLevel &lt; m_transitions.length &amp;&amp;</span>
+<span class="nc bnc" id="L795" title="All 4 branches missed.">                    m_currentLevel &gt;= m_transitions[transitionLevel];</span>
+<span class="nc" id="L796">                    transitionLevel++)</span>
+            {
+                /* DUMMY */;
+            }
+
+<span class="nc bnc" id="L801" title="All 2 branches missed.">            if (transitionLevel &gt; 0)</span>
+            {
+<span class="nc" id="L803">                m_soundPlayer.loadSound(SoundIDEnum.SHOW_QUESTION,</span>
+                        SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L805">                m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+            }
+
+<span class="nc" id="L808">            SoundIDEnum  bkgSoundId = SoundIDEnum.BACKGROUND1;</span>
+            
+<span class="nc bnc" id="L810" title="All 7 branches missed.">            switch (transitionLevel)</span>
+            {
+                case 0:
+<span class="nc" id="L813">                    bkgSoundId = SoundIDEnum.BACKGROUND1;</span>
+<span class="nc" id="L814">                    break;</span>
+                    
+                case 1:
+<span class="nc" id="L817">                    bkgSoundId = SoundIDEnum.BACKGROUND2;</span>
+<span class="nc" id="L818">                    break;</span>
+                    
+                case 2:
+<span class="nc" id="L821">                    bkgSoundId = SoundIDEnum.BACKGROUND3;</span>
+<span class="nc" id="L822">                    break;</span>
+                    
+                case 3:
+<span class="nc" id="L825">                    bkgSoundId = SoundIDEnum.BACKGROUND4;</span>
+<span class="nc" id="L826">                    break;</span>
+                    
+                case 4:
+<span class="nc" id="L829">                    bkgSoundId = SoundIDEnum.BACKGROUND5;</span>
+<span class="nc" id="L830">                    break;</span>
+                    
+                case 5:
+<span class="nc" id="L833">                    bkgSoundId = SoundIDEnum.BACKGROUND6;</span>
+<span class="nc" id="L834">                    break;</span>
+                    
+                default:
+<span class="nc" id="L837">                    bkgSoundId = SoundIDEnum.BACKGROUND1;</span>
+                    break;
+            }
+
+            /* Start the background sound if it isn't playing */
+<span class="nc bnc" id="L842" title="All 4 branches missed.">            if (m_soundPlayer.isPlaying(SoundPlayer.BACKGROUND_CHANNEL) == false ||</span>
+                    m_bkgSoundId != bkgSoundId)
+            {
+<span class="nc" id="L845">                m_bkgSoundId = bkgSoundId;</span>
+<span class="nc" id="L846">                m_soundPlayer.loadSound(m_bkgSoundId,</span>
+                        SoundPlayer.BACKGROUND_CHANNEL, true);
+<span class="nc" id="L848">                m_soundPlayer.start(SoundPlayer.BACKGROUND_CHANNEL);</span>
+            }
+
+            // Hide all answers
+<span class="nc bnc" id="L852" title="All 2 branches missed.">            for (int  i = 0; i &lt; m_maxNumberOfAnswers; i++)</span>
+            {
+<span class="nc" id="L854">                m_gameState.setAnswerVisible(i, false);</span>
+            }
+
+            // Fire an event to update the game
+
+<span class="nc" id="L859">            m_statePacket.setType(GameStateEnum.WAIT_TO_START_ROUND);</span>
+<span class="nc" id="L860">            m_statePacket.setQuestion(&quot;&quot;);</span>
+<span class="nc" id="L861">            m_statePacket.setAnswers(null);</span>
+            
+<span class="nc" id="L863">            m_statePacket.setAnswersVisible(m_gameState.getAnswersVisible());</span>
+<span class="nc" id="L864">            m_statePacket.setCurrentLevel(m_currentLevel);</span>
+<span class="nc" id="L865">            m_statePacket.setLevelTitle(m_titles[m_currentLevel]);</span>
+            
+<span class="nc" id="L867">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+            
+<span class="nc" id="L869">            m_state = GamePhaseEnum.S_STARTING_NEXT_ROUND;</span>
+<span class="nc" id="L870">        }</span>
+<span class="nc bnc" id="L871" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_STARTING_NEXT_ROUND)</span>
+        {
+            /* Start the next round.  First, get a question from the available
+             * questions list */
+
+            String[]  answerStr;        // Shuffled list of possible answers
+            
+            int  difficulty;
+
+<span class="nc" id="L880">            for (difficulty = 0; difficulty &lt; m_numBreakpoints &amp;&amp;</span>
+<span class="nc bnc" id="L881" title="All 4 branches missed.">                    m_currentLevel &gt;= m_breakpoints[difficulty]; difficulty++)</span>
+                /* DUMMY */;
+
+            /* Reset the question timer */
+<span class="nc" id="L885">            m_questionTimer.setupTimer(-1, 0);</span>
+
+            // Display the Question screen
+<span class="nc" id="L888">            m_gameState.setToggleState(GameState.TRANSITION_SCREEN_SHOWN, false);</span>
+
+<span class="nc" id="L890">            m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L891">            m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+
+<span class="nc" id="L893">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+            
+            // Clear the transition text
+<span class="nc" id="L896">            m_eventPacket.setType(GameUpdateEnumGame.TRANSITION_MSG);</span>
+<span class="nc" id="L897">            m_eventPacket.setTransitionMessage(null);</span>
+
+<span class="nc" id="L899">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            {
+<span class="nc" id="L902">                int  numRemaining = m_questionList.getNumQuestionsRemaining(difficulty);</span>
+
+<span class="nc bnc" id="L904" title="All 2 branches missed.">                if (numRemaining &lt; 3)</span>
+                {
+<span class="nc bnc" id="L906" title="All 2 branches missed.">                    if (numRemaining == 0)</span>
+                    {
+<span class="nc" id="L908">		        String  msg = Main.getMessage(&quot;err_no_more_questions&quot;)</span>
+                                + &quot; &quot; + difficulty;
+
+<span class="nc" id="L911">                        System.out.println(msg);</span>
+
+<span class="nc" id="L913">			Main.setStatusLabel(msg);</span>
+
+<span class="nc" id="L915">			JOptionPane.showMessageDialog(m_desktopPane, msg);</span>
+
+<span class="nc" id="L917">                        m_state = GamePhaseEnum.S_INACTIVE;</span>
+                        
+<span class="nc" id="L919">                        return;</span>
+                    }
+                    else
+                    {
+<span class="nc" id="L923">			Object	args[] = </span>
+			    	{
+				    new Integer(difficulty),
+				    new Integer(numRemaining)
+				};
+
+<span class="nc" id="L929">                        String  msg = Main.getMessage(&quot;warn_low_on_questions&quot;,</span>
+				args);
+
+<span class="nc" id="L932">                        System.out.println(msg);</span>
+
+<span class="nc" id="L934">			Main.setStatusLabel(msg);</span>
+                    }
+                }
+
+<span class="nc" id="L938">                m_question = m_questionList.getQuestion(difficulty);</span>
+
+                /* Add the question to the used question file so it won't be
+                 * reused.
+                 */
+                try
+                {
+<span class="nc" id="L945">                    m_gameState.addQuestionToUsedQuestionFile(m_question);</span>
+                }
+<span class="nc" id="L947">                catch (java.io.IOException  e)</span>
+                {
+<span class="nc" id="L949">                    System.out.println(Main.getMessage(&quot;warn_used_question_file&quot;));</span>
+<span class="nc" id="L950">                }</span>
+
+<span class="nc" id="L952">                AnswerList  answers = m_question.getAnswers();</span>
+                
+                /* Get the array of sorted/shuffled possible answers */
+<span class="nc" id="L955">                m_answers = answers.getPossibleAnswers();</span>
+
+<span class="nc" id="L957">                answerStr = new String[m_answers.length];</span>
+
+<span class="nc bnc" id="L959" title="All 2 branches missed.">                for (int  i = 0; i &lt; m_answers.length; i++)</span>
+                {
+<span class="nc" id="L961">                    answerStr[i] = m_answers[i].getAnswer();</span>
+                }
+            }
+
+            /* Zero the number of answers currently displayed counter. */
+<span class="nc" id="L966">            m_numAnswersDisplayed = 0;</span>
+
+            /* Disable answer selections */
+<span class="nc" id="L969">            m_gameState.setToggleState(GameState.ANSWERS_SELECTABLE, false);</span>
+
+<span class="nc" id="L971">            m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L972">            m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+
+<span class="nc" id="L974">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Clear any selected answer index */
+<span class="nc" id="L977">            m_eventPacket.setType(GameUpdateEnumGame.SELECTED_ANSWER);</span>
+<span class="nc" id="L978">            m_eventPacket.setSelectedAnswer(GameState.NO_SELECTED_ANSWER);</span>
+
+<span class="nc" id="L980">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Play the &quot;show question&quot; sound */
+<span class="nc" id="L983">	    m_soundPlayer.loadSound(SoundIDEnum.SHOW_QUESTION,</span>
+		    SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L985">	    m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+            // Set the question and possible answers
+<span class="nc" id="L988">            m_statePacket.setType(GameStateEnum.DISPLAY_QUESTION);</span>
+<span class="nc" id="L989">            m_statePacket.setQuestion(m_question.getQuestion());</span>
+<span class="nc" id="L990">            m_statePacket.setAnswers(answerStr);</span>
+
+<span class="nc" id="L992">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+            /* Switch state flag to next state */
+<span class="nc" id="L995">            m_state = GamePhaseEnum.S_QUESTION_DISPLAYED;</span>
+<span class="nc" id="L996">        }</span>
+<span class="nc bnc" id="L997" title="All 4 branches missed.">        else if (m_state == GamePhaseEnum.S_QUESTION_DISPLAYED ||</span>
+                m_state == GamePhaseEnum.S_DISPLAYING_ANSWERS)
+        {
+            /* Show the next answer */
+<span class="nc" id="L1001">            m_gameState.setAnswerVisible(m_numAnswersDisplayed, true);</span>
+
+<span class="nc" id="L1003">            m_statePacket.setType(GameStateEnum.DISPLAY_ANSWER);</span>
+<span class="nc" id="L1004">            m_statePacket.setAnswersVisible(m_gameState.getAnswersVisible());</span>
+            
+<span class="nc" id="L1006">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+            /* Play the &quot;show answer&quot; sound */
+<span class="nc" id="L1009">	    m_soundPlayer.loadSound(SoundIDEnum.SHOW_ANSWER,</span>
+		    SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L1011">	    m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+            
+<span class="nc bnc" id="L1013" title="All 2 branches missed.">            if (++m_numAnswersDisplayed &gt;= m_answers.length)</span>
+            {
+                /* All answers now displayed. */
+<span class="nc" id="L1016">                m_statePacket.setType(GameStateEnum.WAIT_FOR_ANSWER);</span>
+
+<span class="nc" id="L1018">                m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+                
+                /* Start the timer, if used */
+<span class="nc" id="L1021">                m_questionTimer.startTimer();</span>
+
+                /* Switch state flag to next state */
+<span class="nc" id="L1024">                m_state = GamePhaseEnum.S_ANSWERS_DISPLAYED;</span>
+            }
+        }
+<span class="nc bnc" id="L1027" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_ANSWERS_DISPLAYED)</span>
+        {
+            /* This state does not change until an answer is selected.
+             * See the gameInputReceived() */
+        }
+<span class="nc bnc" id="L1032" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_ANSWER_SELECTED)</span>
+        {
+            /* This state does not change until the Enter key is pressed.
+             * See the gameInputReceived() */
+
+
+            // Highlight the selection
+<span class="nc" id="L1039">            m_eventPacket.setType(GameUpdateEnumGame.SELECTED_ANSWER);</span>
+<span class="nc" id="L1040">            m_eventPacket.setSelectedAnswer(m_selectedIndex);</span>
+            
+<span class="nc" id="L1042">            m_packetProcessor.processEventPacket(m_eventPacket);</span>
+
+            // Play selected sound
+<span class="nc" id="L1045">            m_soundPlayer.loadSound(SoundIDEnum.SELECTION_MADE, SoundPlayer.FOREGROUND_CHANNEL, false);</span>
+<span class="nc" id="L1046">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+        }
+<span class="nc bnc" id="L1048" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_ANSWER_FINALIZED)</span>
+        {
+<span class="nc bnc" id="L1050" title="All 2 branches missed.">            if (m_gameState.getToggleState(GameState.GAME_IN_SESSION) == true)</span>
+            {
+                /* Sound is only played if the game is active (not active if in &quot;Walk away&quot; mode) */
+<span class="nc" id="L1053">                m_soundPlayer.loadSound(SoundIDEnum.ANSWER_FINALIZED, SoundPlayer.FOREGROUND_CHANNEL, false);</span>
+<span class="nc" id="L1054">                m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+            }
+
+            /* Fire off an event to GameState listeners to update their state */
+<span class="nc" id="L1058">            m_gameState.fireGameStateChangeEvent(this, GameStateEnum.WAIT_TO_REVEAL_ANSWER);</span>
+
+             /* Check if the answer is correct or incorrect.  This method
+             * sets the next phase based on the result.
+             */
+<span class="nc" id="L1063">            processFinalAnswer();</span>
+        }
+<span class="nc bnc" id="L1065" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_CORRECT_ANSWER)</span>
+        {
+<span class="nc" id="L1067">            m_questionTimer.stopTimer();        // Stop the question timer</span>
+
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">            if (m_gameState.getToggleState(GameState.GAME_IN_SESSION) == true)</span>
+            {
+                // Play the correct answer sound (only done if game is in session [not Walk Away mode])
+<span class="nc" id="L1072">                m_soundPlayer.loadSound(SoundIDEnum.ANSWER_CORRECT, SoundPlayer.FOREGROUND_CHANNEL, false);</span>
+<span class="nc" id="L1073">                m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+            }
+
+            // If there is a note associated with the question, display it now.
+<span class="nc" id="L1077">            String  note = m_question.getNote();</span>
+            
+<span class="nc bnc" id="L1079" title="All 4 branches missed.">            if (note != null &amp;&amp; note.length() &gt; 0)</span>
+            {
+<span class="nc" id="L1081">                m_eventPacket.setType(GameUpdateEnumGame.STATUS_MSG);</span>
+<span class="nc" id="L1082">                m_eventPacket.setStatusMessage(note);</span>
+                
+<span class="nc" id="L1084">                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+            }
+            
+            /* Fire off an event to GameState listeners to update their state */
+<span class="nc" id="L1088">            m_statePacket.setType(GameStateEnum.ANSWER_WAS_CORRECT);</span>
+<span class="nc" id="L1089">            m_statePacket.setCorrectAnswer(m_selectedIndex);</span>
+
+<span class="nc" id="L1091">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+            /* Switch state flag to next state */
+<span class="nc" id="L1094">            m_state = GamePhaseEnum.S_RESET_FOR_NEXT_ROUND;</span>
+<span class="nc" id="L1095">        }</span>
+<span class="nc bnc" id="L1096" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_WRONG_ANSWER)</span>
+        {
+<span class="nc" id="L1098">            int     correctAnswerIndex = GameState.NO_CORRECT_ANSWER;</span>
+            
+<span class="nc" id="L1100">            m_questionTimer.stopTimer();        // Stop the question timer</span>
+
+<span class="nc" id="L1102">            m_soundPlayer.stop(SoundPlayer.BACKGROUND_CHANNEL);</span>
+
+            // Play the wrong answer sound
+<span class="nc" id="L1105">            m_soundPlayer.loadSound(SoundIDEnum.ANSWER_WRONG, SoundPlayer.FOREGROUND_CHANNEL, false);</span>
+<span class="nc" id="L1106">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+<span class="nc bnc" id="L1108" title="All 2 branches missed.">            for (int  index = 0; index &lt; m_answers.length; index++)</span>
+            {
+<span class="nc bnc" id="L1110" title="All 2 branches missed.">                if (m_answers[index].getCorrect())</span>
+                {
+                    // Set the correct answer
+<span class="nc" id="L1113">                    correctAnswerIndex = index;</span>
+<span class="nc" id="L1114">                    break;</span>
+                }
+            }
+
+            // If there is a note associated with the question, display it now.
+<span class="nc" id="L1119">            String  note = m_question.getNote();</span>
+            
+<span class="nc bnc" id="L1121" title="All 4 branches missed.">            if (note != null &amp;&amp; note.length() &gt; 0)</span>
+            {
+<span class="nc" id="L1123">                m_eventPacket.setType(GameUpdateEnumGame.STATUS_MSG);</span>
+<span class="nc" id="L1124">                m_eventPacket.setStatusMessage(note);</span>
+                
+<span class="nc" id="L1126">                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+            }
+
+            {
+                /* Set game not active */
+<span class="nc" id="L1131">                m_gameState.setToggleState(GameState.GAME_IN_SESSION, false);</span>
+
+                /* Set the finalLevel variable to the previous transition/goal level */
+<span class="nc" id="L1134">                int  questionNum = m_currentLevel;</span>
+
+<span class="nc" id="L1136">                int  prevLevel = 0;</span>
+
+<span class="nc bnc" id="L1138" title="All 2 branches missed.">                for (int  transLevel = 0; transLevel &lt; m_transitions.length; transLevel++)</span>
+                {
+<span class="nc bnc" id="L1140" title="All 4 branches missed.">                    if (questionNum &gt;= prevLevel &amp;&amp; questionNum &lt; m_transitions[transLevel])</span>
+                    {
+<span class="nc bnc" id="L1142" title="All 2 branches missed.">                        if (transLevel &gt; 0)</span>
+<span class="nc" id="L1143">                            m_finalLevel = m_transitions[transLevel - 1];</span>
+                        else
+<span class="nc" id="L1145">                            m_finalLevel = 0;</span>
+<span class="nc" id="L1146">                        break;</span>
+                    }
+
+<span class="nc" id="L1149">                    prevLevel = m_transitions[transLevel];</span>
+                }
+
+                /* Set the ScoreScreen highlight bar to this level */
+<span class="nc" id="L1153">                m_eventPacket.setType(GameUpdateEnumGame.HIGHLIGHT_LEVEL);</span>
+<span class="nc" id="L1154">                m_eventPacket.setHighlightLevel(m_finalLevel - 1);</span>
+
+<span class="nc" id="L1156">                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+                /* Fire off an event to GameState listeners to update their state */
+            }
+
+            /* Fire off an event to GameState listeners to update their state */
+<span class="nc" id="L1162">            m_statePacket.setType(GameStateEnum.ANSWER_WAS_WRONG);</span>
+<span class="nc" id="L1163">            m_statePacket.setCorrectAnswer(correctAnswerIndex);</span>
+<span class="nc" id="L1164">            m_statePacket.setCurrentLevel(m_finalLevel);</span>
+            
+<span class="nc" id="L1166">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+            /* Switch state flag to next state */
+<span class="nc" id="L1169">            m_state = GamePhaseEnum.S_ENDING_GAME;</span>
+<span class="nc" id="L1170">        }</span>
+<span class="nc bnc" id="L1171" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_RESET_FOR_NEXT_ROUND)</span>
+        {
+            int  questionNum;
+
+            /* If m_finalLevel &gt;= 0, then the game is over/stopped. */
+<span class="nc bnc" id="L1176" title="All 2 branches missed.">            if (m_finalLevel &gt;= 0)</span>
+            {
+                /* Set the question number to the final level number */
+<span class="nc" id="L1179">                questionNum = m_finalLevel;</span>
+            }
+            else
+            {
+                /* Increment to next question */
+<span class="nc" id="L1184">                questionNum = ++m_currentLevel;</span>
+            }
+
+            // Set the current level
+<span class="nc" id="L1188">            m_statePacket.setType(GameStateEnum.SET_CURRENT_LEVEL);</span>
+<span class="nc" id="L1189">            m_statePacket.setCurrentLevel(questionNum);</span>
+            
+<span class="nc" id="L1191">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+            
+            /* Set the Transition panel text to the current level title. */
+<span class="nc" id="L1194">            String  title = m_gameConfig.getConfig(&quot;levelName&quot; + questionNum);</span>
+
+<span class="nc bnc" id="L1196" title="All 2 branches missed.">            if (title == null)</span>
+<span class="nc" id="L1197">                title = &quot;$ 0&quot;;</span>
+
+            // Send event to update the transition text
+<span class="nc" id="L1200">            m_eventPacket.setType(GameUpdateEnumGame.TRANSITION_MSG);</span>
+<span class="nc" id="L1201">            m_eventPacket.setTransitionMessage(title);</span>
+
+<span class="nc" id="L1203">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            // Send event to display the transition msg
+<span class="nc" id="L1206">            m_gameState.setToggleState(GameState.TRANSITION_SCREEN_SHOWN, true);</span>
+
+<span class="nc" id="L1208">            m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L1209">            m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+
+<span class="nc" id="L1211">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Reset the question timer */
+<span class="nc" id="L1214">            m_questionTimer.setupTimer(-1, 0);</span>
+
+            // Hide all answers
+<span class="nc bnc" id="L1217" title="All 2 branches missed.">            for (int  i = 0; i &lt; m_maxNumberOfAnswers; i++)</span>
+<span class="nc" id="L1218">                m_gameState.setAnswerVisible(i, false);</span>
+
+            /* Fire off an event to GameState listeners to update their state */
+<span class="nc" id="L1221">            m_statePacket.setType(GameStateEnum.TRANSITION_LEVEL);</span>
+<span class="nc" id="L1222">            m_statePacket.setCorrectAnswer(GameState.NO_CORRECT_ANSWER);</span>
+<span class="nc" id="L1223">            m_statePacket.setQuestion(&quot;&quot;);</span>
+<span class="nc" id="L1224">            m_statePacket.setAnswers(null);</span>
+            
+<span class="nc" id="L1226">            m_statePacket.setAnswersVisible(m_gameState.getAnswersVisible());</span>
+<span class="nc" id="L1227">            m_statePacket.setLevelTitle(m_titles[m_currentLevel]);</span>
+            
+<span class="nc" id="L1229">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+<span class="nc bnc" id="L1231" title="All 2 branches missed.">            if (m_gameState.getToggleState(GameState.GAME_IN_SESSION) == true)</span>
+            {
+<span class="nc bnc" id="L1233" title="All 2 branches missed.">                if (questionNum &gt;= m_maxNumberOfLevels)</span>
+                {
+                    /* Player has reached the top!  Stop background sound and play
+                     * special sound.  Set game inactive.
+                     */
+<span class="nc" id="L1238">                    m_soundPlayer.stop(SoundPlayer.BACKGROUND_CHANNEL);</span>
+
+<span class="nc" id="L1240">                    m_soundPlayer.loadSound(SoundIDEnum.WINNER,</span>
+                            SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L1242">                    m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+<span class="nc" id="L1244">                    m_gameState.setToggleState(GameState.GAME_IN_SESSION, false);</span>
+                }
+                else
+                {
+                    /* Check if a transition point has been reached */
+<span class="nc bnc" id="L1249" title="All 2 branches missed.">                    for (int  transLevel = 0; transLevel &lt; m_transitions.length; transLevel++)</span>
+                    {
+<span class="nc bnc" id="L1251" title="All 2 branches missed.">                        if (questionNum == m_transitions[transLevel])</span>
+                        {
+                            // Major transition reached.  Stop background sound and play
+                            // special sound.
+<span class="nc" id="L1255">                            m_soundPlayer.stop(SoundPlayer.BACKGROUND_CHANNEL);</span>
+
+<span class="nc" id="L1257">                            m_soundPlayer.loadSound(SoundIDEnum.GOAL_REACHED,</span>
+                                    SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L1259">                            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+                        }
+                    }
+                }
+            }
+            
+            /* Switch state flag to next state */
+<span class="nc" id="L1266">            m_state = GamePhaseEnum.S_TRANSITION_PANEL_SHOWN;</span>
+<span class="nc" id="L1267">        }</span>
+<span class="nc bnc" id="L1268" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_WALKAWAY)</span>
+        {
+            // In &quot;Walkaway&quot; mode -- display the correct answer
+<span class="nc" id="L1271">            int     correctAnswerIndex = GameState.NO_CORRECT_ANSWER;</span>
+
+<span class="nc bnc" id="L1273" title="All 2 branches missed.">            for (int  index = 0; index &lt; m_answers.length; index++)</span>
+            {
+<span class="nc bnc" id="L1275" title="All 2 branches missed.">                if (m_answers[index].getCorrect())</span>
+                {
+                    // Set the correct answer
+<span class="nc" id="L1278">                    correctAnswerIndex = index;</span>
+<span class="nc" id="L1279">                    break;</span>
+                }
+            }
+
+            // If there is a note associated with the question, display it now.
+<span class="nc" id="L1284">            String  note = m_question.getNote();</span>
+            
+<span class="nc bnc" id="L1286" title="All 4 branches missed.">            if (note != null &amp;&amp; note.length() &gt; 0)</span>
+            {
+<span class="nc" id="L1288">                m_eventPacket.setType(GameUpdateEnumGame.STATUS_MSG);</span>
+<span class="nc" id="L1289">                m_eventPacket.setStatusMessage(note);</span>
+                
+<span class="nc" id="L1291">                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+            }
+
+            /* Fire off an event to GameState listeners to update their state */
+<span class="nc" id="L1295">            m_statePacket.setType(GameStateEnum.WALKAWAY);</span>
+<span class="nc" id="L1296">            m_statePacket.setCorrectAnswer(correctAnswerIndex);</span>
+<span class="nc" id="L1297">            m_statePacket.setCurrentLevel(m_finalLevel);</span>
+            
+<span class="nc" id="L1299">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+            
+            // Switch state flag to next state
+<span class="nc" id="L1302">            m_state = GamePhaseEnum.S_ENDING_GAME;</span>
+<span class="nc" id="L1303">        }   </span>
+<span class="nc bnc" id="L1304" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_ENDING_GAME)</span>
+        {
+            // Ending game -- Display the winnings and play &quot;Winner&quot; sound
+
+
+            // Set the current level
+<span class="nc" id="L1310">            m_statePacket.setType(GameStateEnum.SET_CURRENT_LEVEL);</span>
+<span class="nc" id="L1311">            m_statePacket.setCurrentLevel(m_finalLevel);</span>
+            
+<span class="nc" id="L1313">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+            
+            /* Set the Transition panel text to the current level title. */
+<span class="nc" id="L1316">            String  title = m_gameConfig.getConfig(&quot;levelName&quot; + m_finalLevel);</span>
+
+<span class="nc bnc" id="L1318" title="All 2 branches missed.">            if (title == null)</span>
+<span class="nc" id="L1319">                title = &quot;$ 0&quot;;</span>
+
+            // Send event to update the transition text
+<span class="nc" id="L1322">            m_eventPacket.setType(GameUpdateEnumGame.TRANSITION_MSG);</span>
+<span class="nc" id="L1323">            m_eventPacket.setTransitionMessage(title);</span>
+
+<span class="nc" id="L1325">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            // Send event to display the transition msg
+<span class="nc" id="L1328">            m_gameState.setToggleState(GameState.TRANSITION_SCREEN_SHOWN, true);</span>
+
+<span class="nc" id="L1330">            m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L1331">            m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+
+<span class="nc" id="L1333">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            // Play the &quot;Winner&quot; sound
+<span class="nc" id="L1336">            m_soundPlayer.loadSound(SoundIDEnum.WINNER,</span>
+                    SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L1338">            m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+            // Switch state flag to next state
+<span class="nc" id="L1341">            m_state = GamePhaseEnum.S_TRANSITION_PANEL_SHOWN;</span>
+<span class="nc" id="L1342">        }</span>
+<span class="nc bnc" id="L1343" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_TRANSITION_PANEL_SHOWN)</span>
+        {
+            // Clear the status message
+<span class="nc" id="L1346">            m_eventPacket.setType(GameUpdateEnumGame.STATUS_MSG);</span>
+<span class="nc" id="L1347">            m_eventPacket.setStatusMessage(&quot;&quot;);</span>
+            
+<span class="nc" id="L1349">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc bnc" id="L1351" title="All 2 branches missed.">            if (m_gameState.getToggleState(GameState.GAME_IN_SESSION) == true)</span>
+            {
+                // Transition to the next level
+<span class="nc" id="L1354">                m_state = GamePhaseEnum.S_WAITING_TO_START;</span>
+<span class="nc" id="L1355">                nextPhase();</span>
+            }
+            else
+            {
+                // Game over - go to inactive mode
+<span class="nc" id="L1360">                m_state = GamePhaseEnum.S_INACTIVE;</span>
+
+                // Stop all sounds
+<span class="nc" id="L1363">                m_soundPlayer.stop(SoundPlayer.ALL_CHANNELS);</span>
+
+                // Inform everyone this is the end of the game
+<span class="nc" id="L1366">                m_statePacket.setType(GameStateEnum.END_OF_GAME);</span>
+
+<span class="nc" id="L1368">                m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+            }
+        }
+<span class="nc bnc" id="L1371" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_CONFIRM_LIFELINE)</span>
+        {
+            /* Unselect any currently selected answers */
+<span class="nc" id="L1374">            m_eventPacket.setType(GameUpdateEnumGame.SELECTED_ANSWER);</span>
+<span class="nc" id="L1375">            m_eventPacket.setSelectedAnswer(-1);</span>
+
+<span class="nc" id="L1377">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Disable answer selection until abort of choice or lifeline used.
+             */
+<span class="nc" id="L1381">            m_gameState.setToggleState(GameState.ANSWERS_SELECTABLE, false);</span>
+
+<span class="nc" id="L1383">            m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L1384">            m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+            
+<span class="nc" id="L1386">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Highlight the selected lifeline icon */
+<span class="nc" id="L1389">            m_eventPacket.setType(GameUpdateEnumGame.SELECTED_LIFELINE);</span>
+<span class="nc" id="L1390">            m_eventPacket.setSelectedLifeline(m_lifelineSelected);</span>
+            
+<span class="nc" id="L1392">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+        }
+<span class="nc bnc" id="L1394" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_LIFELINE_ABORTED)</span>
+        {
+            /* Unhighlight the selected lifeline */
+<span class="nc" id="L1397">            m_eventPacket.setType(GameUpdateEnumGame.SELECTED_LIFELINE);</span>
+<span class="nc" id="L1398">            m_eventPacket.setSelectedLifeline(GameState.NO_SELECTED_LIFELINE);</span>
+            
+<span class="nc" id="L1400">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Re-enable answer selection. */
+<span class="nc" id="L1403">            m_gameState.setToggleState(GameState.ANSWERS_SELECTABLE, true);</span>
+
+<span class="nc" id="L1405">            m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L1406">            m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+            
+<span class="nc" id="L1408">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc" id="L1410">            m_state = GamePhaseEnum.S_ANSWERS_DISPLAYED;</span>
+        }
+<span class="nc bnc" id="L1412" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_LIFELINE_CONFIRMED)</span>
+        {
+            /* Pause the question timer */
+<span class="nc" id="L1415">            m_questionTimer.stopTimer();</span>
+
+<span class="nc bnc" id="L1417" title="All 4 branches missed.">            switch (m_lifelineSelected)</span>
+            {
+                case GameState.FIFTY_FIFTY :
+                {
+<span class="nc" id="L1421">                    performFiftyFifty();</span>
+                }
+<span class="nc" id="L1423">                break;</span>
+
+                case GameState.PHONE_A_FRIEND :
+                {
+<span class="nc" id="L1427">                    performPhoneAFriend();</span>
+                }
+<span class="nc" id="L1429">                break;</span>
+
+                case GameState.ASK_THE_AUDIENCE :
+                {
+<span class="nc" id="L1433">                    performAskTheAudience();</span>
+                }
+<span class="nc" id="L1435">                break;</span>
+            }
+        }
+<span class="nc bnc" id="L1438" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_PHONE_A_FRIEND_TIMER)</span>
+        {
+            /* This state is executed when the Phone-a-friend timer is
+             * shown.  This state does not change until the Scroll Lock
+             * key is pressed.  See the gameActionPerformed() function.
+             */
+
+            /* Stop/start the timer. */
+<span class="nc bnc" id="L1446" title="All 2 branches missed.">            if (m_lifelineTimer.isPaused())</span>
+<span class="nc" id="L1447">                m_lifelineTimer.startTimer();</span>
+            else
+<span class="nc" id="L1449">                m_lifelineTimer.stopTimer();</span>
+        }
+<span class="nc bnc" id="L1451" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_WAITING_FOR_POLL_COMPLETION)</span>
+        {
+            /* The player selected &quot;Ask the audience&quot;.  The waiting
+             * sound is playing until the Space bar is hit to transition
+             * here.  Stop the sound and disable the lifeline.
+             */
+
+<span class="nc" id="L1458">            m_soundPlayer.loadSound(SoundIDEnum.ASK_THE_AUDIENCE_END,</span>
+                    SoundPlayer.EFFECTS_CHANNEL, false);
+
+<span class="nc" id="L1461">            m_soundPlayer.stop(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L1462">            m_soundPlayer.start(SoundPlayer.EFFECTS_CHANNEL);</span>
+
+<span class="nc" id="L1464">            m_state = GamePhaseEnum.S_LIFELINE_USED;</span>
+<span class="nc" id="L1465">            nextPhase();</span>
+        }
+<span class="nc bnc" id="L1467" title="All 2 branches missed.">        else if (m_state == GamePhaseEnum.S_LIFELINE_USED)</span>
+        {
+            /* Unhighlight the selected lifeline */
+<span class="nc" id="L1470">            m_eventPacket.setType(GameUpdateEnumGame.SELECTED_LIFELINE);</span>
+<span class="nc" id="L1471">            m_eventPacket.setSelectedLifeline(GameState.NO_SELECTED_LIFELINE);</span>
+            
+<span class="nc" id="L1473">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Disable the used lifeline */
+<span class="nc" id="L1476">            m_gameState.setToggleState(m_lifelineSelected, false);</span>
+
+            /* Re-enable answer selection. */
+<span class="nc" id="L1479">            m_gameState.setToggleState(GameState.ANSWERS_SELECTABLE, true);</span>
+
+<span class="nc" id="L1481">            m_eventPacket.setType(GameUpdateEnumGame.TOGGLE_STATE);</span>
+<span class="nc" id="L1482">            m_eventPacket.setToggleStates(m_gameState.getToggleStates());</span>
+            
+<span class="nc" id="L1484">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            /* Resume the question timer */
+<span class="nc" id="L1487">            m_questionTimer.startTimer();</span>
+
+            /* Resume the background sound */
+<span class="nc" id="L1490">            m_soundPlayer.start(SoundPlayer.BACKGROUND_CHANNEL);</span>
+
+            // Send the lifeline end state
+<span class="nc" id="L1493">            m_statePacket.setType(GameStateEnum.LIFELINE_END);</span>
+
+<span class="nc" id="L1495">            m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+<span class="nc" id="L1497">            m_state = GamePhaseEnum.S_ANSWERS_DISPLAYED;</span>
+        }
+<span class="nc" id="L1499">    }</span>
+    
+    
+    private void  performFiftyFifty()
+    {
+<span class="nc" id="L1504">        m_soundPlayer.loadSound(SoundIDEnum.FIFTY_FIFTY_LIFELINE, SoundPlayer.FOREGROUND_CHANNEL, false);</span>
+<span class="nc" id="L1505">        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+        /* Randomly eliminate two of the three wrong answers,
+         * leaving one right and one wrong answer.  This
+         * code randomly chooses the wrong answer to keep,
+         * effectively yielding the same results. */
+<span class="nc" id="L1511">	java.util.Random  rand = new java.util.Random();</span>
+
+<span class="nc" id="L1513">        int  wrongAnswerToLeave = rand.nextInt(3) + 1;  // 1, 2 or 3</span>
+
+<span class="nc bnc" id="L1515" title="All 2 branches missed.">        for (int  i = 0; i &lt; m_answers.length; i++)</span>
+        {
+<span class="nc bnc" id="L1517" title="All 2 branches missed.">            if (m_answers[i].getCorrect())</span>
+<span class="nc" id="L1518">                continue;       // Skip the correct answer</span>
+            else
+<span class="nc" id="L1520">                wrongAnswerToLeave--;</span>
+
+<span class="nc bnc" id="L1522" title="All 2 branches missed.">            if (wrongAnswerToLeave == 0)</span>
+<span class="nc" id="L1523">                continue;       // This is the wrong answer to keep</span>
+            else
+<span class="nc" id="L1525">                m_gameState.setAnswerVisible(i, false);</span>
+        }
+
+        // Send the Fifty-fifty state
+<span class="nc" id="L1529">        m_statePacket.setType(GameStateEnum.FIFTY_FIFTY);</span>
+<span class="nc" id="L1530">        m_statePacket.setAnswersVisible(m_gameState.getAnswersVisible());</span>
+        
+<span class="nc" id="L1532">        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+
+<span class="nc" id="L1534">        m_state = GamePhaseEnum.S_LIFELINE_USED;</span>
+
+<span class="nc" id="L1536">        nextPhase();</span>
+<span class="nc" id="L1537">    }</span>
+    
+
+    private void  performPhoneAFriend()
+    {
+<span class="nc" id="L1542">        m_soundPlayer.stop(SoundPlayer.FOREGROUND_CHANNEL);</span>
+<span class="nc" id="L1543">        m_soundPlayer.stop(SoundPlayer.BACKGROUND_CHANNEL);</span>
+
+	/* Play the Phone-a-friend start sound */
+<span class="nc" id="L1546">        m_soundPlayer.loadSound(SoundIDEnum.PHONE_A_FRIEND_LIFELINE,</span>
+		SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L1548">	m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+        /* Pre-load the clock tick sound into the effects channel */
+<span class="nc" id="L1551">        m_soundPlayer.loadSound(SoundIDEnum.CLOCK_TICK, SoundPlayer.EFFECTS_CHANNEL,</span>
+                false);
+
+	/* Clear the &quot;clock-tick&quot; loaded flag so that the tick sound
+	 * will be loaded the first time it is played.
+	 */
+<span class="nc" id="L1557">	m_clockTickLoaded = false;</span>
+        
+<span class="nc bnc" id="L1559" title="All 2 branches missed.">        if (m_lifelineTimer == null)</span>
+        {
+<span class="nc" id="L1561">            m_lifelineTimer = new GameTimer();</span>
+<span class="nc" id="L1562">            m_lifelineTimer.addGameTimerListener(this);</span>
+        }
+        
+<span class="nc" id="L1565">        m_lifelineTimer.setTimer(m_lifelineTimerLimit, 0, false);</span>
+
+<span class="nc" id="L1567">        m_statePacket.setType(GameStateEnum.PHONE_A_FRIEND);</span>
+<span class="nc" id="L1568">        m_statePacket.setLifelineTimerLimit(m_lifelineTimerLimit);</span>
+        
+<span class="nc" id="L1570">        m_packetProcessor.processStatePacket(m_statePacket);</span>
+        
+<span class="nc" id="L1572">        m_state = GamePhaseEnum.S_PHONE_A_FRIEND_TIMER;</span>
+<span class="nc" id="L1573">    }</span>
+
+    /** Called when a game timer event occurs  */
+    public void gameTimerActionPerformed(GameTimerEvent evt) {
+<span class="nc bnc" id="L1577" title="All 2 branches missed.">        if (evt.getType() == GameTimerEvent.TIMER_ELAPSED)</span>
+        {
+            // Update the lifeline clock
+<span class="nc" id="L1580">            m_eventPacket.setType(GameUpdateEnumGame.UPDATE_LIFELINE_CLOCK);</span>
+<span class="nc" id="L1581">            m_eventPacket.setLifelineTimerTime(m_lifelineTimer.getTime());</span>
+
+<span class="nc" id="L1583">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+            // Play the &quot;Time's up!&quot; sound
+<span class="nc" id="L1586">            m_soundPlayer.loadSound(SoundIDEnum.LIFELINE_TIME_UP,</span>
+                    SoundPlayer.EFFECTS_CHANNEL, false);
+<span class="nc" id="L1588">            m_soundPlayer.start(SoundPlayer.EFFECTS_CHANNEL);</span>
+        }
+<span class="nc" id="L1590">    }</span>
+    
+    /** Called whenever each second while timer is running  */
+    public void gameTimerOneSecond(GameTimerEvent evt)
+    {
+        // Update the lifeline clock
+<span class="nc" id="L1596">        m_eventPacket.setType(GameUpdateEnumGame.UPDATE_LIFELINE_CLOCK);</span>
+<span class="nc" id="L1597">        m_eventPacket.setLifelineTimerTime(m_lifelineTimer.getTime());</span>
+        
+<span class="nc" id="L1599">        m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+
+<span class="nc" id="L1601">        m_soundPlayer.start(SoundPlayer.EFFECTS_CHANNEL);</span>
+<span class="nc" id="L1602">    }</span>
+
+    private void  closeLifelineTimer()
+    {
+<span class="nc" id="L1606">        m_soundPlayer.stop(SoundPlayer.ALL_CHANNELS);</span>
+
+<span class="nc" id="L1608">        m_lifelineTimer.stopTimer();</span>
+        
+<span class="nc" id="L1610">        m_state = GamePhaseEnum.S_LIFELINE_USED;</span>
+<span class="nc" id="L1611">        nextPhase();</span>
+<span class="nc" id="L1612">    }</span>
+    
+    private void  performAskTheAudience()
+    {
+<span class="nc" id="L1616">        m_soundPlayer.stop(SoundPlayer.ALL_CHANNELS);</span>
+        
+<span class="nc" id="L1618">        m_soundPlayer.loadSound(SoundIDEnum.ASK_THE_AUDIENCE_LIFELINE,</span>
+	        SoundPlayer.FOREGROUND_CHANNEL, true);
+<span class="nc" id="L1620">        m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+
+        // Send the Ask The Audience state
+<span class="nc" id="L1623">        m_statePacket.setType(GameStateEnum.ASK_THE_AUDIENCE);</span>
+        
+<span class="nc" id="L1625">        m_packetProcessor.processStatePacket(m_statePacket);    // Do it</span>
+        
+<span class="nc" id="L1627">        m_state = GamePhaseEnum.S_WAITING_FOR_POLL_COMPLETION;</span>
+<span class="nc" id="L1628">    }</span>
+    
+    
+    /** Called when the player confirms the selected answer is the final
+     * answer. */
+    private void processFinalAnswer()
+    {
+<span class="nc bnc" id="L1635" title="All 2 branches missed.">        if (m_answers[m_selectedIndex].getCorrect())</span>
+<span class="nc" id="L1636">            m_state = GamePhaseEnum.S_CORRECT_ANSWER;</span>
+        else
+<span class="nc" id="L1638">            m_state = GamePhaseEnum.S_WRONG_ANSWER;</span>
+
+<span class="nc" id="L1640">        return;</span>
+    }
+    
+    private class QuestionTimer
+            implements ActionListener
+    {
+        public  QuestionTimer()
+<span class="fc" id="L1647">        {</span>
+<span class="fc" id="L1648">            m_timer = new Timer(1000, this);</span>
+<span class="fc" id="L1649">            m_timer.setRepeats(true);</span>
+<span class="fc" id="L1650">        }</span>
+
+        /** Setup/reset the timer.  If timeLimit &lt; 0, use the time limit
+         * that was used last time.
+         */
+        public void  setupTimer(int  timeLimit, int  currentTime)
+        {
+<span class="nc" id="L1657">            m_timer.stop();</span>
+
+            // If timeLimit &gt;= 0, use its value, else use previous limit
+<span class="nc bnc" id="L1660" title="All 2 branches missed.">            if (timeLimit &gt;= 0)</span>
+<span class="nc" id="L1661">                m_timeLimit = timeLimit;</span>
+            
+<span class="nc" id="L1663">            m_elapsedTime = currentTime;</span>
+
+            /* Sanity checks */
+<span class="nc bnc" id="L1666" title="All 2 branches missed.">            if (m_timeLimit &lt; 0)</span>
+<span class="nc" id="L1667">                m_timeLimit = 0;</span>
+
+<span class="nc bnc" id="L1669" title="All 2 branches missed.">            if (currentTime &gt; m_timeLimit)</span>
+<span class="nc" id="L1670">                m_elapsedTime = m_timeLimit;</span>
+
+<span class="nc" id="L1672">            m_eventPacket.setType(GameUpdateEnumGame.UPDATE_QUESTION_CLOCK);</span>
+<span class="nc" id="L1673">            m_eventPacket.setQuestionTimerTime(m_elapsedTime);</span>
+            
+<span class="nc" id="L1675">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+<span class="nc" id="L1676">        }</span>
+    
+        /** Starts the timer running */
+        public void startTimer()
+        {
+<span class="nc bnc" id="L1681" title="All 2 branches missed.">            if (m_timeLimit == 0)</span>
+<span class="nc" id="L1682">                return;</span>
+            
+<span class="nc" id="L1684">            m_timer.setInitialDelay(1000);</span>
+<span class="nc" id="L1685">            m_timer.start();</span>
+<span class="nc" id="L1686">            m_paused = false;</span>
+
+<span class="nc" id="L1688">            m_eventPacket.setType(GameUpdateEnumGame.UPDATE_QUESTION_CLOCK);</span>
+<span class="nc" id="L1689">            m_eventPacket.setQuestionTimerTime(m_elapsedTime);</span>
+            
+<span class="nc" id="L1691">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+<span class="nc" id="L1692">        }</span>
+
+        /** Stops/pauses the timer */
+        public void stopTimer()
+        {
+<span class="nc" id="L1697">            m_timer.stop();</span>
+<span class="nc" id="L1698">            m_paused = true;</span>
+
+<span class="nc" id="L1700">            m_eventPacket.setType(GameUpdateEnumGame.UPDATE_QUESTION_CLOCK);</span>
+<span class="nc" id="L1701">            m_eventPacket.setQuestionTimerTime(m_elapsedTime);</span>
+            
+<span class="nc" id="L1703">            m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+<span class="nc" id="L1704">        }</span>
+
+        /** Gets the current time limit */
+        public int  getLimit()
+        {
+<span class="nc" id="L1709">            return m_timeLimit;</span>
+        }
+
+        /** Gets the current elapsed time */
+        public int  getElapsedTime()
+        {
+<span class="nc" id="L1715">            return m_elapsedTime;</span>
+        }
+        
+        public void actionPerformed(ActionEvent  evt)
+        {
+<span class="nc bnc" id="L1720" title="All 2 branches missed.">            if (m_timeLimit == 0)</span>
+<span class="nc" id="L1721">                return;</span>
+            
+<span class="nc bnc" id="L1723" title="All 2 branches missed.">            if (evt.getSource() == m_timer)</span>
+            {
+<span class="nc" id="L1725">                m_elapsedTime++;</span>
+
+<span class="nc bnc" id="L1727" title="All 2 branches missed.">                if (m_elapsedTime &gt;= m_timeLimit)</span>
+                {
+                    /* Time elapsed.  Stop timer and fire off an event. */
+<span class="nc" id="L1730">                    m_timer.stop();</span>
+<span class="nc" id="L1731">                    m_paused = true;</span>
+<span class="nc" id="L1732">                    m_elapsedTime = m_timeLimit;</span>
+
+<span class="nc bnc" id="L1734" title="All 4 branches missed.">                    if (m_state != GamePhaseEnum.S_CORRECT_ANSWER &amp;&amp;</span>
+                            m_state != GamePhaseEnum.S_WRONG_ANSWER)
+                    {
+                        // Play the &quot;Time's up!&quot; sound
+<span class="nc" id="L1738">                        m_soundPlayer.loadSound(SoundIDEnum.QUESTION_TIME_UP,</span>
+                                SoundPlayer.EFFECTS_CHANNEL, false);
+<span class="nc" id="L1740">                        m_soundPlayer.start(SoundPlayer.EFFECTS_CHANNEL);</span>
+                    }
+                }
+
+<span class="nc" id="L1744">                m_eventPacket.setType(GameUpdateEnumGame.UPDATE_QUESTION_CLOCK);</span>
+<span class="nc" id="L1745">                m_eventPacket.setQuestionTimerTime(m_elapsedTime);</span>
+
+<span class="nc" id="L1747">                m_packetProcessor.processEventPacket(m_eventPacket);    // Do it</span>
+            }
+<span class="nc" id="L1749">        }</span>
+        
+        private Timer  m_timer;
+        
+        private int  m_timeLimit;
+        
+        private int  m_elapsedTime;
+        
+        private boolean  m_paused;
+    }
+
+<span class="fc" id="L1760">    static GameController  m_gameControllerSingleton = null;        // Singleton</span>
+    
+    private GamePhaseEnum  m_state;               /* Current game phase */
+
+    private StatePacket     m_statePacket;
+    private EventPacket     m_eventPacket;
+    
+    private PacketProcessor m_packetProcessor;
+
+<span class="fc" id="L1769">    private GameModeEnum  m_gameMode = GameModeEnum.STANDALONE;     /* Standalone/master/slave node */</span>
+    
+    private JDesktopPane  m_desktopPane;
+    
+    private QuestionTimer  m_questionTimer;
+    private int  m_questionTimerLimit;
+    
+    private GameConfig  m_gameConfig;
+    
+    private GameState  m_gameState;
+
+    private jQuizShow.util.SoundPlayer  m_soundPlayer;
+    
+    private GameTimer  m_lifelineTimer;
+    private int  m_lifelineTimerLimit;   // Max time for lifeline timer
+    
+    private int  m_selectedIndex;         /* Index of selected answer */
+    
+    private int  m_lifelineSelected;        /* Index of lifeline that was selected */
+
+    private int  m_maxNumberOfLevels;       // Max. number of possible levels (questions)
+    
+    private int  m_numAnswersDisplayed;     /* Index of last answer displayed */
+
+    private int  m_finalLevel;          /* Set to level # that player ends with */
+    
+    private int  m_maxNumberOfAnswers;      /* Max. number of possible answers */
+   
+    private int  m_currentLevel;        /* Current question level */
+    
+    private QuestionList  m_questionList;   /* Question list */
+    
+    private Question  m_question;       /* Current question */
+    private Answer[]  m_answers;        /* Current possible answers */
+    private int  m_correctAnswer;      /* Index of correct answer */
+    
+    private int  m_numBreakpoints;    /* Number of difficulty levels */
+    private int[]  m_breakpoints;     /* Level numbers at which difficulty changes */
+
+    private int[]  m_transitions;	/* Transition levels */
+    private SoundIDEnum  m_bkgSoundId;		/* Current bkg sound ID */
+
+    private String[]  m_titles;     /* Level titles */
+
+    private boolean  m_clockTickLoaded;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

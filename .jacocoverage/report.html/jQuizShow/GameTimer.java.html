@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GameTimer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">GameTimer.java</span></div><h1>GameTimer.java</h1><pre class="source lang-java linenums">/*
+ * GameTimer.java
+ *
+ * Created on April 28, 2001, 12:05 PM
+ *
+ * $Id: GameTimer.java,v 1.3 2007/02/06 05:20:21 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: GameTimer.java,v $
+ *    Revision 1.3  2007/02/06 05:20:21  sdchen
+ *    Added key listener to overcome keyboard focus problem.
+ *
+ *    Revision 1.2  2007/02/05 04:05:34  sdchen
+ *    Replaced deprecated show() with setVisible(bool  s)
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:26  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 
+ */
+
+import java.lang.Math.*;
+import java.text.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.*;
+import javax.swing.*;
+import javax.swing.event.*;
+
+import jQuizShow.game.*;
+import jQuizShow.event.*;
+
+public class GameTimer extends JPanel
+        implements ActionListener
+{
+    /** Creates new GameTimer */
+    public GameTimer()
+<span class="fc" id="L72">    {</span>
+<span class="fc" id="L73">        m_clockFaceColor = Color.darkGray;</span>
+<span class="fc" id="L74">        m_clockHandColor = Color.orange;</span>
+<span class="fc" id="L75">        m_clockTailColor = Color.lightGray;</span>
+<span class="fc" id="L76">        m_textColor = Color.white;</span>
+<span class="fc" id="L77">        m_backgroundColor = Color.black;</span>
+        
+<span class="fc" id="L79">        m_timer = new Timer(1000, this);</span>
+<span class="fc" id="L80">        m_timer.setRepeats(true);</span>
+        
+<span class="fc" id="L82">        m_evt = new GameTimerEvent(this, 0);</span>
+<span class="fc" id="L83">        m_GameTimerListenerList = new EventListenerList();</span>
+
+        /* Capture resize events */
+<span class="fc" id="L86">        addComponentListener(new ComponentAdapter()</span>
+<span class="fc" id="L87">        {</span>
+            public void  componentResized(ComponentEvent  evt)
+            {
+<span class="fc" id="L90">                Component component = evt.getComponent();</span>
+
+<span class="fc" id="L92">		updateSize(component);</span>
+                
+<span class="fc" id="L94">                repaint();</span>
+<span class="fc" id="L95">            }</span>
+        } );
+
+        // Listen for keyboard events
+<span class="fc" id="L99">        addKeyListener(new java.awt.event.KeyAdapter()</span>
+<span class="fc" id="L100">        {</span>
+            public void keyPressed(java.awt.event.KeyEvent evt)
+            {
+<span class="nc" id="L103">                int  keyCode = evt.getKeyCode();</span>
+<span class="nc" id="L104">                char  keyChar = evt.getKeyChar();</span>
+                
+<span class="nc" id="L106">                GameState  gState = GameState.getInstance(false);</span>
+                
+<span class="nc" id="L108">                GameInputEvent  event = new GameInputEvent(this);</span>
+
+<span class="nc" id="L110">                event.setType(GameInputEnum.KEY_TYPED);</span>
+<span class="nc" id="L111">                event.setKeyCode(keyCode, keyChar);</span>
+<span class="nc" id="L112">                gState.fireGameInputEvent(event);</span>
+<span class="nc" id="L113">            }</span>
+        } );
+        
+<span class="fc" id="L116">        setFocusable(true);</span>
+<span class="fc" id="L117">    }        </span>
+    
+    /**
+     * Sets up the timer.
+     *
+     *@param timeLimit - End time in seconds for the timer
+     *@param currentTime - Current number of seconds elapsed
+     *@param countdown - &quot;true&quot; will show a count down timer vs. a count up timer
+     */
+    public void setTimer(int timeLimit, int  currentTime, boolean  countdown)
+    {
+<span class="nc" id="L128">        stopTimer();</span>
+<span class="nc" id="L129">        m_timeLimit = timeLimit;</span>
+<span class="nc" id="L130">        m_elapsedTime = currentTime;</span>
+<span class="nc" id="L131">        m_countdown = countdown;</span>
+
+        /* Sanity checks */
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (m_timeLimit &lt; 0)</span>
+<span class="nc" id="L135">            m_timeLimit = 0;</span>
+        
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        if (currentTime &gt; timeLimit)</span>
+<span class="nc" id="L138">            m_elapsedTime = timeLimit;</span>
+
+<span class="nc" id="L140">        return;</span>
+    }
+    
+    /** Set the current timer time.  This is used primarily for driving the
+     * timer manually.
+     */
+    public void setTime(int  currentTime)
+    {
+<span class="nc bnc" id="L148" title="All 4 branches missed.">         if (currentTime &gt;= 0 &amp;&amp; currentTime &lt;= m_timeLimit)</span>
+        {
+<span class="nc" id="L150">            m_elapsedTime = currentTime;</span>
+<span class="nc" id="L151">            repaint();</span>
+        }
+<span class="nc" id="L153">    }</span>
+    
+    /** Starts the timer running */
+    public void startTimer()
+    {
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (m_timeLimit == 0)</span>
+<span class="nc" id="L159">            m_timer.setInitialDelay(10);</span>
+        else
+<span class="nc" id="L161">            m_timer.setInitialDelay(1000);</span>
+        
+<span class="nc" id="L163">        m_timer.start();</span>
+<span class="nc" id="L164">        m_paused = false;</span>
+
+        /* Send event to any listener */
+<span class="nc" id="L167">        fireGameTimerEvent(GameTimerEvent.TIMER_STARTED);</span>
+<span class="nc" id="L168">    }</span>
+
+    /** Stops/pauses the timer */
+    public void stopTimer()
+    {
+<span class="nc" id="L173">        m_timer.stop();</span>
+<span class="nc" id="L174">        m_paused = true;</span>
+
+        /* Send event to any listener */
+<span class="nc" id="L177">        fireGameTimerEvent(GameTimerEvent.TIMER_STOPPED);</span>
+<span class="nc" id="L178">    }</span>
+
+    /** Sets the main colors of the timer */
+    public void setColor(Color  faceColor, Color  handColor, Color  textColor)
+    {
+<span class="nc" id="L183">        m_clockFaceColor = new Color(faceColor.getRGB());</span>
+<span class="nc" id="L184">        m_clockHandColor = new Color(handColor.getRGB());</span>
+<span class="nc" id="L185">        m_textColor = new Color(textColor.getRGB());</span>
+<span class="nc" id="L186">    }</span>
+
+    /** Sets all the colors for the timer */
+    public void setColor(Color  faceColor, Color  handColor, Color  textColor,
+            Color  tailColor, Color  backgroundColor)
+    {
+<span class="nc" id="L192">        m_clockTailColor = new Color(tailColor.getRGB());</span>
+<span class="nc" id="L193">        m_backgroundColor = new Color(backgroundColor.getRGB());</span>
+
+<span class="nc" id="L195">        setColor(faceColor, handColor, textColor);</span>
+<span class="nc" id="L196">    }</span>
+
+    /** Returns &quot;true&quot; if the timer is paused */
+    public boolean isPaused()
+    {
+<span class="nc" id="L201">        return m_paused;</span>
+    }
+
+    /** Gets the current time */
+    public int getTime() {
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        if (m_countdown)</span>
+<span class="nc" id="L207">            return  m_timeLimit - m_elapsedTime;</span>
+        else
+<span class="nc" id="L209">            return m_elapsedTime;</span>
+    }
+
+    public void addGameTimerListener(GameTimerListener  l)
+    {
+<span class="fc" id="L214">        m_GameTimerListenerList.add(GameTimerListener.class, l);</span>
+<span class="fc" id="L215">    }</span>
+    
+    public void removeGameTimerListener(GameTimerListener  l)
+    {
+<span class="nc" id="L219">        m_GameTimerListenerList.remove(GameTimerListener.class, l);</span>
+<span class="nc" id="L220">    }</span>
+    
+    protected void  fireGameTimerEvent(int  type)
+    {
+        // Guaranteed to return a non-null array
+<span class="nc" id="L225">        Object[] listeners = m_GameTimerListenerList.getListenerList();</span>
+
+<span class="nc" id="L227">        m_evt.setType(type);</span>
+        
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        for (int i = listeners.length - 2; i &gt;= 0; i -= 2)</span>
+        {
+<span class="nc bnc" id="L233" title="All 2 branches missed.">            if (listeners[i] == GameTimerListener.class)</span>
+            {
+<span class="nc bnc" id="L235" title="All 2 branches missed.">                if (type == GameTimerEvent.TIMER_CLOCK_TICK)</span>
+<span class="nc" id="L236">                    ((GameTimerListener)listeners[i+1]).gameTimerOneSecond(m_evt);</span>
+                else
+<span class="nc" id="L238">                    ((GameTimerListener)listeners[i+1]).gameTimerActionPerformed(m_evt);</span>
+            }
+        }        
+<span class="nc" id="L241">    }</span>
+
+    public void actionPerformed(ActionEvent  evt)
+    {
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        if (evt.getSource() == m_timer)</span>
+        {
+<span class="nc" id="L247">            m_elapsedTime++;</span>
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">            if (m_elapsedTime &gt;= m_timeLimit)</span>
+            {
+                /* Time elapsed.  Stop timer and fire off an event. */
+<span class="nc" id="L252">                m_timer.stop();</span>
+<span class="nc" id="L253">                m_paused = true;</span>
+<span class="nc" id="L254">                m_elapsedTime = m_timeLimit;</span>
+
+                /* Send event to any listener */
+<span class="nc" id="L257">                fireGameTimerEvent(GameTimerEvent.TIMER_ELAPSED);</span>
+            }
+            else
+            {
+                /* Send clock tick event to any listener */
+<span class="nc" id="L262">                fireGameTimerEvent(GameTimerEvent.TIMER_CLOCK_TICK);</span>
+            }
+
+<span class="nc" id="L265">            repaint();</span>
+        }
+<span class="nc" id="L267">    }</span>
+
+
+    /**
+     * Get the size of the component and get a new font if required.
+     */
+    private void  updateSize(Component  component)
+    {
+<span class="fc" id="L275">	Graphics  g = component.getGraphics();</span>
+
+<span class="fc" id="L277">	Dimension  dim = component.getSize();</span>
+
+<span class="fc" id="L279">	int  minDim = Math.min(dim.width, dim.height);</span>
+	
+<span class="fc" id="L281">	int  ptSize = (int) (minDim * 0.9f / 3);</span>
+	
+<span class="pc bpc" id="L283" title="3 of 4 branches missed.">	if (m_font == null || ptSize != m_ptSize)</span>
+	{
+<span class="fc" id="L285">	    m_font = new Font(&quot;Helvetica&quot;, Font.BOLD, ptSize);</span>
+<span class="fc" id="L286">	    m_fontMetrics = g.getFontMetrics(m_font);</span>
+<span class="fc" id="L287">	    m_ptSize = ptSize;</span>
+	}
+<span class="fc" id="L289">    }</span>
+
+    
+    protected void  paintComponent(Graphics  g)
+    {
+        JPanel x;
+
+<span class="nc" id="L296">        Graphics2D  g2 = (Graphics2D) g;</span>
+        
+<span class="nc" id="L298">        Dimension size = getSize();</span>
+	
+	// This code is needed here because JInternalFrames do not get
+	// a resize event when first drawn.
+<span class="nc bnc" id="L302" title="All 2 branches missed.">	if (m_firstShown)</span>
+	{
+<span class="nc" id="L304">	    updateSize(this);</span>
+<span class="nc" id="L305">	    m_firstShown = false;</span>
+	}
+        
+        // Clear everything
+<span class="nc" id="L309">        g2.setBackground(m_backgroundColor);</span>
+<span class="nc" id="L310">        g2.clearRect(0, 0, size.width, size.height);</span>
+        
+<span class="nc" id="L312">        float  minDim = Math.min(size.width, size.height);</span>
+
+<span class="nc" id="L314">        final float  lineThickness = minDim * 0.1f;</span>
+        
+<span class="nc" id="L316">        Rectangle2D  bounds = new Rectangle2D.Float(</span>
+                lineThickness, lineThickness,
+                minDim - lineThickness * 2, minDim - lineThickness * 2);
+
+        // Draw the analog clock &quot;face&quot; outline
+
+        {
+<span class="nc" id="L323">            Arc2D  arc = new Arc2D.Float(bounds, 0.0f, 360.0f, Arc2D.OPEN);</span>
+
+<span class="nc" id="L325">            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,</span>
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+
+<span class="nc" id="L328">            g2.setColor(m_clockFaceColor);</span>
+<span class="nc" id="L329">            g2.fill(arc);</span>
+        }
+        
+        // Draw the elapsed (used) time portion
+
+        {
+<span class="nc" id="L335">            g2.setColor(m_clockTailColor);</span>
+
+<span class="nc" id="L337">            g2.setStroke(new BasicStroke(lineThickness * 0.2f, BasicStroke.CAP_BUTT,</span>
+                    BasicStroke.JOIN_ROUND));
+
+<span class="nc" id="L340">            float arcAngle = m_elapsedTime / (float) m_timeLimit * 360.0f;</span>
+
+<span class="nc" id="L342">            Arc2D  arc = new Arc2D.Float(bounds, 90.0f, -arcAngle, Arc2D.OPEN);</span>
+
+<span class="nc" id="L344">            g2.draw(arc);</span>
+        }
+        // Draw the remaining time portion
+
+        {
+<span class="nc" id="L349">            g2.setColor(m_clockHandColor);</span>
+
+<span class="nc" id="L351">            g2.setStroke(new BasicStroke(lineThickness, BasicStroke.CAP_BUTT,</span>
+                    BasicStroke.JOIN_ROUND));
+
+<span class="nc" id="L354">            float arcAngle = (m_timeLimit - m_elapsedTime) / (float) m_timeLimit * 360.0f;</span>
+
+<span class="nc" id="L356">            Arc2D  arc = new Arc2D.Float(bounds, 90.0f, arcAngle, Arc2D.OPEN);</span>
+
+<span class="nc" id="L358">            g2.draw(arc);</span>
+        }
+        
+        // Draw the digital time clock
+        
+<span class="nc" id="L363">        java.util.Calendar  cal = java.util.Calendar.getInstance();</span>
+
+<span class="nc" id="L365">        cal.set(0, 0, 0, 0, 0);</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">        cal.set(java.util.Calendar.SECOND,</span>
+                m_countdown ? (m_timeLimit - m_elapsedTime) :
+                               m_elapsedTime);
+
+<span class="nc" id="L370">        int  minutes = cal.get(java.util.Calendar.MINUTE);</span>
+<span class="nc" id="L371">        int  seconds = cal.get(java.util.Calendar.SECOND);</span>
+        
+<span class="nc" id="L373">        StringBuffer  strb = new StringBuffer();</span>
+        
+<span class="nc bnc" id="L375" title="All 2 branches missed.">        if (minutes != 0)</span>
+<span class="nc" id="L376">            strb.append(minutes);</span>
+
+<span class="nc" id="L378">        strb.append(&quot;:&quot;);</span>
+        
+<span class="nc bnc" id="L380" title="All 2 branches missed.">        if (seconds &lt; 10)</span>
+<span class="nc" id="L381">            strb.append(&quot;0&quot;);</span>
+        
+<span class="nc" id="L383">        strb.append(seconds);</span>
+        
+<span class="nc" id="L385">        String  timeStr = strb.toString();</span>
+        
+<span class="nc" id="L387">        Point2D.Float center = new Point2D.Float(</span>
+                minDim * 0.5f, minDim * 0.5f);
+        
+<span class="nc bnc" id="L390" title="All 2 branches missed.">        if (m_fontMetrics != null)</span>
+        {
+<span class="nc" id="L392">            int width = m_fontMetrics.stringWidth(timeStr);</span>
+
+<span class="nc" id="L394">            float h = center.y + m_fontMetrics.getAscent() * 0.4f;</span>
+
+<span class="nc" id="L396">            g2.setColor(m_textColor);</span>
+<span class="nc" id="L397">            g2.setFont(m_font);</span>
+<span class="nc" id="L398">            g2.drawString(timeStr, center.x - width * 0.55f, h);</span>
+        }
+<span class="nc" id="L400">    }</span>
+
+    /**
+     * Test program
+     * @param args the command line arguments
+    */
+    public static void main (String args[]) {
+<span class="nc" id="L407">        Toolkit     tk = Toolkit.getDefaultToolkit();</span>
+<span class="nc" id="L408">        Dimension   screenSize = tk.getScreenSize();</span>
+        
+<span class="nc" id="L410">        Dimension   initSize = new Dimension();</span>
+        
+<span class="nc" id="L412">        Point       initLocation = new Point();</span>
+
+<span class="nc" id="L414">        JFrame  timerFrame = new JFrame();</span>
+
+<span class="nc" id="L416">        timerFrame.addWindowListener(new java.awt.event.WindowAdapter()</span>
+<span class="nc" id="L417">        {</span>
+            public void windowClosing(java.awt.event.WindowEvent evt)
+            {
+<span class="nc" id="L420">                System.exit(0);</span>
+<span class="nc" id="L421">            }</span>
+        });
+
+<span class="nc" id="L424">        initSize.width = (int) (screenSize.width * 0.4);</span>
+<span class="nc" id="L425">        initSize.height = (int) (screenSize.height * 0.4f);</span>
+        
+<span class="nc" id="L427">        timerFrame.setSize(initSize);</span>
+<span class="nc" id="L428">        timerFrame.setLocation(50, 50);</span>
+        
+<span class="nc" id="L430">        GameTimer  gameTimer = new GameTimer();</span>
+        
+<span class="nc" id="L432">        timerFrame.getContentPane().add(gameTimer);</span>
+<span class="nc" id="L433">        timerFrame.setVisible(true);</span>
+
+<span class="nc" id="L435">        gameTimer.setTimer(30, 5, true);</span>
+<span class="nc" id="L436">        gameTimer.startTimer();</span>
+<span class="nc" id="L437">    }</span>
+    
+    private int m_timeLimit;
+    
+    private int m_elapsedTime;
+    
+    private boolean m_countdown;
+    
+    private boolean m_paused;
+
+    private Timer  m_timer;
+    
+    private Font  m_font;
+    
+    private FontMetrics  m_fontMetrics;
+    
+    private int  m_ptSize;
+    
+    private Color  m_clockFaceColor;
+    private Color  m_clockTailColor;
+    private Color  m_clockHandColor;
+    private Color  m_textColor;
+    private Color  m_backgroundColor;
+
+<span class="fc" id="L461">    private GameTimerEvent  m_evt = null;</span>
+
+    protected EventListenerList  m_GameTimerListenerList;   // Listeners of time up event
+    
+<span class="fc" id="L465">    private boolean  m_firstShown = true;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

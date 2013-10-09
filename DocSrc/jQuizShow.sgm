@@ -1,0 +1,38 @@
+<!DOCTYPE Book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+<!ENTITY chap1 SYSTEM "chap1.sgm">
+<!ENTITY chap2 SYSTEM "chap2.sgm">
+<!ENTITY chap3 SYSTEM "chap3.sgm">
+<!ENTITY chap4 SYSTEM "chap4.sgm">
+
+<!ENTITY jqs "<emphasis>jQuizShow</emphasis>">
+]>
+
+<book>
+    <bookinfo>
+
+	<title>jQuizShow User Manual</title>
+
+	<author>
+	    <firstname>Steven</firstname>
+	    <surname>Chen</surname>
+	</author>
+
+	<copyright>
+	    <year>2002</year>
+	    <holder>Steven D. Chen</holder>
+	</copyright>
+
+	<mediaobject>
+	    <imageobject>
+		<imagedata fileref="jQuizShowLogo.png" format="PNG">
+	    </imageobject>
+	</mediaobject>
+
+    </bookinfo>
+
+&chap1;
+&chap2;
+&chap3;
+&chap4;
+
+</book>

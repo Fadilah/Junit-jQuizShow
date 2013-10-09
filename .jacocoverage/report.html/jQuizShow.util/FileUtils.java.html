@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FileUtils.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.util</a> &gt; <span class="el_source">FileUtils.java</span></div><h1>FileUtils.java</h1><pre class="source lang-java linenums">/*
+ * FileUtils.java
+ *
+ * Created on May 21, 2001, 8:48 PM
+ *
+ * $Id: FileUtils.java,v 1.2 2007/02/05 03:55:48 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: FileUtils.java,v $
+ *    Revision 1.2  2007/02/05 03:55:48  sdchen
+ *    Removed CR (Ctrl-M) from lines.
+ *
+ *    Revision 1.1  2004/04/02 06:02:00  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.6  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.5  2002/06/24 04:52:33  sdchen
+ *    Fixed to use default JAR file if jarFile arg of openFile() is NULL.
+ *
+ *    Revision 1.4  2002/05/28 00:16:09  sdchen
+ *    *** empty log message ***
+ *
+ *    Revision 1.3  2002/05/23 05:06:51  sdchen
+ *    *** empty log message ***
+ *
+ *    Revision 1.2  2002/05/07 05:36:48  sdchen
+ *    *** empty log message ***
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:13  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.util;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 1.0
+ */
+
+import java.io.*;
+import java.util.*;
+import java.util.jar.*;
+import java.util.zip.*;
+import java.net.*;
+
+import jQuizShow.*;
+
+public class FileUtils
+{
+    public static final String  DEFAULT_JAR_FILE = &quot;jQuizShow.jar&quot;;
+    
+    /** Creates new FileUtils
+     * NOTE:  This is never called since all methods in this class
+     * are static
+     */
+    private FileUtils()
+<span class="nc" id="L86">    {</span>
+<span class="nc" id="L87">    }</span>
+
+    /** Search for the filename.  The filename is searched using the
+     * the following rules:
+     *
+     *     1) the filename as is (absolute, or relative to current),
+     *     2) a URL,
+     *     3) in the defined &quot;searchDirs&quot;.
+     *     4) in the jQuizShow jar archive,
+     *
+     * It return the file path if found, else raise FileNotFoundException.
+     */
+    public static String searchForFile(String filename)
+            throws FileNotFoundException
+    {
+<span class="fc" id="L102">	return (searchForFile(filename, null));</span>
+    }
+
+
+    /** Search for the filename.  The filename is searched using the
+     * the following rules:
+     *
+     *     1) the filename as is (absolute, or relative to current),
+     *     2) a URL,
+     *     3) in the defined &quot;searchDirs&quot;.
+     *     4) in the jar archive,
+     *
+     * It return the file path if found, else raise FileNotFoundException.
+     */
+    public static String searchForFile(String filename, JarFile  jarFile)
+            throws FileNotFoundException
+    {
+<span class="fc" id="L119">        String[]  searchDirs = {</span>
+                    &quot;$user.dir&quot;,		// Run directory
+                    &quot;$JQUIZSHOW&quot; + File.separatorChar,
+                    &quot;$user.dir&quot;  + File.separatorChar + &quot;contrib&quot;,
+                    &quot;$user.dir&quot;  + File.separatorChar + &quot;jQuizShow&quot;,
+                    &quot;$user.home&quot;		// User's home dir
+        };
+
+<span class="fc" id="L127">        StringBuffer  expandedPaths = new StringBuffer();</span>
+
+<span class="fc" id="L129">	Properties  sysprops = System.getProperties();</span>
+
+	//
+	// Get the debugMode flag
+	//
+<span class="fc" id="L134">	GameConfig  gameConfig = GameConfig.getInstance();</span>
+	
+<span class="fc" id="L136">	m_debugMode = gameConfig.getIntConfig(&quot;debugMode&quot;, 0);</span>
+
+	//
+	// First pass initialization -- open the default jQuizShow jar file.
+	//
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (m_firstPass == true)</span>
+        {
+	    //
+            // Check if the jar file exists.  If it does open it.
+	    //
+<span class="fc" id="L146">	    String	str = sysprops.getProperty(&quot;java.class.path&quot;);</span>
+
+            try
+            {
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">	        if (str.endsWith(&quot;.jar&quot;) == false)</span>
+<span class="nc" id="L151">		    str = DEFAULT_JAR_FILE;</span>
+
+<span class="nc" id="L153">		m_jarFile = new JarFile(str);</span>
+            }
+<span class="fc" id="L155">            catch (IOException  e)</span>
+            {
+<span class="fc" id="L157">                m_jarFile = null;</span>
+                
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">                if ((m_debugMode &amp; GameConfig.DEBUG_FILE_IO) != 0)</span>
+<span class="nc" id="L160">                    System.out.println(&quot;WARNING -- unable to open jar file:  &quot; + str);</span>
+            }
+            finally
+            {
+<span class="pc" id="L164">                m_firstPass = false;</span>
+<span class="pc" id="L165">            }</span>
+        }
+
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">	if (jarFile == null)</span>
+<span class="fc" id="L169">	    jarFile = m_jarFile;</span>
+
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">        if ((m_debugMode &amp; GameConfig.DEBUG_FILE_IO) != 0)</span>
+<span class="nc" id="L172">            System.out.println(&quot;FileUtils.searchForFile(&quot; + filename + &quot;)&quot;);</span>
+        
+        File    filePath;
+
+	//
+	// Check the obvious -- the path passed in
+	//
+<span class="fc" id="L179">	filePath = new File(filename);</span>
+	
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">	if (filePath.exists())</span>
+<span class="fc" id="L182">	    return filename;        // File found.  Return it.</span>
+	else
+<span class="nc" id="L184">	    expandedPaths.append(&quot;    &quot; + filename + &quot;\n&quot;);</span>
+        
+	//
+        // Check it as if it was an URL
+	//
+	try
+	{
+<span class="nc" id="L191">	    URL url = new URL(filename);</span>
+<span class="nc" id="L192">	    return filename;</span>
+	}
+<span class="nc" id="L194">	catch (MalformedURLException  e)</span>
+	{
+	    //
+            // Not a valid URL.  Try the search dirs.
+	    //
+<span class="nc bnc" id="L199" title="All 2 branches missed.">            for (int  i = 0; i &lt; searchDirs.length; i++)</span>
+            {
+                String  path;
+
+<span class="nc bnc" id="L203" title="All 2 branches missed.">                if (searchDirs[i].startsWith(&quot;$&quot;))</span>
+                {
+<span class="nc" id="L205">                    int  sepIndex = searchDirs[i].indexOf(File.separatorChar);</span>
+                    
+<span class="nc bnc" id="L207" title="All 2 branches missed.">                    if (sepIndex &gt;= 0)</span>
+                    {
+<span class="nc" id="L209">                        String  expanded = sysprops.getProperty(</span>
+                                searchDirs[i].substring(1, sepIndex));
+                        
+<span class="nc bnc" id="L212" title="All 2 branches missed.">                        if (expanded == null)</span>
+<span class="nc" id="L213">                            continue;       // Variable undefined -- skip this</span>
+
+<span class="nc" id="L215">                        path = expanded + searchDirs[i].substring(sepIndex);</span>
+<span class="nc" id="L216">                    }</span>
+                    else
+                    {
+<span class="nc" id="L219">                        path = sysprops.getProperty(searchDirs[i].substring(1));</span>
+                        
+<span class="nc bnc" id="L221" title="All 2 branches missed.">                        if (path == null)</span>
+<span class="nc" id="L222">                            continue;       // Variable undefined -- skip this</span>
+                    }
+<span class="nc" id="L224">                }</span>
+                else
+<span class="nc" id="L226">                    path = searchDirs[i];</span>
+
+<span class="nc" id="L228">                filePath = new File(path + File.separatorChar + filename);</span>
+
+<span class="nc bnc" id="L230" title="All 2 branches missed.">                if (filePath.exists())</span>
+<span class="nc" id="L231">                    return filePath.toString();</span>
+
+<span class="nc" id="L233">                expandedPaths.append(&quot;    &quot; + path + &quot;\n&quot;);</span>
+            }
+
+	    //
+	    // Check if it is in the jar file
+	    //
+<span class="nc bnc" id="L239" title="All 2 branches missed.">	    if (jarFile != null)</span>
+	    {
+
+		//
+		// Jar files only use &quot;non-DOS&quot; path separators.  Translate
+		// DOS backslash separators into slash separators.
+		//
+<span class="nc" id="L246">		String  stdFilename = filename.replace('\\', '/');</span>
+		
+<span class="nc bnc" id="L248" title="All 2 branches missed.">		if (jarFile.getJarEntry(stdFilename) != null)</span>
+<span class="nc" id="L249">		    return &quot;jar:&quot; + stdFilename;       // Yes.  Return name with &quot;jar:&quot; prepended.</span>
+		else
+<span class="nc" id="L251">		    expandedPaths.append(&quot;    &quot; + jarFile.getName() + &quot;\n&quot;);</span>
+	    }
+
+<span class="nc" id="L254">            String  message = &quot;ERROR!  Unable to find file '&quot; +</span>
+                    filename + &quot;'.  Locations searched:\n\n&quot; +
+                    expandedPaths;
+
+<span class="nc" id="L258">            throw new FileNotFoundException(message);</span>
+	}
+    }
+
+
+    /** Open the file/jar/URL and return an InputStream to it.  This
+      * method searches the jQuizShow JAR file.
+     */
+    public static InputStream openFile(String filepath)
+            throws IOException
+    {
+<span class="fc" id="L269">	return (openFile(filepath, null));</span>
+    }
+
+
+    /** Open the file/jar/URL and return an InputStream to it.
+     */
+    public static InputStream openFile(String filepath, JarFile  jarFile)
+            throws IOException
+    {
+	// Get the debugMode flag
+<span class="fc" id="L279">	GameConfig  gameConfig = GameConfig.getInstance();</span>
+	
+<span class="fc" id="L281">	m_debugMode = gameConfig.getIntConfig(&quot;debugMode&quot;, 0);</span>
+
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">	if (jarFile == null)</span>
+<span class="fc" id="L284">	    jarFile = m_jarFile;</span>
+
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">        if ((m_debugMode &amp; GameConfig.DEBUG_FILE_IO) != 0)</span>
+	{
+	    String	jarName;
+
+<span class="nc bnc" id="L290" title="All 2 branches missed.">	    if (jarFile == null)</span>
+<span class="nc" id="L291">		jarName = &quot;null&quot;;</span>
+	    else
+<span class="nc" id="L293">		jarName = jarFile.getName();</span>
+
+<span class="nc" id="L295">            System.out.println(&quot;FileUtils.openFile(&quot; + filepath + &quot;, &quot; +</span>
+		    jarName + &quot;)&quot;);
+	}
+
+        try
+	{
+<span class="nc" id="L301">	    URL url = new URL(filepath);</span>
+
+<span class="nc" id="L303">            URLConnection  urlConn = url.openConnection();</span>
+
+<span class="nc" id="L305">            return urlConn.getInputStream();</span>
+	}
+<span class="fc" id="L307">	catch (MalformedURLException  e)</span>
+        {
+            // Not a URL.  Check files
+            try
+            {
+		// Check the JAR file, if specified.
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">                if (filepath.startsWith(&quot;jar:&quot;))</span>
+                {
+
+<span class="nc bnc" id="L316" title="All 2 branches missed.">		    if (jarFile == null)</span>
+		    {
+<span class="nc" id="L318">			throw new IOException(&quot;File in JAR specified but no JAR file provided:  &quot; + filepath);</span>
+		    }
+
+                    // Search the jar file for the filepath
+<span class="nc" id="L322">                    ZipEntry  zipEntry = jarFile.getEntry(filepath.substring(4));</span>
+                    
+<span class="nc bnc" id="L324" title="All 2 branches missed.">                    if (zipEntry != null)</span>
+<span class="nc" id="L325">                        return jarFile.getInputStream(zipEntry);</span>
+                }
+            }
+<span class="nc" id="L328">            catch (FileNotFoundException ex)</span>
+            {
+                // Not an error -- drop through and check for a file
+<span class="fc" id="L331">            }</span>
+            
+            try
+            {
+<span class="fc" id="L335">                InputStream  inStream = new FileInputStream(filepath);</span>
+
+<span class="fc" id="L337">                return inStream;</span>
+            }
+<span class="fc" id="L339">            catch (FileNotFoundException ex)</span>
+            {
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">                if ((m_debugMode &amp; GameConfig.DEBUG_FILE_IO) != 0)</span>
+<span class="nc" id="L342">                    System.out.println(&quot;File not found in FileUtils.openFile():  &quot; + filepath);</span>
+    
+<span class="fc" id="L344">                throw new IOException(&quot;File not found:  &quot; + filepath);</span>
+            }
+        }
+    }
+    
+<span class="fc" id="L349">    private static boolean  m_firstPass = true;</span>
+    
+    private static JarFile  m_jarFile;
+    
+    private static int  m_debugMode;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

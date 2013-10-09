@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>LifeLineOverrideDialog.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.game</a> &gt; <span class="el_source">LifeLineOverrideDialog.java</span></div><h1>LifeLineOverrideDialog.java</h1><pre class="source lang-java linenums">/*
+ * LifeLineOverrideDialog.java
+ *
+ * Created on May 15, 2001, 7:21 PM
+ *
+ * $Id: LifeLineOverrideDialog.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: LifeLineOverrideDialog.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.3  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.2  2002/07/15 05:19:20  sdchen
+ *    Removed code which set defaultCloseOperation() to DISPOSE_ON_CLOSE --
+ *    this caused the dialog to no longer exist if the &quot;X&quot; icon is pressed.
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:27  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.game;
+
+/**
+ *
+ * @author  Steve
+ */
+
+import jQuizShow.*;
+import jQuizShow.event.*;
+
+public class LifeLineOverrideDialog extends javax.swing.JInternalFrame
+        implements GameStateChangeListener,
+        GameUpdateListener
+        
+{
+    GameState m_gameState;
+    
+    /** Creates new form LifeLineOverrideDialog */
+    public LifeLineOverrideDialog() {
+<span class="fc" id="L69">        super(&quot;Lifeline&quot;, false, true, false, false);</span>
+
+<span class="fc" id="L71">        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);</span>
+
+<span class="fc" id="L73">        m_gameState = GameState.getInstance();</span>
+
+<span class="fc" id="L75">        m_gameState.addGameStateChangeListener(this);</span>
+        
+<span class="fc" id="L77">        initComponents();</span>
+<span class="fc" id="L78">    }</span>
+
+    public void gameStateChanged(GameStateChangeEvent evt) {
+<span class="nc" id="L81">        GameStateChangeEnum  type = evt.getType();</span>
+        
+/*
+ if (type == GameStateEnum.NEW_GAME ||
+                type == GameStateEnum.WAIT_TO_START_ROUND ||
+                type == GameStateEnum.LIFELINE_END)
+*/
+        {
+<span class="nc" id="L89">            updateToggleStates();</span>
+        }
+<span class="nc" id="L91">    }    </span>
+
+    public void gameUpdated(GameUpdateEvent evt) {
+<span class="nc" id="L94">        GameUpdateEnum  type = evt.getType();</span>
+
+//        if (type == GameUpdateEnum.TOGGLE_STATE)
+        {
+<span class="nc" id="L98">            updateToggleStates();</span>
+        }
+<span class="nc" id="L100">    }    </span>
+
+    
+    private void  updateToggleStates()
+    {
+<span class="nc" id="L105">        fiftyCheckBox.setSelected(m_gameState.getToggleState(GameState.FIFTY_FIFTY));</span>
+<span class="nc" id="L106">        phoneCheckBox.setSelected(m_gameState.getToggleState(GameState.PHONE_A_FRIEND));</span>
+<span class="nc" id="L107">        pollCheckBox.setSelected(m_gameState.getToggleState(GameState.ASK_THE_AUDIENCE));</span>
+
+<span class="nc" id="L109">        return;</span>
+    }
+
+    /** This method is called from within the constructor to
+     * initialize the form.
+     */
+    private void  initComponents() {
+<span class="fc" id="L116">        jPanel1 = new javax.swing.JPanel();</span>
+<span class="fc" id="L117">        fiftyCheckBox = new javax.swing.JCheckBox();</span>
+<span class="fc" id="L118">        phoneCheckBox = new javax.swing.JCheckBox();</span>
+<span class="fc" id="L119">        pollCheckBox = new javax.swing.JCheckBox();</span>
+<span class="fc" id="L120">        closeButton = new javax.swing.JButton();</span>
+        
+<span class="fc" id="L122">        setTitle(&quot;Lifeline Override&quot;);</span>
+<span class="fc" id="L123">        setName(&quot;lifelineDialog&quot;);</span>
+        
+<span class="fc" id="L125">        jPanel1.setLayout(new java.awt.GridLayout(4, 1));</span>
+        
+<span class="fc" id="L127">        jPanel1.setBorder(new javax.swing.border.EmptyBorder(new java.awt.Insets(10, 10, 10, 10)));</span>
+<span class="fc" id="L128">        fiftyCheckBox.setText(Main.getMessage(&quot;label_50_50&quot;));</span>
+<span class="fc" id="L129">        fiftyCheckBox.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L131">                checkBoxActionPerformed(evt);</span>
+<span class="nc" id="L132">            }</span>
+        });
+        
+<span class="fc" id="L135">        jPanel1.add(fiftyCheckBox);</span>
+        
+<span class="fc" id="L137">        phoneCheckBox.setText(Main.getMessage(&quot;label_ask_friend&quot;));</span>
+<span class="fc" id="L138">        phoneCheckBox.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L140">                checkBoxActionPerformed(evt);</span>
+<span class="nc" id="L141">            }</span>
+        });
+        
+<span class="fc" id="L144">        jPanel1.add(phoneCheckBox);</span>
+        
+<span class="fc" id="L146">        pollCheckBox.setText(Main.getMessage(&quot;label_ask_audience&quot;));</span>
+<span class="fc" id="L147">        pollCheckBox.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L149">                checkBoxActionPerformed(evt);</span>
+<span class="nc" id="L150">            }</span>
+        });
+        
+<span class="fc" id="L153">        jPanel1.add(pollCheckBox);</span>
+        
+<span class="fc" id="L155">        closeButton.setText(Main.getMessage(&quot;label_close&quot;));</span>
+<span class="fc" id="L156">        closeButton.setBorder(new javax.swing.border.BevelBorder(javax.swing.border.BevelBorder.RAISED));</span>
+<span class="fc" id="L157">        closeButton.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L159">                closeButtonActionPerformed(evt);</span>
+<span class="nc" id="L160">            }</span>
+        });
+        
+<span class="fc" id="L163">        jPanel1.add(closeButton);</span>
+        
+<span class="fc" id="L165">        getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);</span>
+        
+<span class="fc" id="L167">        pack();</span>
+<span class="fc" id="L168">    }</span>
+    
+    
+    private void closeButtonActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L172">        setVisible(false);</span>
+<span class="nc" id="L173">    }</span>
+
+    private void checkBoxActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L176">        m_gameState.setToggleState(GameState.FIFTY_FIFTY, fiftyCheckBox.isSelected());</span>
+<span class="nc" id="L177">        m_gameState.setToggleState(GameState.PHONE_A_FRIEND, phoneCheckBox.isSelected());</span>
+<span class="nc" id="L178">        m_gameState.setToggleState(GameState.ASK_THE_AUDIENCE, pollCheckBox.isSelected());</span>
+        
+<span class="nc" id="L180">        m_gameState.fireGameStateChangeEvent(this, GameStateEnum.LIFELINE_END);</span>
+<span class="nc" id="L181">    }</span>
+
+    // Variables declaration
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JCheckBox fiftyCheckBox;
+    private javax.swing.JCheckBox phoneCheckBox;
+    private javax.swing.JCheckBox pollCheckBox;
+    private javax.swing.JButton closeButton;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

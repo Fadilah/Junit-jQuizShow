@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RandomSelector.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">RandomSelector.java</span></div><h1>RandomSelector.java</h1><pre class="source lang-java linenums">/*
+ * RandomSelector.java
+ *
+ * Created on December 11, 2001, 7:23 PM
+ *
+ * $Id: RandomSelector.java,v 1.3 2007/02/05 04:24:19 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: RandomSelector.java,v $
+ *    Revision 1.3  2007/02/05 04:24:19  sdchen
+ *    Replaced deprecated isFocusTraversable() with setFocusable(boolean s).
+ *
+ *    Revision 1.2  2007/02/05 04:05:34  sdchen
+ *    Replaced deprecated show() with setVisible(bool  s)
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.3  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.2  2002/05/23 04:43:33  sdchen
+ *    *** empty log message ***
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:14  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow;
+
+/** This class is used to support the random player selector option.
+ * The code here is rudimentary and needs to be improved and cleaned
+ * up; this was a hasty implementation to satisfy a short-term need.
+ * The format of the input file is:
+ *
+ * &lt;pre&gt;
+ *       class   player_name    friends
+ *
+ * where,
+ *       class		= Number from 1 - 9 specifying the player's class
+ *       player_name    = Name of the player
+ *       friends        = Friend or list of friends for &quot;phone a friend&quot;
+ * &lt;/pre&gt;
+ *
+ * The three fields above must be separated by one or more TABs.
+ * The &quot;class&quot; is used to form groups of players.  For example:
+ *
+ * &lt;pre&gt;
+ *     1 = Jr. high girls
+ *     2 = Jr. high boys
+ *     3 = Sr. high girls
+ *     4 = Sr. high boys
+ * &lt;/pre&gt;
+ *
+ * Example entries:
+ *
+ * &lt;pre&gt;
+ *     1    John Doe        Billy Doe, Brad Doe, Brian Doe
+ *     1    Jimmy Doe       Chris Doe, Colby Doe, Cassandra Doe
+ *     2    Jane Doe        Stephanie Doe, Sally Doe, Susan Doe
+ *     2    Jamie Doe       Penny Doe, Polly Doe, Patricia Doe
+ * &lt;/pre&gt;
+ *
+ * @author  Steven D. Chen
+ */
+
+import java.io.*;
+import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+
+import jQuizShow.util.*;
+import jQuizShow.game.classic.*;
+
+public class RandomSelector extends JInternalFrame
+{
+    public static final String PLAYERS_FILE_KEYWORD = &quot;playersFile&quot;;
+    public static final String PLAYERS_DEFAULT_FILE = &quot;players.txt&quot;;
+
+    public static final String USED_PLAYERS_FILE_KEYWORD = &quot;usedPlayersFile&quot;;
+    public static final String USED_PLAYERS_DEFAULT_FILE = &quot;usedPlayers.txt&quot;;
+
+    private static final int PLAYER_ADDED = 0;
+    private static final int BLANK_LINE = 1;
+    private static final int INVALID_CLASS = 2;
+    private static final int PLAYER_ALREADY_USED = 3;
+    private static final int NOT_ENOUGH_FIELDS = 4;
+
+    private static final int MAX_NUM_CATEGORIES = 10;
+
+    private static final int TIMER_DELAY = 250;     // Delay in ms
+    
+    /** Creates new RandomSelector */
+    public RandomSelector() {
+<span class="fc" id="L122">        super(&quot;Random Selector&quot;, false, true, false, true);</span>
+
+<span class="fc" id="L124">        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);</span>
+
+<span class="fc" id="L126">        initComponents();</span>
+
+        // Initialize the ArrayList
+<span class="fc" id="L129">        m_playerCategories = new ArrayList(MAX_NUM_CATEGORIES);</span>
+
+<span class="fc" id="L131">        m_gameConfig = GameConfig.getInstance();</span>
+
+        // Get the SoundPlayer singleton
+<span class="fc" id="L134">        m_soundPlayer = SoundPlayer.getInstance();</span>
+
+        // Listen for keyboard events
+<span class="fc" id="L137">        addKeyListener(new java.awt.event.KeyAdapter()</span>
+<span class="fc" id="L138">        {</span>
+            public void keyPressed(java.awt.event.KeyEvent evt)
+            {
+<span class="nc" id="L141">                int  keyCode = evt.getKeyCode();</span>
+<span class="nc" id="L142">                char  keyChar = evt.getKeyChar();</span>
+                int  category;
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                if (m_timer == null)</span>
+                {
+<span class="nc bnc" id="L147" title="All 4 branches missed.">                    if (keyCode == KeyEvent.VK_ENTER &amp;&amp; m_randomIndex &gt;= 0)</span>
+                    {
+                        // Accept this player
+<span class="nc" id="L150">                        SelectorData  player = (SelectorData) m_currentList.remove(m_randomIndex);    // Remove from list</span>
+                        
+                        // Add this player to the &quot;used&quot; player list
+                        try
+                        {
+<span class="nc" id="L155">                            addPlayerToUsedPlayerFile(player);</span>
+                        }
+<span class="nc" id="L157">                        catch (IOException  e)</span>
+                        {
+<span class="nc" id="L159">                            System.out.println(Main.getMessage(&quot;err_random_write&quot;));</span>
+<span class="nc" id="L160">			    System.out.println(e.getLocalizedMessage());</span>
+<span class="nc" id="L161">                        }</span>
+                        
+<span class="nc" id="L163">                        m_player = null;</span>
+                        
+<span class="nc" id="L165">                        setVisible(false);        // Hide this window</span>
+
+<span class="nc" id="L167">                        m_gameText.setText(&quot;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L168">                        m_gameText.setTextColor();      // Reset colors</span>
+<span class="nc" id="L169">                        return;</span>
+                    }
+                    
+<span class="nc" id="L172">                    category = Character.getNumericValue(keyChar);</span>
+
+<span class="nc bnc" id="L174" title="All 4 branches missed.">                    if (category &lt;= 0 || category &gt;= m_playerCategories.size())</span>
+<span class="nc" id="L175">                        return;     // Invalid category # -- do nothing</span>
+
+<span class="nc" id="L177">                    m_currentList = (ArrayList) m_playerCategories.get(category);</span>
+
+<span class="nc bnc" id="L179" title="All 4 branches missed.">                    if (m_currentList == null || m_currentList.size() == 0)</span>
+		    {
+<span class="nc" id="L181">		        m_statusText.setText(Main.getMessage(&quot;err_no_players&quot;));</span>
+<span class="nc" id="L182">			System.out.println(Main.getMessage(&quot;err_no_players&quot;));</span>
+<span class="nc" id="L183">                        return;     // Empty list -- do nothing</span>
+		    }
+
+                    // Create a timer to randomly select and display the player names.
+<span class="nc" id="L187">                    m_randomIndex = -1;		// Invalidate the index</span>
+
+<span class="nc" id="L189">		    m_statusText.setText(Main.getMessage(&quot;msg_space_select&quot;));</span>
+
+<span class="nc" id="L191">                    m_timer = new javax.swing.Timer(TIMER_DELAY, new ActionListener()</span>
+<span class="nc" id="L192">                    {</span>
+                        public void actionPerformed(ActionEvent evt)
+                        {
+<span class="nc" id="L195">                            int     num = m_randomIndex;</span>
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">                            if (m_currentList.size() == 1)</span>
+<span class="nc" id="L198">                                m_randomIndex = 0;                  // Only person left</span>
+                            else
+                            {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                                while (num == m_randomIndex)        // Select randomly from everyone but current</span>
+<span class="nc" id="L202">                                    num = m_random.nextInt(m_currentList.size());</span>
+                            
+<span class="nc" id="L204">                                m_randomIndex = num;</span>
+                            }
+                            
+<span class="nc" id="L207">                            m_player = (SelectorData) m_currentList.get(m_randomIndex);</span>
+                            
+<span class="nc" id="L209">                            m_gameText.setText(&quot;&quot;, m_player.getPlayer());</span>
+<span class="nc" id="L210">                        }</span>
+                    });
+                    
+<span class="nc" id="L213">                    m_timer.start();</span>
+
+<span class="nc" id="L215">                    m_soundPlayer.loadSound(SoundIDEnum.RANDOM_SELECTOR_BKG,</span>
+                            SoundPlayer.BACKGROUND_CHANNEL, true);
+<span class="nc" id="L217">                    m_soundPlayer.start(SoundPlayer.BACKGROUND_CHANNEL);</span>
+                }
+<span class="nc bnc" id="L219" title="All 4 branches missed.">                else if (m_player != null &amp;&amp; keyCode == KeyEvent.VK_SPACE)</span>
+                {
+<span class="nc" id="L221">                    m_timer.stop();</span>
+<span class="nc" id="L222">                    m_timer = null;</span>
+		    
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		    if (m_playerCategories.size() &lt;= 1)</span>
+		    {
+<span class="nc" id="L226">			m_statusText.setText(Main.getMessage(&quot;msg_enter_select1&quot;));</span>
+		    }
+		    else
+		    {
+<span class="nc" id="L230">			Object  args[] =</span>
+			        {
+				    new Integer(m_playerCategories.size() - 1)
+				};
+
+<span class="nc" id="L235">			m_statusText.setText(Main.getMessage(&quot;msg_enter_select2&quot;,</span>
+				args));
+		    }
+                    
+<span class="nc" id="L239">                    m_gameText.setTextColor(Color.white, Color.cyan, Color.black);</span>
+<span class="nc" id="L240">                    m_gameText.setText(m_player.getPlayer() + &quot;: &quot;, m_player.getFriends());</span>
+
+<span class="nc" id="L242">                    m_soundPlayer.stop(SoundPlayer.BACKGROUND_CHANNEL);</span>
+
+<span class="nc" id="L244">                    m_soundPlayer.loadSound(SoundIDEnum.RANDOM_SELECTOR_DONE,</span>
+                            SoundPlayer.FOREGROUND_CHANNEL, false);
+<span class="nc" id="L246">                    m_soundPlayer.start(SoundPlayer.FOREGROUND_CHANNEL);</span>
+                }
+<span class="nc" id="L248">            }</span>
+        });
+<span class="fc" id="L250">    }</span>
+
+    
+    /** Override the show() method so we can request focus when shown.
+     */
+    public void  isVisible(boolean  s)
+    {
+<span class="nc" id="L257">        super.setVisible(s);</span>
+        
+<span class="nc" id="L259">        setFocusable(true);</span>
+<span class="nc" id="L260">    }</span>
+    
+    /** Reads the available players database file. */
+    public void  readDatabase(String  playersFilename, String  eliminatedPlayersFilename)
+            throws IOException
+    {
+        // Read the list of &quot;used&quot; players, if any
+        BufferedReader  fin;
+
+        String      line;
+
+<span class="nc" id="L271">        Set  usedPlayers = new HashSet();</span>
+
+        try
+        {
+<span class="nc" id="L275">            int     numUsed = 0;</span>
+            
+<span class="nc" id="L277">            fin = openFile(eliminatedPlayersFilename);</span>
+
+<span class="nc bnc" id="L279" title="All 2 branches missed.">            while ((line = fin.readLine()) != null)</span>
+            {
+<span class="nc bnc" id="L281" title="All 2 branches missed.">                if (line.startsWith(&quot;#&quot;))</span>
+<span class="nc" id="L282">                    continue;</span>
+
+<span class="nc" id="L284">                usedPlayers.add(new String(line));</span>
+<span class="nc" id="L285">                numUsed++;</span>
+            }
+
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_BASIC) != 0)</span>
+<span class="nc" id="L289">                System.out.println(&quot;Number of 'eliminated' players:  &quot; + numUsed);</span>
+            
+<span class="nc" id="L291">            fin.close();</span>
+        }
+<span class="nc" id="L293">        catch (IOException  e)</span>
+        {
+            // No file.  No problem.  It just means all players are valid.
+<span class="nc bnc" id="L296" title="All 2 branches missed.">            if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_BASIC) != 0)</span>
+<span class="nc" id="L297">                System.out.println(&quot;Eliminated player list not found:  &quot; + eliminatedPlayersFilename);</span>
+<span class="nc" id="L298">        }</span>
+            
+
+        // Read the player database
+<span class="nc" id="L302">        int     skipCount = 0;</span>
+<span class="nc" id="L303">        int     playerCount = 0;</span>
+<span class="nc" id="L304">        int     line_num = 0;</span>
+        int     err;
+        
+<span class="nc" id="L307">	fin = openFile(playersFilename);</span>
+        
+<span class="nc bnc" id="L309" title="All 2 branches missed.">        while ((line = fin.readLine()) != null)</span>
+        {
+<span class="nc" id="L311">            line_num++;</span>
+            
+<span class="nc bnc" id="L313" title="All 4 branches missed.">            if (line.startsWith(&quot;#&quot;) || line.length() == 0)</span>
+<span class="nc" id="L314">                continue;</span>
+
+            // Parse the line
+<span class="nc bnc" id="L317" title="All 2 branches missed.">            if ((err = parseLine(line, usedPlayers)) == PLAYER_ADDED)</span>
+<span class="nc" id="L318">                playerCount++;</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">            else if (err == PLAYER_ALREADY_USED)</span>
+<span class="nc" id="L320">                skipCount++;</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">            else if (err == BLANK_LINE)</span>
+<span class="nc" id="L322">                /* */;</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">            else if (err == INVALID_CLASS)</span>
+	    {
+<span class="nc" id="L325">		Object  args[] =</span>
+			{
+			    new Integer(line_num),
+			    line
+			};
+
+<span class="nc" id="L331">                System.out.println(Main.getMessage(&quot;err_invalid_class&quot;, args));</span>
+<span class="nc" id="L332">	    }</span>
+            else
+	    {
+<span class="nc" id="L335">		Object  args[] =</span>
+			{
+			    new Integer(line_num),
+			    line
+			};
+
+<span class="nc" id="L341">                System.out.println(Main.getMessage(&quot;err_invalid_player&quot;, args));</span>
+<span class="nc" id="L342">	    }</span>
+        }
+
+	{
+<span class="nc" id="L346">	    Object  args[] =</span>
+		    {
+			new Integer(skipCount),
+			new Integer(playerCount)
+		    };
+
+<span class="nc" id="L352">	    System.out.println(Main.getMessage(&quot;msg_num_players_skipped&quot;, args));</span>
+<span class="nc" id="L353">	    System.out.println(Main.getMessage(&quot;msg_num_players&quot;, args));</span>
+	}
+        
+<span class="nc" id="L356">        fin.close();</span>
+        
+<span class="nc bnc" id="L358" title="All 2 branches missed.">	if (m_playerCategories.size() &lt;= 1)</span>
+	{
+<span class="nc" id="L360">	    m_statusText.setText(Main.getMessage(&quot;msg_start_randomizer1&quot;));</span>
+	}
+	else
+	{
+<span class="nc" id="L364">	    Object  args[] =</span>
+		    {
+			new Integer(m_playerCategories.size() - 1)
+		    };
+
+<span class="nc" id="L369">	    m_statusText.setText(Main.getMessage(&quot;msg_start_randomizer2&quot;,</span>
+		    args));
+	}
+<span class="nc" id="L372">    }</span>
+
+    
+    /** This method appends the player to the &quot;usedPlayerFile&quot; so that
+     * the player won't be reused the next time the game is started.
+     */
+    private void  addPlayerToUsedPlayerFile(SelectorData  player) throws IOException
+    {
+<span class="nc bnc" id="L380" title="All 2 branches missed.">        if (m_gameConfig.getIntConfig(&quot;testMode&quot;) != 0)</span>
+<span class="nc" id="L381">            return;             // Don't write to file in test mode</span>
+        
+<span class="nc" id="L383">        String  usedFilename = m_gameConfig.getConfig(USED_PLAYERS_FILE_KEYWORD,</span>
+                USED_PLAYERS_DEFAULT_FILE);
+        
+<span class="nc" id="L386">        File fileInst = new File(usedFilename);</span>
+
+<span class="nc" id="L388">        BufferedWriter  fout = new BufferedWriter(</span>
+                    new FileWriter(fileInst.toString(), true));
+
+<span class="nc" id="L391">        fout.write(player.getPlayer() + &quot;\n&quot;);</span>
+        
+<span class="nc" id="L393">        fout.close();</span>
+<span class="nc" id="L394">    }</span>
+
+    
+    /** Searches for the file and opens it. */
+    private BufferedReader  openFile(String  filename)
+            throws IOException
+    {
+        BufferedReader  fin;
+        
+<span class="nc" id="L403">        fin = new BufferedReader(</span>
+                new InputStreamReader(FileUtils.openFile(filename)));
+        
+<span class="nc" id="L406">        return (fin);</span>
+    }
+
+    
+    private int parseLine(String  s, Set  usedPlayers) throws IOException
+    {
+<span class="nc" id="L412">        StringTokenizer tok = new StringTokenizer(s, &quot;\t&quot;);</span>
+
+        String          playerStr;
+<span class="nc" id="L415">        int		count = 0;</span>
+        int             category;
+
+<span class="nc bnc" id="L418" title="All 2 branches missed.">        if (s.length() == 0)</span>
+<span class="nc" id="L419">            return BLANK_LINE;</span>
+        
+        try {
+<span class="nc" id="L422">            category = Integer.parseInt(tok.nextToken());</span>
+        }
+<span class="nc" id="L424">        catch (NumberFormatException  e)</span>
+        {
+<span class="nc" id="L426">            return INVALID_CLASS;</span>
+<span class="nc" id="L427">        }</span>
+
+<span class="nc bnc" id="L429" title="All 2 branches missed.">	if (category &lt; 1)</span>
+<span class="nc" id="L430">	    return INVALID_CLASS;</span>
+
+<span class="nc bnc" id="L432" title="All 4 branches missed.">        if (category &gt;= m_playerCategories.size() &amp;&amp; category &lt; MAX_NUM_CATEGORIES)</span>
+        {
+<span class="nc bnc" id="L434" title="All 2 branches missed.">            while (m_playerCategories.size() &lt;= category)</span>
+<span class="nc" id="L435">                m_playerCategories.add(new ArrayList());</span>
+        }
+
+<span class="nc" id="L438">        ArrayList  playerList = (ArrayList) m_playerCategories.get(category);</span>
+        
+        // Read in the player
+<span class="nc" id="L441">        playerStr = StringFilter.filterString(tok.nextToken());</span>
+
+<span class="nc bnc" id="L443" title="All 2 branches missed.">        if (usedPlayers.contains(playerStr))</span>
+<span class="nc" id="L444">            return PLAYER_ALREADY_USED;       // If player already used, skip it</span>
+
+<span class="nc bnc" id="L446" title="All 2 branches missed.">        if (tok.hasMoreTokens())</span>
+        {
+<span class="nc" id="L448">            String friends = StringFilter.filterString(tok.nextToken());</span>
+            
+            // Create a SelectorData instance for the player and his friends
+<span class="nc" id="L451">            SelectorData  player = new SelectorData(playerStr, friends);</span>
+
+<span class="nc" id="L453">            playerList.add(player);</span>
+
+<span class="nc" id="L455">	    Object  args[] =</span>
+		    {
+			playerStr,
+			friends
+		    };
+
+<span class="nc" id="L461">            System.out.println(Main.getMessage(&quot;msg_display_players&quot;, args));</span>
+            
+<span class="nc" id="L463">            return PLAYER_ADDED;</span>
+        }
+        else
+<span class="nc" id="L466">            return NOT_ENOUGH_FIELDS;</span>
+    }
+
+    
+    
+    /** This method is called from within the constructor to
+     * initialize the frame.
+     */
+    private void initComponents() {
+<span class="fc" id="L475">        getContentPane().setLayout(new java.awt.BorderLayout());</span>
+        
+<span class="fc" id="L477">        setBorder(new javax.swing.border.EmptyBorder(new java.awt.Insets(50, 0, 50, 0)));</span>
+<span class="fc" id="L478">        setForeground(java.awt.Color.white);</span>
+<span class="fc" id="L479">        setBackground(java.awt.Color.black);</span>
+        
+<span class="fc" id="L481">        m_gameText = new GameText(594, new Dimension(30, 1));</span>
+<span class="fc" id="L482">        m_gameText.centerText(true);</span>
+
+<span class="fc" id="L484">        getContentPane().add(m_gameText, java.awt.BorderLayout.CENTER);</span>
+        
+<span class="fc" id="L486">	m_statusText = new JTextArea();</span>
+<span class="fc" id="L487">        m_statusText.setWrapStyleWord(true);</span>
+<span class="fc" id="L488">        m_statusText.setLineWrap(true);</span>
+<span class="fc" id="L489">        m_statusText.setForeground(java.awt.Color.white);</span>
+<span class="fc" id="L490">        m_statusText.setText(&quot;&quot;);</span>
+<span class="fc" id="L491">        m_statusText.setBackground(java.awt.Color.black);</span>
+<span class="fc" id="L492">        m_statusText.setDisabledTextColor(java.awt.Color.white);</span>
+<span class="fc" id="L493">        m_statusText.setEnabled(false);</span>
+<span class="fc" id="L494">        m_statusText.setRequestFocusEnabled(false);</span>
+
+<span class="fc" id="L496">        getContentPane().add(m_statusText, java.awt.BorderLayout.SOUTH);</span>
+        
+<span class="fc" id="L498">        pack();</span>
+<span class="fc" id="L499">    }</span>
+
+    
+    private void closeButtonActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L503">        setVisible(false);</span>
+<span class="nc" id="L504">    }</span>
+   
+    private GameConfig  m_gameConfig;
+
+    public void setFocusable(boolean b) {
+<span class="nc" id="L509">    }</span>
+
+    private jQuizShow.util.SoundPlayer  m_soundPlayer;
+    
+    private ArrayList  m_playerCategories;
+
+    private ArrayList  m_currentList;
+    
+    private GameText  m_gameText;
+
+    private JTextArea  m_statusText;
+
+    private SelectorData  m_player;
+    
+<span class="fc" id="L523">    private javax.swing.Timer  m_timer = null;</span>
+    
+<span class="fc" id="L525">    private Random  m_random = new Random();</span>
+    
+<span class="fc" id="L527">    private int  m_randomIndex = -1;</span>
+<span class="fc" id="L528">    private int  m_randomCategory = -1;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

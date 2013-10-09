@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ModeChangePacket.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.net</a> &gt; <span class="el_source">ModeChangePacket.java</span></div><h1>ModeChangePacket.java</h1><pre class="source lang-java linenums">/*
+ * ModeChangePacket.java
+ *
+ * Created on November 4, 2001, 9:33 PM
+ *
+ * $Id: ModeChangePacket.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ModeChangePacket.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:33  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.net;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 1.0
+ */
+
+import java.io.*;
+import java.util.*;
+
+import jQuizShow.*;
+import jQuizShow.event.*;
+
+public class ModeChangePacket implements Serializable {
+    
+    /** Creates new EventPacket */
+<span class="nc" id="L59">    public ModeChangePacket() {</span>
+<span class="nc" id="L60">    }</span>
+
+    public GameModeEnum  getMode() {
+<span class="nc" id="L63">        return m_gameMode;</span>
+    }
+
+    
+    /*
+     * Manipulators
+     */
+    
+    public void setMode(GameModeEnum  mode) {
+<span class="nc" id="L72">        m_gameMode = mode;</span>
+<span class="nc" id="L73">    }</span>
+
+    private GameModeEnum  m_gameMode;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GamePhaseEnum.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.game</a> &gt; <span class="el_source">GamePhaseEnum.java</span></div><h1>GamePhaseEnum.java</h1><pre class="source lang-java linenums">/*
+ * GamePhaseEnum.java
+ *
+ * Created on November 4, 2001, 9:52 PM
+ *
+ * $Id: GamePhaseEnum.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: GamePhaseEnum.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:44  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.game;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 1.0
+ */
+
+import java.util.*;
+
+public final class GamePhaseEnum implements java.io.Serializable
+{
+    // ArrayList of enumerations (used for readResolve())
+<span class="fc" id="L55">    private static ArrayList  privateList = new ArrayList();</span>
+
+    /* Define the &quot;enumeration&quot; values */
+<span class="fc" id="L58">    public static final GamePhaseEnum S_INACTIVE = new GamePhaseEnum(&quot;S_INACTIVE&quot;);</span>
+<span class="fc" id="L59">    public static final GamePhaseEnum S_WAITING_TO_START = new GamePhaseEnum(&quot;S_WAITING_TO_START&quot;);</span>
+<span class="fc" id="L60">    public static final GamePhaseEnum S_STARTING_NEXT_ROUND = new GamePhaseEnum(&quot;S_STARTING_NEXT_ROUND&quot;);</span>
+<span class="fc" id="L61">    public static final GamePhaseEnum S_QUESTION_DISPLAYED = new GamePhaseEnum(&quot;S_QUESTION_DISPLAYED&quot;);</span>
+<span class="fc" id="L62">    public static final GamePhaseEnum S_DISPLAYING_ANSWERS = new GamePhaseEnum(&quot;S_DISPLAYING_ANSWERS&quot;);</span>
+<span class="fc" id="L63">    public static final GamePhaseEnum S_ANSWERS_DISPLAYED = new GamePhaseEnum(&quot;S_ANSWERS_DISPLAYED&quot;);</span>
+<span class="fc" id="L64">    public static final GamePhaseEnum S_ANSWER_SELECTED = new GamePhaseEnum(&quot;S_ANSWER_SELECTED&quot;);</span>
+<span class="fc" id="L65">    public static final GamePhaseEnum S_ANSWER_FINALIZED = new GamePhaseEnum(&quot;S_ANSWER_FINIALIZED&quot;);</span>
+<span class="fc" id="L66">    public static final GamePhaseEnum S_CORRECT_ANSWER = new GamePhaseEnum(&quot;S_CORRECT_ANSWER&quot;);</span>
+<span class="fc" id="L67">    public static final GamePhaseEnum S_WRONG_ANSWER = new GamePhaseEnum(&quot;S_WRONG_ANSWER&quot;);</span>
+<span class="fc" id="L68">    public static final GamePhaseEnum S_RESET_FOR_NEXT_ROUND = new GamePhaseEnum(&quot;S_RESET_FOR_NEXT_ROUND&quot;);</span>
+<span class="fc" id="L69">    public static final GamePhaseEnum S_WALKAWAY = new GamePhaseEnum(&quot;S_WALKAWAY&quot;);</span>
+<span class="fc" id="L70">    public static final GamePhaseEnum S_ENDING_GAME = new GamePhaseEnum(&quot;S_ENDING_GAME&quot;);</span>
+<span class="fc" id="L71">    public static final GamePhaseEnum S_TRANSITION_PANEL_SHOWN = new GamePhaseEnum(&quot;S_TRANSITION_PANEL_SHOWN&quot;);</span>
+<span class="fc" id="L72">    public static final GamePhaseEnum S_CONFIRM_LIFELINE = new GamePhaseEnum(&quot;S_CONFIRM_LIFELINE&quot;);</span>
+<span class="fc" id="L73">    public static final GamePhaseEnum S_LIFELINE_ABORTED = new GamePhaseEnum(&quot;S_LIFELINE_ABORTED&quot;);</span>
+<span class="fc" id="L74">    public static final GamePhaseEnum S_LIFELINE_CONFIRMED = new GamePhaseEnum(&quot;S_LIFELINE_CONFIMED&quot;);</span>
+<span class="fc" id="L75">    public static final GamePhaseEnum S_LIFELINE_USED = new GamePhaseEnum(&quot;S_LIFELINE_USED&quot;);</span>
+<span class="fc" id="L76">    public static final GamePhaseEnum S_PHONE_A_FRIEND_TIMER = new GamePhaseEnum(&quot;S_PHONE_A_FRIEND_TIMER&quot;);</span>
+<span class="fc" id="L77">    public static final GamePhaseEnum S_WAITING_FOR_POLL_COMPLETION = new GamePhaseEnum(&quot;S_WAITING_FOR_POLL_COMPLETION&quot;);</span>
+    
+    /** Creates new GamePhaseEnum (private) */
+<span class="fc" id="L80">    private GamePhaseEnum(String name) {</span>
+<span class="fc" id="L81">        this.name = new String(name);</span>
+<span class="fc" id="L82">        privateList.add(this);          // Add this enumeration to the list</span>
+<span class="fc" id="L83">        ordinal = privateList.indexOf(this);</span>
+<span class="fc" id="L84">    }</span>
+
+    public String  toString() {
+<span class="nc" id="L87">        return name;</span>
+    }
+    
+    // Prevent subclasses from overriding Object.equals
+    public final boolean equals(Object that) {
+<span class="fc" id="L92">        return super.equals(that);</span>
+    }
+    public final int hashCode() {
+<span class="nc" id="L95">        return super.hashCode();</span>
+    }
+    
+    // Override readResolve() to prevent duplicate constants from
+    // coexisting as a result of deserialization.
+    private Object  readResolve() throws java.io.ObjectStreamException {
+<span class="nc" id="L101">        return privateList.get(ordinal);     // Canonicalize</span>
+    }
+    
+    //*** Private Data
+    
+    // Assign an ordinal to this enumeration
+    // @serial Ordinal number of enumeration
+    private int ordinal;
+
+    // Name of this enumeration
+    private transient final String name;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

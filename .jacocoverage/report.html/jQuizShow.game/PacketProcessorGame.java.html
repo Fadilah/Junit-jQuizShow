@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PacketProcessorGame.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.game</a> &gt; <span class="el_source">PacketProcessorGame.java</span></div><h1>PacketProcessorGame.java</h1><pre class="source lang-java linenums">/*
+ * PacketProcessorGame.java
+ *
+ * Created on November 3, 2001, 10:09 PM
+ *
+ * $Id: PacketProcessorGame.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: PacketProcessorGame.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:33  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.game;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 
+ */
+
+import jQuizShow.*;
+import jQuizShow.event.*;
+import jQuizShow.net.*;
+
+public class PacketProcessorGame extends PacketProcessor
+{
+    /**
+     * Initializes this Singleton class.  It must be called once prior to
+     * the initial use in order to properly set the getInstance() method
+     * of the parent class.
+     */
+    public static void  initialize()
+    {
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        if (m_singletonPacketProcessorGame == null)</span>
+<span class="fc" id="L64">            m_singletonPacketProcessorGame = new PacketProcessorGame();</span>
+        
+<span class="fc" id="L66">        PacketProcessor.setInstance(m_singletonPacketProcessorGame);</span>
+        
+<span class="fc" id="L68">        return;</span>
+    }
+    
+    /**
+     * Creates new PacketProcessorGame (private)
+     */
+<span class="fc" id="L74">    private PacketProcessorGame() {</span>
+<span class="fc" id="L75">        m_gameState = GameState.getInstance(false);</span>
+<span class="fc" id="L76">        m_gameConfig = GameConfig.getInstance();</span>
+<span class="fc" id="L77">    }</span>
+
+    
+    /** Process the received game state changed packet.  This is sent
+     * at the start of a round and contains all the information
+     * needed for the round.
+     */
+    public void processStatePacket(StatePacket  info)
+    {
+        String[]  answers;
+        
+<span class="nc" id="L88">        GameStateEnum  type = (GameStateEnum) info.getType();</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        boolean  debugOn = (m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_NETWORK_SETUP) != 0;</span>
+
+<span class="nc" id="L92">        m_gameState.setGameStateEnum(type);</span>
+        
+<span class="nc" id="L94">        answers = info.getAnswers();</span>
+        
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (debugOn)</span>
+        {
+<span class="nc" id="L98">            System.out.println(&quot;--&gt; PacketProcessorGame::processStatePacket(&quot; + type + &quot;)&quot;);</span>
+        }
+
+        // Process special game states
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (type == GameStateEnum.NEW_GAME)</span>
+        {
+<span class="nc" id="L104">            m_gameState.setMaxNumberOfLevels(info.getMaxNumberOfLevels());</span>
+<span class="nc" id="L105">            m_gameState.setCurrentLevel(info.getCurrentLevel());</span>
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_NETWORK_SETUP) != 0)</span>
+<span class="nc" id="L108">                System.out.println(&quot;  Max number of levels = &quot; + info.getMaxNumberOfLevels());</span>
+        }
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        else if (type == GameStateEnum.WAIT_TO_START_ROUND)</span>
+        {
+<span class="nc" id="L112">            m_gameState.setCurrentLevel(info.getCurrentLevel());</span>
+<span class="nc" id="L113">            m_gameState.setAnswersVisible(info.getAnswersVisible());</span>
+<span class="nc" id="L114">            m_gameState.setLevelTitle(info.getLevelTitle());</span>
+<span class="nc" id="L115">            m_gameState.setStatusMessage(null);</span>
+
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_NETWORK_SETUP) != 0)</span>
+<span class="nc" id="L118">                System.out.println(&quot;  Current level = &quot; + info.getCurrentLevel());</span>
+        }
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        else if (type == GameStateEnum.DISPLAY_QUESTION)</span>
+        {
+<span class="nc" id="L122">            m_gameState.setCurrentQuestion(info.getQuestion(), answers);</span>
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            if (debugOn)</span>
+            {
+<span class="nc" id="L126">                System.out.println(&quot;  Question # &quot; + info.getCurrentLevel() + &quot;: &quot; + info.getQuestion());</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">                for (int  i = 0; i &lt; answers.length; i++)</span>
+<span class="nc" id="L129">                    System.out.println(&quot;    Answer &quot; + i + &quot; = &quot; + answers[i]);</span>
+
+<span class="nc" id="L131">                System.out.println(&quot;  Question timer limit = &quot; + info.getQuestionTimerLimit());</span>
+            }
+        }
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        else if (type == GameStateEnum.DISPLAY_ANSWER)</span>
+        {
+<span class="nc" id="L136">            m_gameState.setAnswersVisible(info.getAnswersVisible());</span>
+        }
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        else if (type == GameStateEnum.WAIT_FOR_ANSWER)</span>
+        {
+<span class="nc" id="L140">            m_gameState.setToggleState(GameState.ANSWERS_SELECTABLE, true);</span>
+        }
+<span class="nc bnc" id="L142" title="All 2 branches missed.">        else if (type == GameStateEnum.WAIT_TO_REVEAL_ANSWER)</span>
+        {
+<span class="nc" id="L144">            m_gameState.setToggleState(GameState.ANSWERS_SELECTABLE, false);</span>
+        }
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        else if (type == GameStateEnum.ANSWER_WAS_CORRECT)</span>
+        {
+<span class="nc" id="L148">            m_gameState.setCorrectAnswer(info.getCorrectAnswer());</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            if (debugOn)</span>
+<span class="nc" id="L151">                System.out.println(&quot;  Correct answer = &quot; + info.getCorrectAnswer());</span>
+        }
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        else if (type == GameStateEnum.ANSWER_WAS_WRONG)</span>
+        {
+<span class="nc" id="L155">            m_gameState.setCorrectAnswer(info.getCorrectAnswer());</span>
+<span class="nc" id="L156">            m_gameState.setCurrentLevel(info.getCurrentLevel());</span>
+
+<span class="nc bnc" id="L158" title="All 2 branches missed.">            if (debugOn)</span>
+<span class="nc" id="L159">                System.out.println(&quot;  Correct answer = &quot; + info.getCorrectAnswer());</span>
+        }
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        else if (type == GameStateEnum.GRAND_PRIZE_WON)</span>
+        {
+        }
+<span class="nc bnc" id="L164" title="All 2 branches missed.">        else if (type == GameStateEnum.TRANSITION_LEVEL)</span>
+        {
+<span class="nc" id="L166">            m_gameState.setCurrentLevel(info.getCurrentLevel());</span>
+<span class="nc" id="L167">            m_gameState.setAnswersVisible(info.getAnswersVisible());</span>
+<span class="nc" id="L168">            m_gameState.setLevelTitle(info.getLevelTitle());</span>
+<span class="nc" id="L169">            m_gameState.setCurrentQuestion(info.getQuestion(), answers);</span>
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_NETWORK_SETUP) != 0)</span>
+<span class="nc" id="L172">                System.out.println(&quot;  Current level = &quot; + info.getCurrentLevel());</span>
+        }
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        else if (type == GameStateEnum.WALKAWAY)</span>
+        {
+<span class="nc" id="L176">            m_gameState.setCorrectAnswer(info.getCorrectAnswer());</span>
+<span class="nc" id="L177">            m_gameState.setCurrentLevel(info.getCurrentLevel());</span>
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            if (debugOn)</span>
+<span class="nc" id="L180">                System.out.println(&quot;  Correct answer = &quot; + info.getCorrectAnswer());</span>
+        }
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        else if (type == GameStateEnum.LIFELINE_SELECTED)</span>
+        {
+        }
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        else if (type == GameStateEnum.FIFTY_FIFTY)</span>
+        {
+<span class="nc" id="L187">            m_gameState.setAnswersVisible(info.getAnswersVisible());</span>
+        }
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        else if (type == GameStateEnum.PHONE_A_FRIEND)</span>
+        {
+<span class="nc" id="L191">            m_gameState.setLifelineTimerLimit(info.getLifelineTimerLimit());</span>
+<span class="nc" id="L192">            m_gameState.setLifelineTimerTime(0);</span>
+
+<span class="nc" id="L194">            m_gameState.setToggleState(GameState.LIFELINE_TIMER_SHOWN, true);</span>
+            
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            if (debugOn)</span>
+<span class="nc" id="L197">                System.out.println(&quot;  Lifeline timer limit = &quot; + info.getLifelineTimerLimit());</span>
+        }
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        else if (type == GameStateEnum.ASK_THE_AUDIENCE)</span>
+        {
+        }
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        else if (type == GameStateEnum.LIFELINE_END)</span>
+        {
+<span class="nc" id="L204">            m_gameState.setToggleState(GameState.LIFELINE_TIMER_SHOWN, false);</span>
+        }
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        else if (type == GameStateEnum.SET_CURRENT_LEVEL)</span>
+        {
+<span class="nc" id="L208">            m_gameState.setCurrentLevel(info.getCurrentLevel());</span>
+        }
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        else if (type == GameStateEnum.SET_QUESTION_TIMER_LIMIT)</span>
+        {
+<span class="nc" id="L212">            m_gameState.setQuestionTimerLimit(info.getQuestionTimerLimit());</span>
+        }
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        else if (type == GameStateEnum.END_OF_GAME)</span>
+        {
+        }
+        else
+        {
+<span class="nc" id="L219">            throw new UnsupportedOperationException(&quot;Unhandled GameStateEnum = &quot; + type);</span>
+        }
+        
+        // Fire off notification of this state change
+<span class="nc" id="L223">        m_gameState.fireGameStateChangeEvent(this, info.getType());</span>
+<span class="nc" id="L224">    }</span>
+
+    /** Process the received game update event packet.
+     */
+    public void processEventPacket(EventPacket  info)
+    {
+<span class="nc" id="L230">        GameUpdateEnumGame         type = (GameUpdateEnumGame) info.getType();</span>
+
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        boolean  debugOn = (m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_NETWORK_SETUP) != 0;</span>
+        
+<span class="nc bnc" id="L234" title="All 2 branches missed.">        if (debugOn)</span>
+        {
+<span class="nc bnc" id="L236" title="All 4 branches missed.">            if (type != GameUpdateEnumGame.UPDATE_QUESTION_CLOCK &amp;&amp;</span>
+                    type != GameUpdateEnumGame.UPDATE_LIFELINE_CLOCK)
+            {
+<span class="nc" id="L239">                System.out.println(&quot;--&gt; PacketProcessorGame::processEventPacket(&quot; + type + &quot;)&quot;);</span>
+            }
+        }
+
+        // Process special event states
+<span class="nc bnc" id="L244" title="All 2 branches missed.">        if (type == GameUpdateEnumGame.UPDATE_QUESTION_CLOCK)</span>
+        {
+<span class="nc" id="L246">            m_gameState.setQuestionTimerTime(info.getQuestionTimerTime());</span>
+        }
+<span class="nc bnc" id="L248" title="All 2 branches missed.">        else if (type == GameUpdateEnumGame.UPDATE_LIFELINE_CLOCK)</span>
+        {
+<span class="nc" id="L250">            m_gameState.setLifelineTimerTime(info.getLifelineTimerTime());</span>
+        }
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        else if (type == GameUpdateEnumGame.TOGGLE_STATE)</span>
+        {
+<span class="nc" id="L254">            m_gameState.setToggleStates(info.getToggleStates());</span>
+        }
+<span class="nc bnc" id="L256" title="All 2 branches missed.">        else if (type == GameUpdateEnumGame.HIGHLIGHT_LEVEL)</span>
+        {
+<span class="nc" id="L258">            m_gameState.setHighlightLevel(info.getHighlightLevel());</span>
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">            if (debugOn)</span>
+<span class="nc" id="L261">                System.out.println(&quot;  Highlight level = &quot; + info.getLifelineTimerTime());</span>
+        }
+<span class="nc bnc" id="L263" title="All 2 branches missed.">        else if (type == GameUpdateEnumGame.SELECTED_ANSWER)</span>
+        {
+<span class="nc" id="L265">            m_gameState.setSelectedAnswer(info.getSelectedAnswer());</span>
+            
+<span class="nc bnc" id="L267" title="All 2 branches missed.">            if (debugOn)</span>
+<span class="nc" id="L268">                System.out.println(&quot;  Selected answer = &quot; + info.getSelectedAnswer());</span>
+        }
+<span class="nc bnc" id="L270" title="All 2 branches missed.">        else if (type == GameUpdateEnumGame.SELECTED_LIFELINE)</span>
+        {
+<span class="nc" id="L272">            m_gameState.setSelectedLifeline(info.getSelectedLifeline());</span>
+            
+<span class="nc bnc" id="L274" title="All 2 branches missed.">            if (debugOn)</span>
+<span class="nc" id="L275">                System.out.println(&quot;  Selected lifeline = &quot; + info.getSelectedLifeline());</span>
+        }
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        else if (type == GameUpdateEnumGame.TRANSITION_MSG)</span>
+        {
+<span class="nc" id="L279">            m_gameState.setTransitionMessage(info.getTransitionMessage());</span>
+            
+<span class="nc bnc" id="L281" title="All 2 branches missed.">            if (debugOn)</span>
+<span class="nc" id="L282">                System.out.println(&quot;  Transition message: &quot; + info.getTransitionMessage());</span>
+        }
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        else if (type == GameUpdateEnumGame.STATUS_MSG)</span>
+        {
+<span class="nc" id="L286">            m_gameState.setStatusMessage(info.getStatusMessage());</span>
+            
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            if (debugOn)</span>
+<span class="nc" id="L289">                System.out.println(&quot;  Status message: &quot; + info.getStatusMessage());</span>
+        }
+        else
+        {
+<span class="nc" id="L293">            throw new UnsupportedOperationException(&quot;Unhandled GameUpdateEnumGame = &quot; + type);</span>
+        }
+        
+        // Fire off notification of this event
+<span class="nc" id="L297">        m_gameState.fireGameUpdateEvent(this, type);</span>
+<span class="nc" id="L298">    }</span>
+
+    /** Process the received game update event packet.
+     */
+    public void processModeChangePacket(ModeChangePacket  info)
+    {
+<span class="nc" id="L304">        GameModeEnum  mode = info.getMode();</span>
+        
+<span class="nc bnc" id="L306" title="All 2 branches missed.">        if ((m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_NETWORK_EVENTS) != 0)</span>
+        {
+<span class="nc" id="L308">            System.out.println(&quot;--&gt; GameState::processModeChangePacket(&quot; + mode + &quot;)&quot;);</span>
+        }
+
+        // Process special event states
+
+        
+        // Fire off notification of this event
+<span class="nc" id="L315">        m_gameState.fireGameModeChangeEvent(this, mode);</span>
+<span class="nc" id="L316">    }</span>
+
+    private static PacketProcessorGame     m_singletonPacketProcessorGame;
+
+    private GameState  m_gameState;
+    private GameConfig  m_gameConfig;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

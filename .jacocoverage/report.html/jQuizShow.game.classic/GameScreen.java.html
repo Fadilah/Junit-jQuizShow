@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GameScreen.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.game.classic</a> &gt; <span class="el_source">GameScreen.java</span></div><h1>GameScreen.java</h1><pre class="source lang-java linenums">/*
+ * GameScreen.java
+ *
+ * Created on February 23, 2001, 12:41 PM
+ *
+ * $Id: GameScreen.java,v 1.3 2007/02/05 04:24:19 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: GameScreen.java,v $
+ *    Revision 1.3  2007/02/05 04:24:19  sdchen
+ *    Replaced deprecated isFocusTraversable() with setFocusable(boolean s).
+ *
+ *    Revision 1.2  2007/02/05 03:55:48  sdchen
+ *    Removed CR (Ctrl-M) from lines.
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.2  2002/07/06 06:13:38  sdchen
+ *    Completed implementation of a workaround for Java2 1.4 KeyEvent processing
+ *    change.  With Java2 1.4, the GameScreen must have focus in order for
+ *    jQuizShow to receive keyboard events.  This is a change from v1.3 behavior
+ *    which passed uncaught KeyEvents up to the parent classes (Main's JFrame).
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:21  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.game.classic;
+
+/**
+ *
+ * @author  Steve
+ * @version 
+ */
+
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
+
+import jQuizShow.*;
+import jQuizShow.game.*;
+import jQuizShow.event.*;
+
+public class GameScreen extends javax.swing.JInternalFrame
+        implements GameUpdateListener
+{
+    public static final int GAME_PANEL = 0;
+    public static final int TRANSITION_PANEL = 1;
+    
+    public GameScreen(Point  initLocation, Dimension  initSize, GameState  gameState)
+    {
+<span class="fc" id="L79">        super(&quot;Game Screen&quot;, true, false, true, true);</span>
+<span class="fc" id="L80">        setSize(initSize);</span>
+<span class="fc" id="L81">        setLocation(initLocation);</span>
+
+<span class="fc" id="L83">        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);</span>
+        
+<span class="fc" id="L85">        m_gameState = gameState;</span>
+<span class="fc" id="L86">        m_gameState.addGameUpdateListener(this);</span>
+
+<span class="fc" id="L88">        m_evt = new GameInputEvent(this);</span>
+        
+<span class="fc" id="L90">        m_maxAnswers = m_gameState.getMaxNumberOfAnswers();</span>
+        
+<span class="fc" id="L92">        initComponents ();</span>
+
+<span class="fc" id="L94">        m_tabbedPane = new JTabbedPane();</span>
+<span class="fc" id="L95">        m_tabbedPane.setTabPlacement(SwingConstants.RIGHT);</span>
+<span class="fc" id="L96">        getContentPane().add(m_tabbedPane);</span>
+        
+        // Add the GamePanel to the tabbed pane
+<span class="fc" id="L99">        m_gamePanel = new GamePanel(m_maxAnswers);</span>
+<span class="fc" id="L100">        m_tabbedPane.addTab(&quot;Q&quot;, m_gamePanel);</span>
+
+        // Add the TransitionPanel to the tabbed pane
+<span class="fc" id="L103">        m_transitionPanel = new TransitionPanel();</span>
+<span class="fc" id="L104">        m_tabbedPane.addTab(&quot;T&quot;, m_transitionPanel);</span>
+
+        // Listen for keyboard events
+<span class="fc" id="L107">        addKeyListener(new java.awt.event.KeyAdapter()</span>
+<span class="fc" id="L108">        {</span>
+            public void keyPressed(java.awt.event.KeyEvent evt)
+            {
+<span class="nc" id="L111">                int  keyCode = evt.getKeyCode();</span>
+<span class="nc" id="L112">                char  keyChar = evt.getKeyChar();</span>
+
+<span class="nc" id="L114">                m_evt.setType(GameInputEnum.KEY_TYPED);</span>
+<span class="nc" id="L115">		m_evt.setKeyCode(keyCode, keyChar);</span>
+<span class="nc" id="L116">		m_gameState.fireGameInputEvent(m_evt);</span>
+
+<span class="nc" id="L118">		return;</span>
+            }
+        });
+        
+<span class="fc" id="L122">        setFocusable(true);</span>
+<span class="fc" id="L123">    }</span>
+
+    
+    public void gameUpdated(GameUpdateEvent evt) {
+<span class="nc" id="L127">        GameUpdateEnum  type = evt.getType();</span>
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (type == GameUpdateEnumGame.TOGGLE_STATE)</span>
+        {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            if (m_gameState.getToggleState(GameState.TRANSITION_SCREEN_SHOWN))</span>
+            {
+<span class="nc" id="L133">                m_tabbedPane.setSelectedComponent(m_transitionPanel);</span>
+<span class="nc" id="L134">                show();</span>
+            }
+            else
+            {
+<span class="nc" id="L138">                m_tabbedPane.setSelectedComponent(m_gamePanel);</span>
+<span class="nc" id="L139">                show();</span>
+            }
+        }
+<span class="nc" id="L142">    }    </span>
+    
+    
+    /** This method is called from within the constructor to
+     * initialize the form.
+     */
+    private void initComponents() {
+        
+<span class="fc" id="L150">        getContentPane().setLayout(new java.awt.GridLayout(1, 0));</span>
+        
+<span class="fc" id="L152">    }</span>
+    
+    protected JTabbedPane  m_tabbedPane;
+
+    protected GamePanel  m_gamePanel;                 // Primary question/answer panel
+
+    protected TransitionPanel  m_transitionPanel;
+    
+    private GameState  m_gameState;     // GameState instance (model)
+    
+    private int  m_maxAnswers;          // Max number of answers
+
+<span class="fc" id="L164">    private GameInputEvent  m_evt = null;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

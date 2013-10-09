@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GameText.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">GameText.java</span></div><h1>GameText.java</h1><pre class="source lang-java linenums">/*
+ * GameText.java
+ *
+ * Created on April 21, 2001, 10:06 PM
+ *
+ * $Id: GameText.java,v 1.2 2007/02/05 04:05:34 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: GameText.java,v $
+ *    Revision 1.2  2007/02/05 04:05:34  sdchen
+ *    Replaced deprecated show() with setVisible(bool  s)
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:24  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow;
+
+import java.awt.*;
+import java.awt.geom.*;
+import java.awt.font.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.text.*;
+import javax.swing.event.*;
+import java.util.*;
+
+import jQuizShow.*;
+import jQuizShow.event.*;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 1.0
+ */
+public class GameText extends JPanel {
+
+    private static final String FONT_NAME_SUFFIX = &quot;FontName&quot;;
+    private static final String FONT_BOLD_SUFFIX = &quot;FontBold&quot;;
+    private static final String FONT_ITALIC_SUFFIX = &quot;FontItalic&quot;;
+
+    /** Creates new GameText */
+
+    public GameText(int  id)
+<span class="nc" id="L73">    {</span>
+<span class="nc" id="L74">        initialize(id, new Dimension(32, 2));</span>
+<span class="nc" id="L75">    }</span>
+    
+    public GameText(int  id, Dimension  size)
+<span class="fc" id="L78">    {</span>
+<span class="fc" id="L79">        initialize(id, size);</span>
+<span class="fc" id="L80">    }</span>
+
+    /**
+     * Sets the basename that is used to look up the font settings
+     * in the configuration file.  The desired font parameter is
+     * specified by appending the appropriate suffix to the basename,
+     * e.g. if the basename was &quot;question&quot;, &quot;questionFontName&quot; would
+     * be the name of the font for the questions.
+     */
+    public void   setFontBasename(String  basename)
+    {
+<span class="nc" id="L91">        m_fontBasename = basename;</span>
+<span class="nc" id="L92">    }</span>
+    
+    private void  initialize(int  id, final Dimension  rowcol)
+    {
+<span class="fc" id="L96">        m_id = id;</span>
+
+<span class="fc" id="L98">        m_gameConfig = GameConfig.getInstance();</span>
+        
+<span class="fc" id="L100">        m_label = new String();</span>
+<span class="fc" id="L101">        m_text = new String();</span>
+        
+<span class="fc" id="L103">        setTextColor();</span>
+<span class="fc" id="L104">        setBorderColor(Color.blue);</span>
+        
+<span class="pc bpc" id="L106" title="2 of 4 branches missed.">        if (rowcol.width &lt; 1 || rowcol.height &lt; 1)</span>
+        {
+<span class="nc" id="L108">            throw new IndexOutOfBoundsException();</span>
+        }
+        
+        // Initialize the GameActionEvent and the listener list
+<span class="fc" id="L112">        m_evt = new GameInputEvent(this);</span>
+<span class="fc" id="L113">        m_eventListenerList = new EventListenerList();</span>
+        
+        // Add a listener for component resize events
+<span class="fc" id="L116">        addComponentListener(new java.awt.event.ComponentAdapter()</span>
+<span class="fc" id="L117">        {</span>
+            public void componentResized(java.awt.event.ComponentEvent evt)
+            {
+<span class="fc" id="L120">                Component  component = evt.getComponent();</span>
+<span class="fc" id="L121">                Graphics  g = component.getGraphics();</span>
+<span class="fc" id="L122">                m_size = component.getSize();</span>
+
+<span class="fc" id="L124">                m_parentBG = component.getParent().getBackground();</span>
+
+                // Get the font preferences
+<span class="fc" id="L127">                m_fontName = m_gameConfig.getConfig(</span>
+                        m_fontBasename + FONT_NAME_SUFFIX, &quot;SansSerif&quot;);
+                
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">                if (m_gameConfig.getIntConfig(m_fontBasename + FONT_BOLD_SUFFIX, 1) != 0)</span>
+<span class="fc" id="L131">                    m_fontStyle = Font.BOLD;</span>
+                else
+<span class="nc" id="L133">                    m_fontStyle = Font.PLAIN;</span>
+                
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">                if (m_gameConfig.getIntConfig(m_fontBasename + FONT_ITALIC_SUFFIX, 0) != 0)</span>
+<span class="nc" id="L136">                    m_fontStyle |= Font.ITALIC;</span>
+
+<span class="fc" id="L138">		StringBuffer strBuf = new StringBuffer((int) rowcol.width);</span>
+
+<span class="fc bfc" id="L140" title="All 2 branches covered.">		for (int i = 0; i &lt; rowcol.width; i++)</span>
+		{
+<span class="fc" id="L142">		    strBuf.append('W');</span>
+		}
+
+<span class="fc" id="L145">		String  testString = strBuf.toString();</span>
+                
+                /* Scale the font to fit to the size of the actual panel
+                 *
+                 * Make initial guess too large
+                 */
+<span class="fc" id="L151">                int  ptSize = (int) (m_size.width / 5.0f);</span>
+
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                for (int  loop = 0; loop &lt; 10; loop++)</span>
+                {
+<span class="fc" id="L155">                    m_font = new Font(m_fontName, m_fontStyle, ptSize);</span>
+<span class="fc" id="L156">                    m_fontMetrics = g.getFontMetrics(m_font);</span>
+                    
+<span class="fc" id="L158">                    int  height = rowcol.height * m_fontMetrics.getHeight();</span>
+                    
+<span class="fc bfc" id="L160" title="All 2 branches covered.">                    if (height &gt; m_size.height)</span>
+                    {
+<span class="fc" id="L162">                        ptSize *= (1.0f - (height - m_size.height) / ((float) height));</span>
+<span class="fc" id="L163">                        continue;</span>
+                    }
+
+<span class="fc" id="L166">                    int  width = m_fontMetrics.stringWidth(testString) + (int) (height / 2.5 + 1.0);</span>
+
+<span class="fc bfc" id="L168" title="All 2 branches covered.">                    if (width &gt; m_size.width)</span>
+                    {
+<span class="fc" id="L170">                        ptSize *= (1.0f - (width - m_size.width) / ((float) width));</span>
+<span class="fc" id="L171">                        continue;</span>
+                    }
+                    
+                    // Font size fitted to panel size.  Exit.
+                    break;
+                }
+
+<span class="fc" id="L178">                component.repaint();</span>
+<span class="fc" id="L179">            }</span>
+        });
+        
+        // Add a listener for mouse events
+<span class="fc" id="L183">        addMouseListener(new MouseAdapter()</span>
+<span class="fc" id="L184">        {</span>
+            public void mousePressed(MouseEvent  evt)
+            {
+<span class="nc" id="L187">                m_evt.setType(GameInputEnum.MOUSE_BUTTON_1);</span>
+<span class="nc" id="L188">                fireGameInputEvent(m_evt);</span>
+<span class="nc" id="L189">            }</span>
+        } );
+<span class="fc" id="L191">    }</span>
+
+    /**
+     * Get the object's assigned ID.
+     */
+    public int  getId()
+    {
+<span class="nc" id="L198">        return m_id;</span>
+    }
+    
+    public void addGameInputListener(GameInputListener  l)
+    {
+<span class="fc" id="L203">        m_eventListenerList.add(GameInputListener.class, l);</span>
+<span class="fc" id="L204">    }</span>
+    
+    public void removeGameInputListener(GameInputListener  l)
+    {
+<span class="nc" id="L208">        m_eventListenerList.remove(GameInputListener.class, l);</span>
+<span class="nc" id="L209">    }</span>
+    
+    protected void  fireGameInputEvent(GameInputEvent  evt)
+    {
+        // Guaranteed to return a non-null array
+<span class="nc" id="L214">        Object[] listeners = m_eventListenerList.getListenerList();</span>
+
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+<span class="nc bnc" id="L218" title="All 2 branches missed.">        for (int i = listeners.length - 2; i &gt;= 0; i -= 2)</span>
+        {
+<span class="nc bnc" id="L220" title="All 2 branches missed.">            if (listeners[i] == GameInputListener.class)</span>
+            {
+<span class="nc" id="L222">                ((GameInputListener)listeners[i+1]).gameInputReceived(evt);</span>
+            }
+        }        
+<span class="nc" id="L225">    }</span>
+    
+    public void setText(String  label, String text)
+    {
+<span class="nc" id="L229">        m_label = new String(label);</span>
+<span class="nc" id="L230">        m_text = new String(text);</span>
+<span class="nc" id="L231">        repaint();</span>
+<span class="nc" id="L232">        return;</span>
+    }
+
+    public void setTextColor()
+    {
+<span class="fc" id="L237">        setTextColor(Color.orange, Color.white, Color.black);</span>
+<span class="fc" id="L238">    }</span>
+
+    public void setTextColor(Color  labelColor, Color textColor, Color  bgColor)
+    {
+<span class="fc" id="L242">        m_labelColor = new Color(labelColor.getRGB());</span>
+<span class="fc" id="L243">        m_textColor = new Color(textColor.getRGB());</span>
+<span class="fc" id="L244">        m_bgColor = new Color(bgColor.getRGB());</span>
+<span class="fc" id="L245">        repaint();</span>
+<span class="fc" id="L246">    }</span>
+
+    public void setBorderColor(Color color)
+    {
+<span class="fc" id="L250">        m_borderColor = new Color(color.getRGB());</span>
+<span class="fc" id="L251">        repaint();</span>
+<span class="fc" id="L252">    }</span>
+
+    public void centerText(boolean  center)
+    {
+<span class="fc" id="L256">        m_center = center;</span>
+<span class="fc" id="L257">    }</span>
+    
+    public void paintComponent(Graphics  g)
+    {
+<span class="nc" id="L261">        Graphics2D  g2 = (Graphics2D) g;</span>
+
+<span class="nc" id="L263">        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,</span>
+                RenderingHints.VALUE_ANTIALIAS_ON);
+        
+<span class="nc bnc" id="L266" title="All 2 branches missed.">        if (m_fontMetrics == null)</span>
+<span class="nc" id="L267">            return;</span>
+        
+<span class="nc" id="L269">        final int  borderWidth = m_fontMetrics.getAscent() / 5 + 1;</span>
+        
+        // Save the original (current) graphics transform
+<span class="nc" id="L272">        AffineTransform  origTransform = g2.getTransform();</span>
+        
+        // Clear everything
+<span class="nc" id="L275">        g2.setBackground(m_parentBG);</span>
+<span class="nc" id="L276">        g2.clearRect(0, 0, m_size.width, m_size.height);</span>
+    
+<span class="nc" id="L278">        Dimension  size = new Dimension(m_size);</span>
+
+<span class="nc" id="L280">        g2.translate(0, borderWidth);</span>
+        
+<span class="nc" id="L282">        size.height -= borderWidth * 2;</span>
+
+        // Draw the six-sided Question box
+<span class="nc" id="L285">        GeneralPath  path = new GeneralPath();</span>
+<span class="nc" id="L286">        path.moveTo(size.width * 0.05f, size.height / 2.0f);</span>
+<span class="nc" id="L287">        path.lineTo(size.width * 0.05f + 15.0f, 0.0f);</span>
+<span class="nc" id="L288">        path.lineTo(size.width * 0.95f - 15.0f, 0.0f);</span>
+<span class="nc" id="L289">        path.lineTo(size.width * 0.95f, size.height / 2.0f);</span>
+<span class="nc" id="L290">        path.lineTo(size.width * 0.95f - 15.0f, size.height);</span>
+<span class="nc" id="L291">        path.lineTo(size.width * 0.05f + 15.0f, size.height);</span>
+<span class="nc" id="L292">        path.closePath();     </span>
+        
+        // Draw the line extensions on left &amp; right sides
+<span class="nc" id="L295">        path.moveTo(0.0f, size.height / 2.0f);</span>
+<span class="nc" id="L296">        path.lineTo(size.width * 0.05f, size.height / 2.0f);</span>
+<span class="nc" id="L297">        path.moveTo(size.width * 0.95f, size.height / 2.0f);</span>
+<span class="nc" id="L298">        path.lineTo(size.width, size.height / 2.0f);</span>
+        
+        // Draw the background
+
+<span class="nc" id="L302">        g2.setColor(m_bgColor);</span>
+        
+<span class="nc" id="L304">        g2.fill(path);</span>
+
+        // Draw the border
+        
+<span class="nc" id="L308">        g2.setColor(m_borderColor);</span>
+<span class="nc" id="L309">        g2.setStroke(new BasicStroke(borderWidth, BasicStroke.CAP_BUTT,</span>
+                BasicStroke.JOIN_ROUND));
+
+<span class="nc" id="L312">        g2.draw(path);</span>
+        
+        // Draw the label
+
+<span class="nc" id="L316">        g2.setFont(m_font);</span>
+        
+<span class="nc" id="L318">        Point2D.Float pen = new Point2D.Float(size.width * 0.1f, size.height * 0.5f);</span>
+        
+<span class="nc bnc" id="L320" title="All 2 branches missed.">        if (m_label.length() &gt; 0)</span>
+        {
+<span class="nc" id="L322">            g2.setColor(m_labelColor);</span>
+
+<span class="nc" id="L324">            int width = m_fontMetrics.stringWidth(m_label + &quot;  &quot;);</span>
+<span class="nc" id="L325">            float h = pen.y + m_fontMetrics.getAscent() * 0.5f;</span>
+            
+<span class="nc" id="L327">            g2.drawString(m_label, pen.x, h);</span>
+            
+<span class="nc" id="L329">            pen.x += width;</span>
+        }
+
+        // Draw the text
+        
+<span class="nc bnc" id="L334" title="All 2 branches missed.">        if (m_text.length() &gt; 0)</span>
+        {
+<span class="nc" id="L336">            g2.setColor(m_textColor);</span>
+            
+<span class="nc" id="L338">            AttributedString  attrString = new AttributedString(m_text);</span>
+<span class="nc" id="L339">            attrString.addAttribute(TextAttribute.FONT, m_font);</span>
+            
+<span class="nc" id="L341">            AttributedCharacterIterator  attrIter = attrString.getIterator();</span>
+<span class="nc" id="L342">            FontRenderContext  frc = g2.getFontRenderContext();</span>
+            
+<span class="nc" id="L344">            LineBreakMeasurer measurer = new LineBreakMeasurer(</span>
+                    attrIter, frc);
+            
+<span class="nc" id="L347">            float wrappingWidth = size.width * 0.9f - pen.x;</span>
+
+<span class="nc" id="L349">            float height = 0.0f;</span>
+
+<span class="nc" id="L351">            float width = 0.0f;</span>
+            
+            // Calculate the offset in order to center the text vertically.
+<span class="nc bnc" id="L354" title="All 2 branches missed.">            while (measurer.getPosition() &lt; attrIter.getEndIndex())</span>
+            {
+<span class="nc" id="L356">                TextLayout layout = measurer.nextLayout(wrappingWidth);</span>
+<span class="nc" id="L357">                height += layout.getAscent() + layout.getDescent() +</span>
+                        layout.getLeading();
+
+<span class="nc" id="L360">                float  advance = layout.getAdvance();</span>
+                
+<span class="nc bnc" id="L362" title="All 2 branches missed.">                if (advance &gt; width)</span>
+<span class="nc" id="L363">                    width = advance;</span>
+<span class="nc" id="L364">            }         </span>
+
+<span class="nc" id="L366">            pen.y -= height * 0.5f;</span>
+
+            // Draw the text
+<span class="nc" id="L369">            measurer.setPosition(0);</span>
+
+<span class="nc" id="L371">            float  xOffset = 0.0f;</span>
+            
+<span class="nc bnc" id="L373" title="All 2 branches missed.">            if (m_center)</span>
+<span class="nc" id="L374">                xOffset = (wrappingWidth - width) * 0.5f;</span>
+            
+<span class="nc bnc" id="L376" title="All 2 branches missed.">            while (measurer.getPosition() &lt; attrIter.getEndIndex())</span>
+            {
+<span class="nc" id="L378">                TextLayout layout = measurer.nextLayout(wrappingWidth);</span>
+<span class="nc" id="L379">                pen.y += (layout.getAscent());</span>
+<span class="nc" id="L380">                layout.draw(g2, pen.x + xOffset, pen.y);</span>
+<span class="nc" id="L381">                pen.y += layout.getDescent() + layout.getLeading();</span>
+<span class="nc" id="L382">            }         </span>
+        }
+        
+        // Restore the original graphics transform
+<span class="nc" id="L386">        g2.setTransform(origTransform);</span>
+<span class="nc" id="L387">    }</span>
+
+    /**
+     * Test program
+     * @param args the command line arguments
+    */
+    public static void main (String args[]) {
+<span class="nc" id="L394">        Toolkit     tk = Toolkit.getDefaultToolkit();</span>
+<span class="nc" id="L395">        Dimension   screenSize = tk.getScreenSize();</span>
+        
+<span class="nc" id="L397">        Dimension   initSize = new Dimension();</span>
+        
+<span class="nc" id="L399">        Point       initLocation = new Point();</span>
+
+<span class="nc" id="L401">        JFrame  jframe = new JFrame();</span>
+
+<span class="nc" id="L403">        jframe.addWindowListener(new java.awt.event.WindowAdapter()</span>
+<span class="nc" id="L404">        {</span>
+            public void windowClosing(java.awt.event.WindowEvent evt)
+            {
+<span class="nc" id="L407">                System.exit(0);</span>
+<span class="nc" id="L408">            }</span>
+        });
+
+<span class="nc" id="L411">        initSize.width = (int) (screenSize.width * 0.5);</span>
+<span class="nc" id="L412">        initSize.height = (int) (screenSize.height * 0.2f);</span>
+        
+<span class="nc" id="L414">        System.out.println(&quot;Dimension = &quot; + initSize);</span>
+        
+<span class="nc" id="L416">        jframe.setSize(initSize);</span>
+<span class="nc" id="L417">        jframe.setLocation(50, 50);</span>
+        
+<span class="nc" id="L419">        GameText  gameText = new GameText(111);</span>
+        
+<span class="nc" id="L421">        gameText.setText(&quot;A:&quot;, &quot;The quick brown fox jumps over the lazy dog but was scared away when he saw the grumpy cat&quot;);</span>
+        
+<span class="nc" id="L423">        jframe.getContentPane().add(gameText);</span>
+<span class="nc" id="L424">        jframe.setVisible(true);</span>
+<span class="nc" id="L425">    }</span>
+    
+    private GameConfig  m_gameConfig;   // GameConfig instance
+    
+    private int  m_id;              // Instance ID
+
+<span class="pc" id="L431">    private boolean  m_center = false;      // Center text if true</span>
+    
+    private String  m_label;        // Label string
+
+    private String  m_text;         // Text string
+
+    private String  m_numLines;     // Number of text lines
+
+    private String  m_fontBasename;   // Config family name
+    private String  m_fontName;     // Font name as specified in config file
+    private int  m_fontStyle;       // Font style
+    
+    private Font  m_font;           // Font for text
+
+    private FontMetrics  m_fontMetrics;  // Font metrics
+    
+    private Dimension  m_size;      // Current dimension of JPanel
+    
+    private Color  m_labelColor;
+    
+    private Color  m_textColor;
+    
+    private Color  m_bgColor;
+    
+    private Color  m_borderColor;
+    
+    private Color  m_parentBG;      // Parent component's background color
+    
+<span class="pc" id="L459">    private GameInputEvent  m_evt = null;</span>
+    protected EventListenerList  m_eventListenerList;   // Listeners interested in a selection
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

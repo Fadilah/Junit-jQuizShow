@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ConnectionListener.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.net</a> &gt; <span class="el_source">ConnectionListener.java</span></div><h1>ConnectionListener.java</h1><pre class="source lang-java linenums">/*
+ * ConnectionListener.java
+ *
+ * Created on June 9, 2001, 9:32 PM
+ *
+ * $Id: ConnectionListener.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ConnectionListener.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.2  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:40  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.net;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 
+ */
+
+import java.io.*;
+import java.net.*;
+import javax.swing.*;
+
+import jQuizShow.*;
+
+public class ConnectionListener extends Thread {
+
+    /** Creates new ConnectionListener */
+<span class="nc" id="L63">    public ConnectionListener(ObjectInputStream  objInput) {</span>
+<span class="nc" id="L64">        m_objInput = objInput;</span>
+        
+<span class="nc" id="L66">        m_packetProcessor = PacketProcessor.getInstance();</span>
+<span class="nc" id="L67">    }</span>
+
+    public void run() {
+        while (true) {
+            try
+            {
+                Object          object;
+                
+<span class="nc" id="L75">                object = m_objInput.readObject();</span>
+                
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                if (object.getClass() == StatePacket.class)</span>
+                {
+<span class="nc" id="L79">                    StatePacket     statePacket = (StatePacket) object;</span>
+
+                    // Update the local GameState singleton using the received info
+<span class="nc" id="L82">                    m_packetProcessor.processStatePacket(statePacket);</span>
+<span class="nc" id="L83">                }</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">                else if (object.getClass() == EventPacket.class)</span>
+                {
+<span class="nc" id="L86">                    EventPacket     eventPacket = (EventPacket) object;</span>
+                    
+                    // Update the local GameState singleton using the received info
+<span class="nc" id="L89">                    m_packetProcessor.processEventPacket(eventPacket);</span>
+<span class="nc" id="L90">                }</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">                else if (object.getClass() == ModeChangePacket.class)</span>
+                {
+<span class="nc" id="L93">                    ModeChangePacket     modeChangePacket = (ModeChangePacket) object;</span>
+                    
+                    // Update the local GameState singleton using the received info
+<span class="nc" id="L96">                    m_packetProcessor.processModeChangePacket(modeChangePacket);</span>
+                }
+
+            }
+<span class="nc" id="L100">            catch (OptionalDataException  e)</span>
+            {
+<span class="nc" id="L102">                System.out.println(&quot;OptionalDataException:  &quot; + e.getMessage());</span>
+            }
+<span class="nc" id="L104">            catch (ClassNotFoundException  e)</span>
+            {
+<span class="nc" id="L106">                System.out.println(&quot;ClassNotFoundException:  &quot; + e.getMessage());</span>
+            }
+<span class="nc" id="L108">            catch (IOException  e)</span>
+            {
+<span class="nc" id="L110">                System.out.println(&quot;IOException:  &quot; + e.getMessage());</span>
+
+<span class="nc" id="L112">                JOptionPane.showMessageDialog(Main.getMain(),</span>
+			Main.getMessage(&quot;msg_connect_lost&quot;),
+                        Main.getMessage(&quot;title_error&quot;),
+			JOptionPane.ERROR_MESSAGE);
+
+                // Clean up
+                try {
+<span class="nc" id="L119">                    ConnectionSlave.getInstance().close();</span>
+                }
+<span class="nc" id="L121">                catch (IOException  exc)</span>
+                {
+<span class="nc" id="L123">                    System.out.println(&quot;IOException [close()]:  &quot; + exc.getMessage());</span>
+<span class="nc" id="L124">                }</span>
+                
+                // Exit loop
+<span class="nc" id="L127">                return;</span>
+<span class="nc" id="L128">            }</span>
+            
+            try
+            {
+<span class="nc" id="L132">                Thread.sleep(20);</span>
+            }
+<span class="nc" id="L134">            catch (InterruptedException  e)</span>
+            {
+                // Okay
+<span class="nc" id="L137">            }</span>
+        }
+    }
+
+    private ObjectInputStream m_objInput;
+
+    private PacketProcessor  m_packetProcessor;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

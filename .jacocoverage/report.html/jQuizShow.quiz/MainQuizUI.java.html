@@ -1,0 +1,775 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MainQuizUI.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.quiz</a> &gt; <span class="el_source">MainQuizUI.java</span></div><h1>MainQuizUI.java</h1><pre class="source lang-java linenums">/*
+ * MainQuizUI.java
+ *
+ * Created on January 26, 2004, 9:54 PM
+ *
+ * $Id: MainQuizUI.java,v 1.2 2007/02/05 03:55:49 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: MainQuizUI.java,v $
+ *    Revision 1.2  2007/02/05 03:55:49  sdchen
+ *    Removed CR (Ctrl-M) from lines.
+ *
+ *    Revision 1.1  2004/04/02 06:02:00  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow.quiz;
+
+/**
+ *
+ * @author  Steven D. Chen
+ */
+
+import java.io.*;
+import java.net.*;
+import java.text.*;
+import java.util.*;
+import java.awt.*;
+import java.awt.image.*;
+import java.awt.event.*;
+import javax.imageio.*;
+import javax.swing.*;
+import javax.swing.event.*;
+
+import jQuizShow.*;
+import jQuizShow.event.*;
+import jQuizShow.quiz.*;
+import jQuizShow.net.*;
+import jQuizShow.util.*;
+
+
+public class MainQuizUI
+        extends MainSubset
+        implements 
+            GameModeChangeListener,
+            GameStateChangeListener,
+            GameUpdateListener
+
+{
+    private static final int FRAME_MULT = 50;
+
+    private static final String  QUIZ_DEFAULT_SKIN = &quot;quizSkin&quot;;
+
+    private static MainQuizUI  m_singletonInstance;
+
+
+    /**
+     * Initializes this Singleton class.  It must be called once prior to
+     * the initial use in order to properly set the getInstance() method
+     * of the parent class.
+     */    
+    public static void  initializeClass()
+    {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (m_singletonInstance == null)</span>
+<span class="nc" id="L90">            m_singletonInstance = new MainQuizUI();</span>
+        else
+        {
+            // Set the singleton instance of the MainSubset to &quot;this&quot;.
+<span class="nc" id="L94">            MainSubset.setInstance(m_singletonInstance);</span>
+
+            // Create the main menu.
+<span class="nc" id="L97">            m_singletonInstance.initMainMenu();</span>
+        }
+
+        // Set the initial size and position of the main frame.
+        {
+<span class="nc" id="L102">            Rectangle  bounds = m_desktopPane.getBounds();</span>
+<span class="nc" id="L103">            Point    location = new Point(0, 0);</span>
+<span class="nc" id="L104">            m_singletonInstance.m_mainFrame.setSize(bounds.width, bounds.height);</span>
+<span class="nc" id="L105">            m_singletonInstance.m_mainFrame.setLocation(location);</span>
+        }
+        
+<span class="nc" id="L108">        m_singletonInstance.m_mainFrame.show();</span>
+
+<span class="nc" id="L110">        return;</span>
+    }
+    
+    
+    /** Private constructor -- only callable from within the
+     * class.  This is called once when the singleton instance is
+     * created.  Thus, any one-time only initialization should be done
+     * here.
+     */
+    private MainQuizUI()
+<span class="nc" id="L120">    {</span>
+<span class="nc" id="L121">        m_singletonInstance = this;</span>
+        
+        // Set the singleton instance of the MainSubset to &quot;this&quot;.
+<span class="nc" id="L124">        MainSubset.setInstance(m_singletonInstance);</span>
+
+        // Get a reference to Main
+<span class="nc" id="L127">        m_main = Main.getInstance();</span>
+
+        // Get the GameConfig singleton instance
+<span class="nc" id="L130">        m_gameConfig = GameConfig.getInstance();</span>
+              
+        // Get a reference to the main desktop pane
+<span class="nc" id="L133">        m_desktopPane = Main.getDesktopPane();</span>
+
+        // Initialize the SoundPlayer instance.  This will preload the
+	// sound effects.
+<span class="nc" id="L137">        SoundPlayer  soundPlayer = SoundPlayer.getInstance();</span>
+
+        // Get the PacketProcessor instance
+<span class="nc" id="L140">        PacketProcessorQuiz.initialize();</span>
+<span class="nc" id="L141">        m_packetProcessor = PacketProcessor.getInstance();</span>
+         
+        // Get the SoundPlayer singleton
+<span class="nc" id="L144">        m_soundPlayer = SoundPlayer.getInstance();</span>
+        
+        // Create the game controller instance
+<span class="nc" id="L147">        m_quizController = QuizController.getInstance();</span>
+        
+        // Get the QuizState instance
+<span class="nc" id="L150">        m_quizState = QuizState.getInstance(false);</span>
+
+        // Add event listeners
+<span class="nc" id="L153">        m_quizState.addGameStateChangeListener(this);</span>
+<span class="nc" id="L154">        m_quizState.addGameModeChangeListener(this);</span>
+<span class="nc" id="L155">        m_quizState.addGameUpdateListener(this);</span>
+
+        // Set the default quiz delay values
+<span class="nc" id="L158">        m_quizState.setDelayValue(QuizState.DELAY_AT_START,</span>
+                m_gameConfig.getIntConfig(&quot;quizDelayAtStart&quot;, 2));
+<span class="nc" id="L160">        m_quizState.setDelayValue(QuizState.DELAY_AFTER_QUESTION,</span>
+                m_gameConfig.getIntConfig(&quot;quizDelayAfterQuestion&quot;, 5));
+<span class="nc" id="L162">        m_quizState.setDelayValue(QuizState.DELAY_AFTER_TIMER_EXPIRES,</span>
+                m_gameConfig.getIntConfig(&quot;quizDelayAfterTimerExpires&quot;, 5));
+   
+        // Create an instace of the EventPacket
+<span class="nc" id="L166">        m_eventPacket = new EventPacket();</span>
+        
+        // Create the vector for the quiz skins
+<span class="nc" id="L169">        m_quizSkins = new Vector();</span>
+
+        // Create the SoundCtrlDialog
+<span class="nc" id="L172">        m_soundCtrlDialog = new SoundCtrlDialog();</span>
+<span class="nc" id="L173">        addWithOffset(m_soundCtrlDialog);</span>
+
+        // Create the QuizTimerControlDialog
+<span class="nc" id="L176">        m_timerCtrlDialog = new QuizTimerControlDialog();</span>
+<span class="nc" id="L177">        m_timerCtrlDialog.setSize(500, 300);</span>
+<span class="nc" id="L178">        addWithOffset(m_timerCtrlDialog);</span>
+
+        // Create the QuizQuestionNumberDialog
+<span class="nc" id="L181">        m_questionNumDialog = new QuizQuestionNumberDialog();</span>
+<span class="nc" id="L182">        m_questionNumDialog.setSize(240, 100);</span>
+<span class="nc" id="L183">        addWithOffset(m_questionNumDialog);</span>
+        
+        // Initialize the default skin
+<span class="nc" id="L186">        m_quizSkin = new QuizSkin();</span>
+
+        try
+        {
+<span class="nc" id="L190">            String  defaultSkin = m_gameConfig.getConfig(QUIZ_DEFAULT_SKIN,</span>
+                    &quot;standard.skin&quot;);
+            
+<span class="nc" id="L193">            m_quizSkin.load(&quot;Standard&quot;, defaultSkin);</span>
+            
+<span class="nc" id="L195">            m_quizSkins.add(m_quizSkin);</span>
+        }
+<span class="nc" id="L197">        catch (java.io.IOException  io_e)</span>
+        {
+<span class="nc" id="L199">            System.out.println(io_e.getMessage());</span>
+<span class="nc" id="L200">        }</span>
+                
+        // Create the main frame and its child QuizPanel
+<span class="nc" id="L203">        m_mainFrame = new JInternalFrame(&quot;QuizScreen&quot;, true, false, true, false);</span>
+        
+<span class="nc" id="L205">        m_quizPanel = new QuizPanel();</span>
+<span class="nc" id="L206">        m_quizPanel.setSkin(m_quizSkin);</span>
+        
+<span class="nc" id="L208">        m_mainFrame.getContentPane().add(m_quizPanel, java.awt.BorderLayout.CENTER);</span>
+        
+        // Add listener for resize events
+<span class="nc" id="L211">        m_desktopPane.addComponentListener(new java.awt.event.ComponentAdapter()</span>
+<span class="nc" id="L212">        {</span>
+            public void componentResized(java.awt.event.ComponentEvent evt)
+            {
+<span class="nc" id="L215">                Dimension   newSize = new Dimension();</span>
+<span class="nc" id="L216">                Point       newLocation = new Point();</span>
+                
+<span class="nc" id="L218">                Component  component = evt.getComponent();</span>
+
+<span class="nc" id="L220">                Dimension  frameSize = component.getSize();</span>
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                if (m_mainFrame != null)</span>
+                {
+                    // Set the initial size and location of the main QuizPanel frame
+<span class="nc" id="L225">                    newSize.width = frameSize.width;</span>
+<span class="nc" id="L226">                    newSize.height = frameSize.height;</span>
+<span class="nc" id="L227">                    newLocation.x = 0;</span>
+<span class="nc" id="L228">                    newLocation.y = 0;</span>
+
+<span class="nc" id="L230">                    m_mainFrame.setLocation(newLocation);</span>
+<span class="nc" id="L231">                    m_mainFrame.setSize(newSize);</span>
+                }
+<span class="nc" id="L233">            }</span>
+        } );
+
+<span class="nc" id="L236">    }</span>
+
+
+    /**
+     * Primary initialization method.  Called every time this subset is
+     * (re)loaded.
+     */
+    public void  initialize()
+    {
+<span class="nc" id="L245">        m_desktopPane.add(m_mainFrame);</span>
+        
+	// Create the main menu.
+<span class="nc" id="L248">        initMainMenu();</span>
+
+        // Disable the game control menu options
+<span class="nc" id="L251">        updateGameControlOptions(false);</span>
+
+        // Load the default questions from the Q &amp; A database
+<span class="nc" id="L254">        loadQuestions(m_gameConfig.getConfig(&quot;quizFile&quot;,</span>
+		&quot;Data/Quiz.txt&quot;));
+<span class="nc" id="L256">    }</span>
+
+
+    /**
+     * Starts a new game.
+     */
+    public void  startNewGame()
+    {
+        // Show the main window
+<span class="nc" id="L265">        m_mainFrame.setVisible(true);</span>
+
+<span class="nc" id="L267">        m_quizController.setShowAnswersMode(showAnswersMode.isSelected());</span>
+
+<span class="nc" id="L269">        m_quizController.startGame();</span>
+<span class="nc" id="L270">    }</span>
+
+
+    /**
+     * Uninstalls this subset from the system.  This is called prior to
+     * switching game modes to &quot;close&quot; the subset in preparation for
+     * loading a new subset.
+     */
+    public void uninstall() {
+<span class="nc" id="L279">        m_quizController.stopGame();</span>
+        
+<span class="nc" id="L281">        m_desktopPane.remove(m_mainFrame);</span>
+        
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        if (m_cloneWindow != null)</span>
+<span class="nc" id="L284">            m_cloneWindow.setVisible(false);</span>
+<span class="nc" id="L285">    }    </span>
+
+    
+    /**
+     * Loads a new question database for the subset.
+     */
+    public void  loadQuestionDatabase()
+    {
+        String  filename;
+        
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        if (m_fileChooser == null)</span>
+	{
+	    /* Create a new JFileChooser instance and initialize it
+	     * to start in the &quot;user.dir&quot;, or if undefined, the
+	     * &quot;user.home&quot; directory.
+	     */
+<span class="nc" id="L301">            m_fileChooser = new JFileChooser(System.getProperty(&quot;user.dir&quot;,</span>
+	            System.getProperty(&quot;user.home&quot;)));
+	}
+        
+<span class="nc" id="L305">        int  returnVal = m_fileChooser.showOpenDialog(m_desktopPane);</span>
+        
+<span class="nc bnc" id="L307" title="All 2 branches missed.">        if (returnVal == JFileChooser.APPROVE_OPTION)</span>
+        {
+<span class="nc" id="L309">            File file = m_fileChooser.getSelectedFile();</span>
+
+<span class="nc" id="L311">            int  numQuestions = loadQuestions(file.getAbsolutePath());</span>
+            
+<span class="nc bnc" id="L313" title="All 2 branches missed.">            if (numQuestions &gt; 0)</span>
+	    {
+<span class="nc" id="L315">		Object  args[] =</span>
+			{
+			    new Integer(numQuestions)
+			};
+
+<span class="nc" id="L320">	    	String	   msg = Main.getMessage(&quot;msg_questions_read&quot;, args);</span>
+
+<span class="nc" id="L322">                JOptionPane.showMessageDialog(m_desktopPane, msg);</span>
+	    }
+        }
+<span class="nc" id="L325">    }</span>
+
+    
+    /** Load the questions from the specified database file */
+    public int  loadQuestions(String  filename)
+    {
+<span class="nc" id="L331">	Object  args[] =</span>
+		{
+		    filename
+		};
+        try
+        {
+<span class="nc" id="L337">            int  numQuestions = m_quizController.loadQuestions(filename);</span>
+            
+<span class="nc bnc" id="L339" title="All 2 branches missed.">            if (numQuestions &lt;= 0)</span>
+            {
+<span class="nc" id="L341">                String  message = Main.getMessage(&quot;warn_no_questions_found&quot;,</span>
+			args);
+
+<span class="nc" id="L344">                System.out.println(message);</span>
+
+<span class="nc" id="L346">                JOptionPane.showMessageDialog(m_desktopPane, message);</span>
+            }
+            
+<span class="nc" id="L349">            return numQuestions;</span>
+        }
+<span class="nc" id="L351">        catch (FileNotFoundException  e)</span>
+        {
+<span class="nc" id="L353">            String  message = Main.getMessage(&quot;warn_question_file_not_found&quot;,</span>
+		    args);
+
+<span class="nc" id="L356">            System.out.println(message);</span>
+
+<span class="nc" id="L358">            JOptionPane.showMessageDialog(m_desktopPane, message);</span>
+	}
+<span class="nc" id="L360">        catch (IOException  e)</span>
+        {
+<span class="nc" id="L362">            String  message = Main.getMessage(&quot;warn_question_file_io&quot;,</span>
+		    args);
+
+<span class="nc" id="L365">            System.out.println(message);</span>
+<span class="nc" id="L366">            System.out.println(e.getMessage());</span>
+
+<span class="nc" id="L368">            JOptionPane.showMessageDialog(m_desktopPane, message);</span>
+<span class="nc" id="L369">        }</span>
+
+<span class="nc" id="L371">        return 0;</span>
+    }
+
+    
+    /**
+     * Listener for GameModeChangeEvents
+     */
+    public void gameModeChanged(GameModeChangeEvent evt) {
+<span class="nc" id="L379">        GameModeEnum  evtType = evt.getType();</span>
+        
+<span class="nc bnc" id="L381" title="All 4 branches missed.">        if (evtType == GameModeEnum.STANDALONE ||</span>
+                evtType == GameModeEnum.MASTER)
+        {
+            // Enable control menus in standalone/master mode
+<span class="nc" id="L385">            updateGameControlOptions(false);</span>
+        }
+<span class="nc bnc" id="L387" title="All 2 branches missed.">        else if (evtType == GameModeEnum.SLAVE)</span>
+        {
+            // Disble control menus in slave mode
+<span class="nc" id="L390">            updateGameControlOptions(false);</span>
+        }
+
+        
+<span class="nc" id="L394">        return;</span>
+    }
+    
+    /**
+     * Listener for GameStateChangeEvents
+     */
+    public void  gameStateChanged(GameStateChangeEvent  evt)
+    {
+<span class="nc" id="L402">        GameStateChangeEnum  type = evt.getType();</span>
+<span class="nc" id="L403">        GameModeEnum  mode = m_quizState.getGameMode();</span>
+
+<span class="nc bnc" id="L405" title="All 2 branches missed.">        if (type == QuizStateEnum.IDLE)</span>
+        {
+<span class="nc" id="L407">            updateGameControlOptions(false);</span>
+        }
+<span class="nc bnc" id="L409" title="All 4 branches missed.">        else if (type == QuizStateEnum.NEW_GAME &amp;&amp; mode != GameModeEnum.SLAVE)</span>
+        {
+<span class="nc" id="L411">            updateGameControlOptions(true);</span>
+        }
+<span class="nc bnc" id="L413" title="All 2 branches missed.">        else if (type == QuizStateEnum.END_OF_GAME)</span>
+        {
+<span class="nc" id="L415">            updateGameControlOptions(false);</span>
+
+            // Hide the windows
+<span class="nc" id="L418">            m_mainFrame.setVisible(false);</span>
+
+<span class="nc bnc" id="L420" title="All 2 branches missed.">            if (m_cloneWindow != null)</span>
+<span class="nc" id="L421">                m_cloneWindow.setVisible(false);</span>
+        }
+<span class="nc" id="L423">    }</span>
+
+    
+    /** Listener for GameUpdateEvents
+     */
+    public void gameUpdated(GameUpdateEvent evt) {
+<span class="nc" id="L429">        QuizUpdateEnum  type = (QuizUpdateEnum) evt.getType();</span>
+<span class="nc" id="L430">    }</span>
+    
+
+    
+    /** Enable/disable the game controller menu options.  Used when switching
+     * between Master and Slave modes
+     */
+    private void  updateGameControlOptions(boolean  state)
+    {
+<span class="nc" id="L439">        resetLifeline.setEnabled(state);</span>
+<span class="nc" id="L440">        setLevel.setEnabled(state);</span>
+        
+<span class="nc" id="L442">        return;</span>
+    }
+
+    
+    private void  addWithOffset(JInternalFrame  component)
+    {
+<span class="nc" id="L448">        m_desktopPane.add(component);</span>
+<span class="nc" id="L449">        component.setLocation(m_frameOffset * FRAME_MULT, m_frameOffset * FRAME_MULT);</span>
+<span class="nc" id="L450">        m_frameOffset++;</span>
+<span class="nc" id="L451">    }</span>
+        
+
+    /** This method is called from within the constructor to
+     * initialize the main menu bar for this UI.
+     */
+    private void initMainMenu() {
+<span class="nc" id="L458">        mainMenuBar = new MainMenuBar();</span>
+        
+<span class="nc" id="L460">        normalQuiz = new javax.swing.JRadioButtonMenuItem();</span>
+<span class="nc" id="L461">        showAnswers = new javax.swing.JRadioButtonMenuItem();</span>
+<span class="nc" id="L462">        showAnswersMode = new javax.swing.JRadioButtonMenuItem();</span>
+<span class="nc" id="L463">        quizModeButtonGroup = new javax.swing.ButtonGroup();</span>
+<span class="nc" id="L464">        optionsMenu = new javax.swing.JMenu();</span>
+<span class="nc" id="L465">        cloneWindow = new javax.swing.JMenuItem();</span>
+<span class="nc" id="L466">        resetLifeline = new javax.swing.JMenuItem();</span>
+<span class="nc" id="L467">        setLevel = new javax.swing.JMenuItem();</span>
+<span class="nc" id="L468">        questionTimer = new javax.swing.JMenuItem();</span>
+<span class="nc" id="L469">        soundCtrl = new javax.swing.JMenuItem();</span>
+<span class="nc" id="L470">        skinsMenu = new javax.swing.JMenu();</span>
+<span class="nc" id="L471">        helpMenu = new javax.swing.JMenu();</span>
+<span class="nc" id="L472">        usingJQS = new javax.swing.JMenuItem();</span>
+<span class="nc" id="L473">        jSeparator1 = new javax.swing.JSeparator();</span>
+<span class="nc" id="L474">        jSeparator2 = new javax.swing.JSeparator();</span>
+<span class="nc" id="L475">        jSeparator3 = new javax.swing.JSeparator();</span>
+<span class="nc" id="L476">        aboutJQS = new javax.swing.JMenuItem();</span>
+
+<span class="nc" id="L478">        optionsMenu.setText(Main.getMessage(&quot;menu_options&quot;));</span>
+        
+<span class="nc" id="L480">        normalQuiz.setText(Main.getMessage(&quot;menu_quiz_normal&quot;));</span>
+<span class="nc" id="L481">        normalQuiz.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L483">                quizModeActionPerformed(evt);</span>
+<span class="nc" id="L484">            }</span>
+        });
+<span class="nc" id="L486">        normalQuiz.setSelected(true);</span>
+        
+<span class="nc" id="L488">        quizModeButtonGroup.add(normalQuiz);</span>
+        
+<span class="nc" id="L490">        optionsMenu.add(normalQuiz);</span>
+        
+<span class="nc" id="L492">        showAnswers.setText(Main.getMessage(&quot;menu_show_answers&quot;));</span>
+<span class="nc" id="L493">        showAnswers.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L495">                quizModeActionPerformed(evt);</span>
+<span class="nc" id="L496">            }</span>
+        });
+
+<span class="nc" id="L499">        quizModeButtonGroup.add(showAnswers);</span>
+        
+<span class="nc" id="L501">        optionsMenu.add(showAnswers);</span>
+        
+<span class="nc" id="L503">        showAnswersMode.setText(Main.getMessage(&quot;menu_answer_mode&quot;));</span>
+<span class="nc" id="L504">        showAnswersMode.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L506">                quizModeActionPerformed(evt);</span>
+<span class="nc" id="L507">            }</span>
+        });
+
+<span class="nc" id="L510">        quizModeButtonGroup.add(showAnswersMode);</span>
+        
+<span class="nc" id="L512">        optionsMenu.add(showAnswersMode);</span>
+
+<span class="nc" id="L514">        optionsMenu.add(jSeparator1);</span>
+        
+<span class="nc" id="L516">        cloneWindow.setText(Main.getMessage(&quot;menu_clone_window&quot;));</span>
+<span class="nc" id="L517">        cloneWindow.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc bnc" id="L519" title="All 2 branches missed.">                if (m_cloneWindow == null)</span>
+                {
+<span class="nc" id="L521">                    m_cloneWindow = new JFrame(&quot;jQuizShow - Quiz Window&quot;);</span>
+<span class="nc" id="L522">                    Rectangle  bounds = m_desktopPane.getBounds();</span>
+<span class="nc" id="L523">                    Point    location = new Point(0, 0);</span>
+<span class="nc" id="L524">                    m_cloneWindow.setSize(bounds.width, bounds.height);</span>
+<span class="nc" id="L525">                    m_cloneWindow.setLocation(location);</span>
+        
+<span class="nc" id="L527">                    m_quizPanelClone = new QuizPanel();</span>
+<span class="nc" id="L528">                    m_quizPanelClone.setSkin(m_quizSkin);</span>
+
+<span class="nc" id="L530">                    m_cloneWindow.getContentPane().add(m_quizPanelClone, java.awt.BorderLayout.CENTER);</span>
+                }
+                
+<span class="nc" id="L533">                m_cloneWindow.setVisible(true);</span>
+<span class="nc" id="L534">            }</span>
+        });
+        
+<span class="nc" id="L537">        optionsMenu.add(cloneWindow);</span>
+
+<span class="nc" id="L539">        optionsMenu.add(jSeparator2);</span>
+        
+<span class="nc" id="L541">        setLevel.setText(Main.getMessage(&quot;menu_set_level&quot;));</span>
+<span class="nc" id="L542">        setLevel.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L544">                m_questionNumDialog.setVisible(true);</span>
+<span class="nc" id="L545">                m_questionNumDialog.toFront();</span>
+<span class="nc" id="L546">            }</span>
+        });
+        
+<span class="nc" id="L549">        optionsMenu.add(setLevel);</span>
+        
+<span class="nc" id="L551">        questionTimer.setText(Main.getMessage(&quot;menu_set_question_timer_time&quot;));</span>
+<span class="nc" id="L552">        questionTimer.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L554">                questionTimerActionPerformed(evt);</span>
+<span class="nc" id="L555">            }</span>
+        });
+        
+<span class="nc" id="L558">        optionsMenu.add(questionTimer);</span>
+        
+<span class="nc" id="L560">        soundCtrl.setText(Main.getMessage(&quot;menu_sound&quot;));</span>
+<span class="nc" id="L561">        soundCtrl.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L563">                soundCtrlActionPerformed(evt);</span>
+<span class="nc" id="L564">            }</span>
+        });
+        
+<span class="nc" id="L567">        optionsMenu.add(soundCtrl);</span>
+
+<span class="nc" id="L569">        skinsMenu.setText(Main.getMessage(&quot;menu_skins&quot;));</span>
+<span class="nc" id="L570">        skinsMenu.setEnabled(false);</span>
+
+<span class="nc bnc" id="L572" title="All 2 branches missed.">        for (Iterator  iter = m_quizSkins.iterator(); iter.hasNext(); /**/)</span>
+        {
+<span class="nc" id="L574">            QuizSkin    skin = (QuizSkin) iter.next();</span>
+
+<span class="nc" id="L576">            JMenuItem  menuItem = new JMenuItem();</span>
+            
+<span class="nc" id="L578">            menuItem.setText(skin.getName());</span>
+<span class="nc" id="L579">            menuItem.addActionListener(new java.awt.event.ActionListener() {</span>
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L581">                    skinsActionPerformed(evt);</span>
+<span class="nc" id="L582">                }</span>
+            });
+            
+<span class="nc" id="L585">            skinsMenu.add(menuItem);</span>
+<span class="nc" id="L586">        }</span>
+        
+<span class="nc" id="L588">        optionsMenu.add(skinsMenu);</span>
+        
+<span class="nc" id="L590">        mainMenuBar.add(optionsMenu);</span>
+        
+<span class="nc" id="L592">        helpMenu.setText(Main.getMessage(&quot;menu_help&quot;));</span>
+
+<span class="nc" id="L594">        usingJQS.setText(Main.getMessage(&quot;menu_using_jqs&quot;));</span>
+<span class="nc" id="L595">        usingJQS.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L597">                usingJQSActionPerformed(evt);</span>
+<span class="nc" id="L598">            }</span>
+        });
+        
+<span class="nc" id="L601">        mainMenuBar.add(helpMenu);</span>
+                      
+<span class="nc" id="L603">        m_main.setJMenuBar(mainMenuBar);</span>
+<span class="nc" id="L604">    }</span>
+
+
+    private void usingJQSActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc bnc" id="L608" title="All 2 branches missed.">        if (m_helpFrame == null)</span>
+        {
+<span class="nc" id="L610">	    String  filename = m_gameConfig.getConfig(&quot;helpFile&quot;, &quot;JQSHelp.txt&quot;);</span>
+<span class="nc" id="L611">	    String  helpFilename = filename;</span>
+
+            
+<span class="nc" id="L614">            m_helpFrame = new JInternalFrame(&quot;Help&quot;, true, true, true, true);</span>
+<span class="nc" id="L615">            m_helpFrame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);</span>
+<span class="nc" id="L616">            m_helpFrame.setSize(600, 400);</span>
+            
+<span class="nc" id="L618">            m_helpPane = new JTextArea();</span>
+<span class="nc" id="L619">            m_helpPane.setDisabledTextColor(java.awt.Color.black);</span>
+<span class="nc" id="L620">            m_helpPane.setEnabled(false);</span>
+            
+<span class="nc" id="L622">            JScrollPane  jScrollPanel = new JScrollPane();</span>
+<span class="nc" id="L623">            jScrollPanel.setViewportView(m_helpPane);</span>
+
+<span class="nc" id="L625">            m_helpFrame.getContentPane().add(jScrollPanel);</span>
+            
+<span class="nc" id="L627">            addWithOffset(m_helpFrame);</span>
+
+            // Locate and read the help file
+            try
+            {
+                String  line;
+
+<span class="nc" id="L634">		helpFilename = FileUtils.searchForFile(filename);</span>
+                
+<span class="nc" id="L636">                BufferedReader  fin = new BufferedReader(</span>
+                        new InputStreamReader(FileUtils.openFile(helpFilename)));
+                
+<span class="nc bnc" id="L639" title="All 2 branches missed.">                while ((line = fin.readLine()) != null)</span>
+                {
+
+<span class="nc" id="L642">                    m_helpPane.append(line + &quot;\n&quot;);</span>
+                }
+            }
+<span class="nc" id="L645">	    catch (FileNotFoundException  fnf_e)</span>
+	    {
+<span class="nc" id="L647">                m_helpPane.append(Main.getMessage(&quot;err_help_not_found&quot;));</span>
+<span class="nc" id="L648">                m_helpPane.append(fnf_e.getMessage());</span>
+	    }
+<span class="nc" id="L650">            catch (IOException  e)</span>
+            {
+<span class="nc" id="L652">		Object  args[] =</span>
+			{
+			    helpFilename
+			};
+
+<span class="nc" id="L657">                m_helpPane.append(Main.getMessage(&quot;err_help_file_io&quot;, args));</span>
+<span class="nc" id="L658">            }</span>
+        }
+
+<span class="nc" id="L661">        m_helpFrame.setVisible(true);</span>
+<span class="nc" id="L662">        m_helpFrame.toFront();</span>
+<span class="nc" id="L663">    }</span>
+
+
+    private void quizModeActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc bnc" id="L667" title="All 2 branches missed.">        if (evt.getSource() == normalQuiz)</span>
+        {
+<span class="nc" id="L669">            m_quizController.setShowAnswers(false);</span>
+<span class="nc" id="L670">            m_quizController.setShowAnswersMode(false);</span>
+        }
+<span class="nc bnc" id="L672" title="All 2 branches missed.">        else if (evt.getSource() == showAnswers)</span>
+        {
+<span class="nc" id="L674">            m_quizController.setShowAnswers(true);</span>
+<span class="nc" id="L675">            m_quizController.setShowAnswersMode(false);</span>
+        }
+<span class="nc bnc" id="L677" title="All 2 branches missed.">        else if (evt.getSource() == showAnswersMode)</span>
+        {
+<span class="nc" id="L679">            m_quizController.setShowAnswers(false);</span>
+<span class="nc" id="L680">            m_quizController.setShowAnswersMode(true);</span>
+        }
+<span class="nc" id="L682">    }</span>
+
+    private void soundCtrlActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L685">        m_soundCtrlDialog.show();</span>
+<span class="nc" id="L686">        m_soundCtrlDialog.toFront();</span>
+<span class="nc" id="L687">    }</span>
+
+    private void questionTimerActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L690">        m_timerCtrlDialog.show();</span>
+<span class="nc" id="L691">        m_timerCtrlDialog.toFront();</span>
+<span class="nc" id="L692">    }</span>
+
+    private void skinsActionPerformed(java.awt.event.ActionEvent evt) {
+
+<span class="nc" id="L696">    }</span>
+    
+    
+    private Main  m_main;
+    
+    private JMenuBar  mainMenuBar;
+    private JMenu  optionsMenu;
+    private JRadioButtonMenuItem  normalQuiz;
+    private JRadioButtonMenuItem  showAnswers;
+    private JRadioButtonMenuItem  showAnswersMode;
+    private ButtonGroup  quizModeButtonGroup;
+    private JMenuItem  setQuestion;
+    private JMenuItem  cloneWindow;
+    private JMenuItem  resetLifeline;
+    private JMenuItem  setLevel;
+    private JMenuItem  questionTimer;
+    private JMenuItem  soundCtrl;
+    private JMenu  skinsMenu;
+    private JMenuItem  standardSkin;
+    private JMenu  helpMenu;
+    private JMenuItem  usingJQS;
+    private JSeparator  jSeparator1;
+    private JSeparator  jSeparator2;
+    private JSeparator  jSeparator3;
+    private JMenuItem  aboutJQS;
+
+    private JInternalFrame  m_mainFrame;
+    
+    private static MainQuizUI  m_quizShow;
+
+    private static JDesktopPane  m_desktopPane;
+    
+    private static MessageWindow   m_messageWindow;
+
+    private static GameInputEvent  m_gameInputEvent;
+
+<span class="nc" id="L732">    private static JFrame  m_cloneWindow = null;</span>
+    
+    private QuizController  m_quizController;
+
+    private QuizPanel  m_quizPanel;
+    private QuizPanel  m_quizPanelClone;
+
+    private QuizQuestionNumberDialog  m_questionNumDialog;
+    
+    private QuizTimerControlDialog  m_timerCtrlDialog;
+    
+    private SoundCtrlDialog  m_soundCtrlDialog;
+
+    private ConnectionDialog  m_connectionDialog;
+
+    private static GameConfig      m_gameConfig;
+    
+    private QuizState       m_quizState;
+
+    private JInternalFrame  m_lifelineTimerFrame;
+    
+    private SoundPlayer  m_soundPlayer;
+    
+    private PacketProcessor  m_packetProcessor;
+
+    private EventPacket  m_eventPacket;
+    
+    private JInternalFrame  m_helpFrame;
+    private JTextArea  m_helpPane;
+    private JFileChooser  m_fileChooser;
+
+    private Vector  m_quizSkins;
+    private QuizSkin  m_quizSkin;
+    
+    private static ResourceBundle  m_localeBundle;
+    private static ResourceBundle  m_defaultBundle;
+
+    private static MessageFormat  m_msgFormat;
+
+    private static int  m_debugMode;
+    
+<span class="nc" id="L773">    private static int  m_frameOffset = 0;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

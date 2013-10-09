@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ResizableTextGroup.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">ResizableTextGroup.java</span></div><h1>ResizableTextGroup.java</h1><pre class="source lang-java linenums">/*
+ * ResizableTextGroup.java
+ *
+ * Created on March 7, 2004, 6:01 PM
+ *
+ * $Id: ResizableTextGroup.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ResizableTextGroup.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow;
+
+/**
+ *
+ * @author  Steve
+ */
+
+import java.util.*;
+
+public class ResizableTextGroup {
+
+<span class="nc" id="L50">    private LinkedList  m_list = null;</span>
+    
+    /** Creates a new instance of ResizableTextGroup */
+    public ResizableTextGroup()
+<span class="nc" id="L54">    {</span>
+<span class="nc" id="L55">        m_list = new LinkedList();</span>
+<span class="nc" id="L56">    }</span>
+    
+    public void addResizableText(ResizableText rtext)
+    {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (rtext != null)</span>
+<span class="nc" id="L61">            m_list.add(rtext);</span>
+        
+<span class="nc" id="L63">        return;</span>
+    }
+    
+    public void removeResizableText(ResizableText rtext)
+    {
+<span class="nc" id="L68">        m_list.remove(rtext);</span>
+<span class="nc" id="L69">    }</span>
+    
+    public void autoSize()
+    {
+        ResizableText    rtext;
+
+<span class="nc" id="L75">        int     minPointSize = 9999999;</span>
+        
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        for (Iterator  iter = m_list.iterator(); iter.hasNext(); /**/)</span>
+        {
+            int    pointSize;
+            
+<span class="nc" id="L81">            rtext = (ResizableText) iter.next();</span>
+            
+<span class="nc bnc" id="L83" title="All 2 branches missed.">            if ((pointSize = rtext.getPointSize()) &lt; minPointSize)</span>
+<span class="nc" id="L84">                minPointSize = pointSize;</span>
+<span class="nc" id="L85">        }</span>
+        
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        for (Iterator  iter = m_list.iterator(); iter.hasNext(); /**/)</span>
+        {
+<span class="nc" id="L89">            rtext = (ResizableText) iter.next();</span>
+<span class="nc" id="L90">            rtext.setPointSize(minPointSize);</span>
+        }
+<span class="nc" id="L92">    }</span>
+
+    
+    public void setSize(int ptSize)
+    {
+        ResizableText    rtext;
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        for (Iterator  iter = m_list.iterator(); iter.hasNext(); /**/)</span>
+        {
+<span class="nc" id="L101">            rtext = (ResizableText) iter.next();          </span>
+<span class="nc" id="L102">            rtext.setPointSize(ptSize);</span>
+        }
+<span class="nc" id="L104">    }</span>
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

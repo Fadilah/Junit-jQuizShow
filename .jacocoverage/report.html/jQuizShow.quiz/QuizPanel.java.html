@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>QuizPanel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.quiz</a> &gt; <span class="el_source">QuizPanel.java</span></div><h1>QuizPanel.java</h1><pre class="source lang-java linenums">/*
+ * QuizPanel.java
+ *
+ * Created on February 3, 2004, 9:15 PM
+ *
+ * $Id: QuizPanel.java,v 1.2 2007/02/05 04:24:19 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: QuizPanel.java,v $
+ *    Revision 1.2  2007/02/05 04:24:19  sdchen
+ *    Replaced deprecated isFocusTraversable() with setFocusable(boolean s).
+ *
+ *    Revision 1.1  2004/04/02 06:02:00  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow.quiz;
+
+import java.awt.*;
+import java.awt.image.*;
+import java.awt.geom.*;
+import java.io.*;
+import java.util.*;
+
+import jQuizShow.*;
+import jQuizShow.event.*;
+
+/**
+ * Main quiz panel (based on JPanel).  Multiple, independent instances of
+ * this can be created, providing cloned views of the quiz.
+ *
+ * @author  Steve
+ */
+public class QuizPanel
+        extends
+            javax.swing.JPanel
+        implements
+            jQuizShow.event.GameStateChangeListener,
+            jQuizShow.event.GameUpdateListener
+    {
+
+    private static final int QUESTION_NUM_ID = 100;
+    private static final int QUESTION_ID = 101;
+    private static final int TIMER_ID = 200;
+    private static final int COMMENT_ID = 201;
+    private static final int TRANSITION_ID = 300;
+    
+    private static GameConfig m_gameConfig;
+    
+    private static Color  m_bkgColor;
+    
+    private static BufferedImage  m_bkgImage;
+    
+    /** Creates new form QuizPanel */
+    public QuizPanel()
+<span class="nc" id="L81">    {</span>
+        // Remove any layout manager.  This uses calculated absolute coordinates.
+<span class="nc" id="L83">        setLayout(null);</span>
+        
+        // Get the game configuration instance
+<span class="nc" id="L86">        m_gameConfig = GameConfig.getInstance();</span>
+
+<span class="nc" id="L88">        m_quizState = QuizState.getInstance(true);</span>
+<span class="nc" id="L89">        m_quizState.addGameStateChangeListener(this);</span>
+<span class="nc" id="L90">        m_quizState.addGameUpdateListener(this);</span>
+        
+<span class="nc" id="L92">        m_answerLabelTextVector = new Vector();</span>
+<span class="nc" id="L93">        m_answerTextVector = new Vector();</span>
+        
+        /* Listen for resize events */
+<span class="nc" id="L96">        addComponentListener(new java.awt.event.ComponentAdapter()</span>
+<span class="nc" id="L97">        {</span>
+            public void componentResized(java.awt.event.ComponentEvent evt)
+            {
+<span class="nc" id="L100">                Component  component = evt.getComponent();</span>
+<span class="nc" id="L101">                Dimension  size = component.getSize();</span>
+                
+<span class="nc" id="L103">                float    xRatio = 1.0f;</span>
+<span class="nc" id="L104">                float    yRatio = 1.0f;</span>
+                
+<span class="nc bnc" id="L106" title="All 6 branches missed.">                if (m_bkgImage != null &amp;&amp; size.width &gt; 0 &amp;&amp; size.height &gt; 0)</span>
+                {
+                    // Scale image to fit the entire window
+<span class="nc" id="L109">                    m_image = m_bkgImage.getScaledInstance(size.width,</span>
+                            size.height, Image.SCALE_DEFAULT);
+
+                    // Adjust the positions and sizes of the text boxes
+<span class="nc bnc" id="L113" title="All 8 branches missed.">                    if (m_quizSkin != null</span>
+                            &amp;&amp; m_imageSize != null
+                            &amp;&amp; m_imageSize.getWidth() &gt; 0
+                            &amp;&amp; m_imageSize.getHeight() &gt; 0)
+                    {
+<span class="nc" id="L118">                        xRatio = (float) (size.getWidth() / m_imageSize.getWidth());</span>
+<span class="nc" id="L119">                        yRatio = (float) (size.getHeight() / m_imageSize.getHeight());</span>
+                    }
+                }
+                
+                Rectangle    origBounds;
+                Rectangle    newBounds;
+
+<span class="nc" id="L126">                origBounds = m_quizSkin.getQuestionLabelBox().getBounds();</span>
+<span class="nc" id="L127">                newBounds = rescale(xRatio, yRatio, origBounds);</span>
+<span class="nc" id="L128">                m_questionLabelText.setBounds(newBounds);</span>
+
+<span class="nc" id="L130">                origBounds = m_quizSkin.getQuestionBox().getBounds();</span>
+<span class="nc" id="L131">                newBounds = rescale(xRatio, yRatio, origBounds);</span>
+<span class="nc" id="L132">                m_questionText.setBounds(newBounds);</span>
+
+<span class="nc" id="L134">                origBounds = m_quizSkin.getTimerBox().getBounds();</span>
+<span class="nc" id="L135">                newBounds = rescale(xRatio, yRatio, origBounds);</span>
+<span class="nc" id="L136">                m_timerText.setBounds(newBounds);</span>
+
+<span class="nc" id="L138">                origBounds = m_quizSkin.getCommentBox().getBounds();</span>
+<span class="nc" id="L139">                newBounds = rescale(xRatio, yRatio, origBounds);</span>
+<span class="nc" id="L140">                m_commentText.setBounds(newBounds);</span>
+
+<span class="nc" id="L142">                origBounds = m_quizSkin.getTransitionBox().getBounds();</span>
+<span class="nc" id="L143">                newBounds = rescale(xRatio, yRatio, origBounds);</span>
+<span class="nc" id="L144">                m_transitionText.setBounds(newBounds);</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                for (int  i = 0; i &lt; m_numAnswers; i++)</span>
+                {
+<span class="nc" id="L148">                    origBounds = m_quizSkin.getAnswerLabelBox(i).getBounds();</span>
+<span class="nc" id="L149">                    newBounds = rescale(xRatio, yRatio, origBounds);</span>
+<span class="nc" id="L150">                    ((ResizableText) m_answerLabelTextVector.get(i)).setBounds(newBounds);</span>
+
+<span class="nc" id="L152">                    origBounds = m_quizSkin.getAnswerBox(i).getBounds();</span>
+<span class="nc" id="L153">                    newBounds = rescale(xRatio, yRatio, origBounds);</span>
+<span class="nc" id="L154">                    ((ResizableText) m_answerTextVector.get(i)).setBounds(newBounds);</span>
+                }
+                
+<span class="nc" id="L157">                invalidate();</span>
+<span class="nc" id="L158">            }</span>
+        });
+
+        // Add listener for keyboard events
+<span class="nc" id="L162">        addKeyListener(new java.awt.event.KeyAdapter()</span>
+<span class="nc" id="L163">        {</span>
+            public void keyPressed(java.awt.event.KeyEvent evt)
+            {
+<span class="nc" id="L166">                int  keyCode = evt.getKeyCode();</span>
+<span class="nc" id="L167">                char  keyChar = evt.getKeyChar();</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                if (m_gameInputEvent == null)</span>
+<span class="nc" id="L170">                    m_gameInputEvent = new GameInputEvent(this);</span>
+
+<span class="nc" id="L172">                m_gameInputEvent.setType(GameInputEnum.KEY_TYPED);</span>
+<span class="nc" id="L173">                m_gameInputEvent.setKeyCode(keyCode, keyChar);</span>
+                
+<span class="nc" id="L175">                m_quizState.fireGameInputEvent(m_gameInputEvent);</span>
+<span class="nc" id="L176">                return;</span>
+            }
+        } );
+        
+<span class="nc" id="L180">        setFocusable(true);</span>
+<span class="nc" id="L181">    }</span>
+   
+    
+    private Rectangle  rescale(float  xRatio, float  yRatio, Rectangle  origBounds)
+    {
+<span class="nc" id="L186">        Rectangle  newBounds = new Rectangle();</span>
+<span class="nc" id="L187">        newBounds.x = Math.round(origBounds.x * xRatio);</span>
+<span class="nc" id="L188">        newBounds.y = Math.round(origBounds.y * yRatio);</span>
+<span class="nc" id="L189">        newBounds.width = Math.round(origBounds.width * xRatio);</span>
+<span class="nc" id="L190">        newBounds.height = Math.round(origBounds.height * yRatio);</span>
+        
+<span class="nc" id="L192">        return newBounds;</span>
+    }
+    
+    public void  setSkin(QuizSkin  skin)
+    {
+        int    i;
+        
+<span class="nc bnc" id="L199" title="All 4 branches missed.">        if (skin == null || skin == m_quizSkin)</span>
+<span class="nc" id="L200">            return;</span>
+        
+<span class="nc" id="L202">        m_quizSkin = skin;</span>
+        
+<span class="nc" id="L204">        m_bkgImage = skin.getBkgImage();</span>
+<span class="nc" id="L205">        m_bkgColor = skin.getBkgColor();</span>
+        
+<span class="nc bnc" id="L207" title="All 2 branches missed.">        if (m_bkgColor != null)</span>
+<span class="nc" id="L208">            setBackground(m_bkgColor);</span>
+
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        if (m_bkgImage != null)</span>
+        {
+<span class="nc" id="L212">            m_imageSize = new Dimension(m_bkgImage.getWidth(),</span>
+                    m_bkgImage.getHeight());
+        }
+        
+<span class="nc" id="L216">        removeAll();        // Removes all old components</span>
+        
+        // Create the ResizableText instances for the skin
+        TextBoxConfig    bounds;
+        
+<span class="nc" id="L221">        bounds = skin.getQuestionLabelBox();</span>
+<span class="nc" id="L222">        m_questionLabelText = new ResizableText(QUESTION_NUM_ID,</span>
+                bounds.fontName, bounds.fontStyle);
+<span class="nc" id="L224">        m_questionLabelText.setDefaultTextColor(bounds.fontColor,</span>
+                bounds.bgColor);
+<span class="nc" id="L226">        m_questionLabelText.setFadeInDelay(bounds.fadeInDelay);</span>
+<span class="nc" id="L227">        m_questionLabelText.setRowColumnHint(bounds.rows, bounds.columns);</span>
+<span class="nc" id="L228">        add(m_questionLabelText);</span>
+        
+<span class="nc" id="L230">        bounds = skin.getQuestionBox();</span>
+<span class="nc" id="L231">        m_questionText = new ResizableText(QUESTION_ID,</span>
+                bounds.fontName, bounds.fontStyle);
+<span class="nc" id="L233">        m_questionText.setDefaultTextColor(bounds.fontColor,</span>
+                bounds.bgColor);
+<span class="nc" id="L235">        m_questionText.setFadeInDelay(bounds.fadeInDelay);</span>
+<span class="nc" id="L236">        m_questionText.setRowColumnHint(bounds.rows, bounds.columns);</span>
+<span class="nc" id="L237">        add(m_questionText);</span>
+        
+<span class="nc" id="L239">        bounds = skin.getTimerBox();</span>
+<span class="nc" id="L240">        m_timerText = new ResizableText(TIMER_ID,</span>
+                bounds.fontName, bounds.fontStyle);
+<span class="nc" id="L242">        m_timerText.setDefaultTextColor(bounds.fontColor,</span>
+                bounds.bgColor);
+<span class="nc" id="L244">        m_timerText.setFadeInDelay(bounds.fadeInDelay);</span>
+<span class="nc" id="L245">        m_timerText.setRowColumnHint(bounds.rows, bounds.columns);</span>
+<span class="nc" id="L246">        add(m_timerText);</span>
+        
+<span class="nc" id="L248">        bounds = skin.getCommentBox();</span>
+<span class="nc" id="L249">        m_commentText = new ResizableText(COMMENT_ID,</span>
+                bounds.fontName, bounds.fontStyle);
+<span class="nc" id="L251">        m_commentText.setDefaultTextColor(bounds.fontColor,</span>
+                bounds.bgColor);
+<span class="nc" id="L253">        m_commentText.setFadeInDelay(bounds.fadeInDelay);</span>
+<span class="nc" id="L254">        m_commentText.setRowColumnHint(bounds.rows, bounds.columns);</span>
+<span class="nc" id="L255">        add(m_commentText);</span>
+        
+<span class="nc" id="L257">        bounds = skin.getTransitionBox();</span>
+<span class="nc" id="L258">        m_transitionText = new ResizableText(TRANSITION_ID,</span>
+                bounds.fontName, bounds.fontStyle);
+<span class="nc" id="L260">        m_transitionText.setDefaultTextColor(bounds.fontColor,</span>
+                bounds.bgColor);
+<span class="nc" id="L262">        m_transitionText.setFadeInDelay(bounds.fadeInDelay);</span>
+<span class="nc" id="L263">        m_transitionText.setRowColumnHint(bounds.rows, bounds.columns);</span>
+<span class="nc" id="L264">        m_transitionText.centerText(true);</span>
+<span class="nc" id="L265">        add(m_transitionText);</span>
+        
+<span class="nc" id="L267">        m_numAnswers = m_quizSkin.getNumAnswers();</span>
+
+<span class="nc" id="L269">        m_answerTextGroup = new ResizableTextGroup();</span>
+        
+<span class="nc" id="L271">        m_answerTextVector = new Vector();</span>
+        
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        for (i = 0; i &lt; m_numAnswers; i++)</span>
+        {
+            ResizableText  rtext;
+            
+<span class="nc" id="L277">            bounds = skin.getAnswerLabelBox(i);</span>
+<span class="nc" id="L278">            rtext = new ResizableText(i + 10,</span>
+                    bounds.fontName, bounds.fontStyle);
+<span class="nc" id="L280">            rtext.setDefaultTextColor(bounds.fontColor, bounds.bgColor);</span>
+<span class="nc" id="L281">            rtext.setFadeInDelay(bounds.fadeInDelay);</span>
+<span class="nc" id="L282">            rtext.setRowColumnHint(bounds.rows, bounds.columns);</span>
+<span class="nc" id="L283">            m_answerLabelTextVector.add(rtext);</span>
+<span class="nc" id="L284">            add(rtext);</span>
+            
+            // Add the QuizState instance as a listener for answer clicked events.
+<span class="nc" id="L287">            rtext.addGameInputListener(m_quizState);</span>
+
+<span class="nc" id="L289">            m_answerTextGroup.addResizableText(rtext);</span>
+            
+<span class="nc" id="L291">            bounds = skin.getAnswerBox(i);</span>
+<span class="nc" id="L292">            rtext = new ResizableText(i,</span>
+                    bounds.fontName, bounds.fontStyle);
+<span class="nc" id="L294">            rtext.setDefaultTextColor(bounds.fontColor, bounds.bgColor);</span>
+<span class="nc" id="L295">            rtext.setFadeInDelay(bounds.fadeInDelay);</span>
+<span class="nc" id="L296">            rtext.setRowColumnHint(bounds.rows, bounds.columns);</span>
+<span class="nc" id="L297">            m_answerTextVector.add(rtext);</span>
+<span class="nc" id="L298">            add(rtext);</span>
+            
+            // Add the QuizState instance as a listener for answer clicked events.
+<span class="nc" id="L301">            rtext.addGameInputListener(m_quizState);</span>
+            
+<span class="nc" id="L303">            m_answerTextGroup.addResizableText(rtext);</span>
+        }
+<span class="nc" id="L305">    }</span>
+    
+
+    protected void paintComponent(Graphics g) {
+<span class="nc" id="L309">        Graphics2D g2d = (Graphics2D) g.create();   // Create a copy of &quot;g&quot;</span>
+
+<span class="nc" id="L311">        Rectangle  bounds = getBounds();</span>
+
+<span class="nc" id="L313">        super.paintComponent(g);</span>
+
+<span class="nc bnc" id="L315" title="All 2 branches missed.">        if (m_bkgImage != null)</span>
+        {
+<span class="nc" id="L317">            g2d.drawImage(m_image, 0, 0, m_image.getWidth(null),</span>
+                    m_image.getHeight(null), null);
+        }
+
+<span class="nc" id="L321">        g2d.dispose();      // Clean up copy of &quot;g&quot;</span>
+<span class="nc" id="L322">    }</span>
+
+    
+    protected void paintChildren(Graphics g)
+    {
+<span class="nc" id="L327">        m_answerTextGroup.autoSize();</span>
+        
+<span class="nc" id="L329">        super.paintChildren(g);</span>
+<span class="nc" id="L330">    }</span>
+
+    
+    public void gameStateChanged(jQuizShow.event.GameStateChangeEvent evt)
+    {
+<span class="nc" id="L335">        QuizStateEnum    type = (QuizStateEnum) evt.getType();</span>
+        
+<span class="nc bnc" id="L337" title="All 2 branches missed.">        if (type == QuizStateEnum.IDLE)</span>
+        {
+<span class="nc" id="L339">            highlightSelection(null);</span>
+        }
+<span class="nc bnc" id="L341" title="All 2 branches missed.">        else if (type == QuizStateEnum.SET_CURRENT_LEVEL)</span>
+        {
+        }
+<span class="nc bnc" id="L344" title="All 2 branches missed.">        else if (type == QuizStateEnum.SET_QUESTION_TIMER_LIMIT)</span>
+        {
+        }
+<span class="nc bnc" id="L347" title="All 2 branches missed.">        else if (type == QuizStateEnum.NEW_GAME)</span>
+        {
+<span class="nc" id="L349">            clearScreen();</span>
+<span class="nc" id="L350">            highlightSelection(null);</span>
+        }
+<span class="nc bnc" id="L352" title="All 2 branches missed.">        else if (type == QuizStateEnum.WAIT_TO_START_ROUND)</span>
+        {
+<span class="nc" id="L354">            clearScreen();</span>
+
+<span class="nc" id="L356">            highlightSelection(null);</span>
+        }
+<span class="nc bnc" id="L358" title="All 2 branches missed.">        else if (type == QuizStateEnum.DISPLAY_QUESTION)</span>
+        {            
+<span class="nc" id="L360">            Object  args[] = new Object[1];</span>
+
+<span class="nc" id="L362">            m_currentLevel = m_quizState.getCurrentLevel();</span>
+
+<span class="nc" id="L364">            String  questionID = m_quizState.getQuestionID();</span>
+            
+<span class="nc bnc" id="L366" title="All 4 branches missed.">            if (questionID == null || questionID.length() == 0)</span>
+<span class="nc" id="L367">                args[0] = new Integer(m_currentLevel + 1);</span>
+            else
+<span class="nc" id="L369">                args[0] = questionID;</span>
+
+<span class="nc" id="L371">            m_questionLabelText.setText(Main.getMessage(&quot;quiz_question_label&quot;, args));</span>
+
+<span class="nc" id="L373">            String  question = m_quizState.getQuestion();</span>
+            
+<span class="nc" id="L375">            m_questionText.setText(question);</span>
+<span class="nc" id="L376">        }</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">        else if (type == QuizStateEnum.DISPLAY_ANSWER)</span>
+        {
+<span class="nc bnc" id="L379" title="All 2 branches missed.">            for (int  i = 0; i &lt; m_numAnswers; i++)</span>
+            {
+                ResizableText  rText;
+
+<span class="nc" id="L383">                rText = (ResizableText) m_answerLabelTextVector.get(i);</span>
+<span class="nc" id="L384">                rText.setText(String.valueOf((char) ('A' + i)) + &quot; :&quot;);</span>
+                
+<span class="nc" id="L386">                String  answer = m_quizState.getAnswer(i);</span>
+                
+<span class="nc" id="L388">                rText = (ResizableText) m_answerTextVector.get(i);</span>
+<span class="nc" id="L389">                rText.setText(answer);</span>
+            }
+        }
+<span class="nc bnc" id="L392" title="All 2 branches missed.">        else if (type == QuizStateEnum.WAIT_FOR_ANSWER)</span>
+        {
+        }
+<span class="nc bnc" id="L395" title="All 2 branches missed.">        else if (type == QuizStateEnum.WAIT_TO_REVEAL_ANSWER)</span>
+        {
+        }
+<span class="nc bnc" id="L398" title="All 4 branches missed.">        else if (type == QuizStateEnum.ANSWER_WAS_CORRECT ||</span>
+                type == QuizStateEnum.ANSWER_WAS_WRONG)
+        {
+            ResizableText  answerBox;
+
+<span class="nc" id="L403">            int  index = m_quizState.getCorrectAnswer();</span>
+
+<span class="nc bnc" id="L405" title="All 4 branches missed.">            if (index &lt; 0 || index &gt;= m_numAnswers)</span>
+<span class="nc" id="L406">                return;</span>
+
+<span class="nc" id="L408">            answerBox = (ResizableText) m_answerTextVector.get(index);</span>
+
+<span class="nc" id="L410">            answerBox.setTextColor(Color.black, Color.green);</span>
+<span class="nc" id="L411">        }</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">        else if (type == QuizStateEnum.SET_SHOW_ANSWERS_MODE)</span>
+        {
+<span class="nc bnc" id="L414" title="All 2 branches missed.">            if (m_quizState.getToggleState(QuizState.ANSWER_MODE) == true)</span>
+            {
+<span class="nc" id="L416">                enableTextFadeIn(false);</span>
+            }
+            else
+            {
+<span class="nc" id="L420">                enableTextFadeIn(true);</span>
+            }
+        }
+<span class="nc bnc" id="L423" title="All 2 branches missed.">        else if (type == QuizStateEnum.END_OF_GAME)</span>
+        {
+<span class="nc" id="L425">            highlightSelection(null);</span>
+<span class="nc" id="L426">            clearScreen();</span>
+        }
+<span class="nc" id="L428">    }</span>
+
+    
+    private void  clearScreen()
+    {
+<span class="nc" id="L433">        m_questionLabelText.setText(null);</span>
+<span class="nc" id="L434">        m_questionText.setText(null);</span>
+<span class="nc" id="L435">        m_timerText.setText(null);</span>
+<span class="nc" id="L436">        m_commentText.setText(null);</span>
+
+<span class="nc bnc" id="L438" title="All 2 branches missed.">        for (int  i = 0; i &lt; m_numAnswers; i++)</span>
+        {
+<span class="nc" id="L440">            ((ResizableText) m_answerLabelTextVector.get(i)).setText(null);</span>
+<span class="nc" id="L441">            ((ResizableText) m_answerTextVector.get(i)).setText(null);</span>
+        }
+<span class="nc" id="L443">    }</span>
+
+    
+    private void  showResizableText(boolean  flag)
+    {
+<span class="nc" id="L448">        m_questionLabelText.setVisible(flag);</span>
+<span class="nc" id="L449">        m_questionText.setVisible(flag);</span>
+<span class="nc" id="L450">        m_timerText.setVisible(flag);</span>
+<span class="nc" id="L451">        m_commentText.setVisible(flag);</span>
+
+<span class="nc bnc" id="L453" title="All 2 branches missed.">        for (int  i = 0; i &lt; m_numAnswers; i++)</span>
+        {
+<span class="nc" id="L455">            ((ResizableText) m_answerLabelTextVector.get(i)).setVisible(flag);</span>
+<span class="nc" id="L456">            ((ResizableText) m_answerTextVector.get(i)).setVisible(flag);</span>
+        }
+<span class="nc" id="L458">    }</span>
+
+    
+    private void  enableTextFadeIn(boolean  flag)
+    {
+<span class="nc" id="L463">        m_questionLabelText.enableFadeInDelay(flag);</span>
+<span class="nc" id="L464">        m_questionText.enableFadeInDelay(flag);</span>
+<span class="nc" id="L465">        m_timerText.enableFadeInDelay(flag);</span>
+<span class="nc" id="L466">        m_commentText.enableFadeInDelay(flag);</span>
+
+<span class="nc bnc" id="L468" title="All 2 branches missed.">        for (int  i = 0; i &lt; m_numAnswers; i++)</span>
+        {
+<span class="nc" id="L470">            ((ResizableText) m_answerLabelTextVector.get(i)).enableFadeInDelay(flag);</span>
+<span class="nc" id="L471">            ((ResizableText) m_answerTextVector.get(i)).enableFadeInDelay(flag);</span>
+        }
+<span class="nc" id="L473">    }</span>
+    
+    
+    public void gameUpdated(jQuizShow.event.GameUpdateEvent evt)
+    {
+<span class="nc" id="L478">        QuizUpdateEnum  type = (QuizUpdateEnum) evt.getType();</span>
+        
+<span class="nc bnc" id="L480" title="All 2 branches missed.">        if (type == QuizUpdateEnum.NOP)</span>
+        {
+        }
+<span class="nc bnc" id="L483" title="All 2 branches missed.">        else if (type == QuizUpdateEnum.TRANSITION_MSG)</span>
+        {
+<span class="nc" id="L485">            String  msg = m_quizState.getTransitionMessage();</span>
+            
+<span class="nc bnc" id="L487" title="All 2 branches missed.">            if (msg == null)</span>
+            {
+<span class="nc" id="L489">                showResizableText(true);</span>
+<span class="nc" id="L490">                m_transitionText.setVisible(false);</span>
+            }
+            else
+            {
+<span class="nc" id="L494">                showResizableText(false);</span>
+<span class="nc" id="L495">                m_transitionText.setVisible(true);</span>
+<span class="nc" id="L496">                m_transitionText.setText(msg);</span>
+            }
+<span class="nc" id="L498">        }</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">        else if (type == QuizUpdateEnum.SELECTED_ANSWER)</span>
+        {
+            ResizableText  answerBox;
+            
+<span class="nc" id="L503">            int  index = m_quizState.getSelectedAnswer();</span>
+            
+<span class="nc bnc" id="L505" title="All 6 branches missed.">            if (index == QuizState.NO_SELECTED_ANSWER ||</span>
+                    index &lt; 0 || index &gt;= m_numAnswers)
+            {
+<span class="nc" id="L508">                answerBox = null;</span>
+            }
+            else
+            {
+<span class="nc" id="L512">                answerBox = (ResizableText) m_answerTextVector.get(index);</span>
+            }
+            
+<span class="nc" id="L515">            highlightSelection(answerBox);           </span>
+<span class="nc" id="L516">        }</span>
+<span class="nc bnc" id="L517" title="All 2 branches missed.">        else if (type == QuizUpdateEnum.UPDATE_QUESTION_CLOCK)</span>
+        {
+<span class="nc" id="L519">            java.util.Calendar  cal = java.util.Calendar.getInstance();</span>
+
+<span class="nc" id="L521">            int  timeLimit = m_quizState.getQuestionTimerLimit();</span>
+<span class="nc" id="L522">            int  elapsedTime = m_quizState.getQuestionTimerTime();</span>
+            
+<span class="nc" id="L524">            cal.set(0, 0, 0, 0, 0);</span>
+<span class="nc" id="L525">            cal.set(java.util.Calendar.SECOND,</span>
+                    timeLimit - elapsedTime);
+
+<span class="nc" id="L528">            int  minutes = cal.get(java.util.Calendar.MINUTE);</span>
+<span class="nc" id="L529">            int  seconds = cal.get(java.util.Calendar.SECOND);</span>
+
+<span class="nc" id="L531">            StringBuffer  strb = new StringBuffer();</span>
+
+<span class="nc bnc" id="L533" title="All 2 branches missed.">            if (minutes != 0)</span>
+<span class="nc" id="L534">                strb.append(minutes);</span>
+
+<span class="nc" id="L536">            strb.append(&quot;:&quot;);</span>
+
+<span class="nc bnc" id="L538" title="All 2 branches missed.">            if (seconds &lt; 10)</span>
+<span class="nc" id="L539">                strb.append(&quot;0&quot;);</span>
+
+<span class="nc" id="L541">            strb.append(seconds);</span>
+
+<span class="nc" id="L543">            String  timeStr = strb.toString();</span>
+
+<span class="nc" id="L545">            m_timerText.setText(timeStr);</span>
+<span class="nc" id="L546">        }</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">        else if (type == QuizUpdateEnum.TOGGLE_STATE)</span>
+        {
+        }
+<span class="nc bnc" id="L550" title="All 2 branches missed.">        else if (type == QuizUpdateEnum.STATUS_MSG)</span>
+        {
+<span class="nc" id="L552">            m_commentText.setText(m_quizState.getStatusMessage());</span>
+        }
+<span class="nc" id="L554">    }</span>
+
+
+    /** Highlight the specified &quot;box&quot;.  If box == null, unhighlight all.
+     */
+    private void highlightSelection(ResizableText  box)
+    {
+<span class="nc bnc" id="L561" title="All 2 branches missed.">        for (int  i = 0; i &lt; m_numAnswers; i++)</span>
+        {
+<span class="nc" id="L563">            ResizableText  answerBox = (ResizableText) m_answerTextVector.get(i);</span>
+            
+<span class="nc bnc" id="L565" title="All 2 branches missed.">            if (answerBox == box)</span>
+            {
+                // Highlight the box
+<span class="nc" id="L568">                answerBox.setTextColor(Color.black, Color.orange);</span>
+            }
+            else
+            {
+                // Reset to normal colors (unhighlight)
+<span class="nc" id="L573">                answerBox.restoreDefaultColors();</span>
+            }
+        }
+<span class="nc" id="L576">    }</span>
+
+    
+    // Variables declaration
+    
+    private QuizSkin  m_quizSkin;
+
+    private Image  m_image;
+
+    private QuizState  m_quizState;
+
+    private static GameInputEvent  m_gameInputEvent;
+    
+    private Dimension  m_imageSize;
+    
+<span class="nc" id="L591">    private boolean    m_fillWindow = true;</span>
+
+<span class="nc" id="L593">    private int  m_numAnswers = 0;</span>
+
+    private int  m_currentLevel;
+    
+    private ResizableTextGroup  m_answerTextGroup;
+    
+    private ResizableText    m_questionLabelText;
+    private ResizableText    m_questionText;
+    private ResizableText    m_timerText;
+    private ResizableText    m_commentText;
+    private ResizableText    m_transitionText;
+
+    private Vector  m_answerLabelTextVector;      // Vector of ResizableText for answer labels
+    private Vector  m_answerTextVector;      // Vector of ResizableText for answers
+    
+    // End of variables declaration
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

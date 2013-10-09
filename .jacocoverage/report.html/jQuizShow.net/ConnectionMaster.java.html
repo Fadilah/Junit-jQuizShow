@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ConnectionMaster.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.net</a> &gt; <span class="el_source">ConnectionMaster.java</span></div><h1>ConnectionMaster.java</h1><pre class="source lang-java linenums">/*
+ * ConnectionMaster.java
+ *
+ * Created on June 9, 2001, 3:42 PM
+ *
+ * $Id: ConnectionMaster.java,v 1.2 2007/01/28 05:17:52 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ConnectionMaster.java,v $
+ *    Revision 1.2  2007/01/28 05:17:52  sdchen
+ *    Made reference to SwingWorker to explicitly use jQuizShow.util.SwingWorker to avoid conflict with javax.util.SwingWorker.
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.2  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:43  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.net;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 
+ */
+
+import java.io.*;
+import java.net.*;
+import javax.swing.*;
+
+import jQuizShow.*;
+import jQuizShow.game.*;
+import jQuizShow.util.*;
+import jQuizShow.event.*;
+
+public class ConnectionMaster implements ConnectionInterface,
+        GameStateChangeListener,
+        GameUpdateListener
+{
+  
+    /** Creates new ConnectionMaster */
+<span class="nc" id="L72">    public ConnectionMaster(String host, int port) {</span>
+<span class="nc" id="L73">        setHostAndPort(host, port);</span>
+        
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (m_main == null)</span>
+<span class="nc" id="L76">            m_main = MainSubset.getInstance();</span>
+<span class="nc" id="L77">    }</span>
+
+    public void setHostAndPort(String  host, int  port)
+    {
+<span class="nc" id="L81">        m_hostname = new String(host);</span>
+<span class="nc" id="L82">        m_port = port;</span>
+<span class="nc" id="L83">    }</span>
+
+    public void start()
+    {
+<span class="nc" id="L87">        m_done = false;</span>
+        
+<span class="nc" id="L89">        final jQuizShow.util.SwingWorker worker = new jQuizShow.util.SwingWorker() {</span>
+            public Object construct()
+            {
+                try
+                {
+<span class="nc" id="L94">                    open();</span>
+                }
+<span class="nc" id="L96">                catch (IOException  exception)</span>
+                {
+<span class="nc" id="L98">		    Object  args[] =</span>
+			    {
+				exception.getLocalizedMessage()
+			    };
+
+<span class="nc" id="L103">                    String  message = Main.getMessage(&quot;msg_err_master_open&quot;,</span>
+			    args);
+
+<span class="nc" id="L106">                    JOptionPane.showMessageDialog(Main.getMain(),</span>
+			    message,
+                            Main.getMessage(&quot;title_error&quot;),
+			    JOptionPane.ERROR_MESSAGE);
+
+<span class="nc" id="L111">                    return null;</span>
+<span class="nc" id="L112">                }</span>
+
+<span class="nc" id="L114">                m_progress = 100;</span>
+                
+<span class="nc" id="L116">                return this;</span>
+            }
+        };
+<span class="nc" id="L119">        worker.start();</span>
+<span class="nc" id="L120">    }</span>
+    
+    public void stop()
+    {
+<span class="nc" id="L124">    }</span>
+    
+    public String getNote()
+    {
+<span class="nc" id="L128">        return m_note;</span>
+    }
+    
+    public int  getProgress()
+    {
+<span class="nc" id="L133">        return m_progress;</span>
+    }
+
+    public boolean done()
+    {
+<span class="nc" id="L138">        return m_done;</span>
+    }
+    
+    private void open()
+            throws UnknownHostException, IOException
+    {
+<span class="nc" id="L144">	Object  args[] =</span>
+		{
+		    m_hostname,
+		    new Integer(m_port)
+		};
+
+<span class="nc" id="L150">        m_progress = 30;</span>
+<span class="nc" id="L151">        m_note = Main.getMessage(&quot;msg_master_connect&quot;, args);</span>
+
+<span class="nc" id="L153">        System.out.println(m_note);</span>
+        
+<span class="nc" id="L155">        m_socket = new Socket(m_hostname, m_port);</span>
+        
+<span class="nc" id="L157">        m_progress = 60;</span>
+<span class="nc" id="L158">        m_note = Main.getMessage(&quot;msg_master_connect_setup&quot;);</span>
+
+<span class="nc" id="L160">        m_objOutput = new ObjectOutputStream(m_socket.getOutputStream());</span>
+
+        // Set to MASTER mode
+<span class="nc" id="L163">        m_progress = 80;</span>
+<span class="nc" id="L164">        m_note = Main.getMessage(&quot;msg_master_setup&quot;);</span>
+
+<span class="nc" id="L166">        PacketProcessor  packetProcessor = PacketProcessor.getInstance();</span>
+        
+<span class="nc" id="L168">        ModeChangePacket  modePacket = new ModeChangePacket();</span>
+<span class="nc" id="L169">        modePacket.setMode(GameModeEnum.MASTER);</span>
+        
+<span class="nc" id="L171">        packetProcessor.processModeChangePacket(modePacket);    // Do it</span>
+        
+<span class="nc" id="L173">        m_progress = 100;</span>
+<span class="nc" id="L174">        m_note = Main.getMessage(&quot;msg_master_ready&quot;);</span>
+<span class="nc" id="L175">        m_done = true;</span>
+        
+<span class="nc" id="L177">        System.out.println(Main.getMessage(&quot;msg_master_done&quot;, args));</span>
+<span class="nc" id="L178">    }</span>
+    
+
+    public void close()
+            throws IOException
+    {
+<span class="nc" id="L184">        IOException    saveException = null;</span>
+
+<span class="nc" id="L186">	Object  args[] =</span>
+		{
+		    m_hostname,
+		    new Integer(m_port)
+		};
+
+        
+        // Reset to STANDALONE mode
+<span class="nc" id="L194">        PacketProcessor  packetProcessor = PacketProcessor.getInstance();</span>
+        
+<span class="nc" id="L196">        ModeChangePacket  modePacket = new ModeChangePacket();</span>
+<span class="nc" id="L197">        modePacket.setMode(GameModeEnum.STANDALONE);</span>
+        
+<span class="nc" id="L199">        packetProcessor.processModeChangePacket(modePacket);    // Do it</span>
+
+<span class="nc" id="L201">        System.out.println(Main.getMessage(&quot;msg_closing_connect&quot;, args));</span>
+
+        // Close the connection
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        if (m_objOutput != null)</span>
+        {
+            try {
+<span class="nc" id="L207">                m_objOutput.close();</span>
+            }
+<span class="nc" id="L209">            catch (IOException  e)</span>
+            {
+<span class="nc" id="L211">                saveException = e;</span>
+            }
+            finally
+            {
+<span class="nc" id="L215">                m_objOutput = null;</span>
+<span class="nc" id="L216">            }</span>
+        }
+        
+<span class="nc bnc" id="L219" title="All 2 branches missed.">        if (m_socket != null)</span>
+        {
+            try {
+<span class="nc" id="L222">                m_socket.close();</span>
+            }
+<span class="nc" id="L224">            catch (IOException  e)</span>
+            {
+<span class="nc" id="L226">                saveException = e;</span>
+            }
+            finally
+            {
+<span class="nc" id="L230">                m_socket = null;</span>
+<span class="nc" id="L231">            }</span>
+        }
+        
+<span class="nc bnc" id="L234" title="All 2 branches missed.">        if (saveException != null)</span>
+<span class="nc" id="L235">            throw saveException;</span>
+<span class="nc" id="L236">    }</span>
+    
+    public void gameStateChanged(GameStateChangeEvent evt)
+    {
+<span class="nc bnc" id="L240" title="All 2 branches missed.">        if (m_objOutput == null)</span>
+<span class="nc" id="L241">            return;</span>
+        
+        try
+        {
+<span class="nc" id="L245">            m_objOutput.reset();		// Clear so a new copy of the object will be sent.</span>
+
+<span class="nc" id="L247">            GameStateChangeEnum  eventType = evt.getType();</span>
+            
+<span class="nc bnc" id="L249" title="All 2 branches missed.">            if (m_statePacket == null)</span>
+<span class="nc" id="L250">                m_statePacket = new StatePacket();</span>
+
+            // Fill the packet object with data
+/*
+            m_statePacket.setType(eventType);
+            m_statePacket.setMaxNumberOfLevels(m_gameState.getMaxNumberOfLevels());
+            m_statePacket.setCurrentLevel(m_gameState.getCurrentLevel());
+            m_statePacket.setLevelTitle(m_gameState.getLevelTitle());
+            m_statePacket.setQuestion(m_gameState.getQuestion());
+            m_statePacket.setAnswers(m_gameState.getAnswers());
+            m_statePacket.setQuestionTimerLimit(m_gameState.getQuestionTimerLimit());
+            m_statePacket.setLifelineTimerLimit(m_gameState.getLifelineTimerLimit());
+            m_statePacket.setAnswersVisible(m_gameState.getAnswersVisible());
+            m_statePacket.setCorrectAnswer(m_gameState.getCorrectAnswer());
+*/            
+<span class="nc" id="L265">            m_objOutput.writeObject(m_statePacket);</span>
+        }
+<span class="nc" id="L267">        catch (IOException  e)</span>
+        {
+<span class="nc" id="L269">	    Object  args[] =</span>
+		    {
+			m_hostname
+		    };
+
+<span class="nc" id="L274">	    String  msg = Main.getMessage(&quot;err_sending_state&quot;, args);</span>
+
+<span class="nc" id="L276">            System.out.println(msg);</span>
+<span class="nc" id="L277">            System.out.println(e.getLocalizedMessage());</span>
+
+<span class="nc" id="L279">            JOptionPane.showMessageDialog(Main.getMain(),</span>
+		    msg,
+                    Main.getMessage(&quot;title_error&quot;),
+		    JOptionPane.ERROR_MESSAGE);
+
+            // Clean up
+            try {
+<span class="nc" id="L286">		System.out.println(Main.getMessage(&quot;msg_closing_connect&quot;)</span>
+			+ &quot; &quot; + m_hostname + &quot;:&quot; + m_port);
+
+<span class="nc" id="L289">                close();</span>
+            }
+<span class="nc" id="L291">            catch (IOException  exc)</span>
+            {
+<span class="nc" id="L293">                System.out.println(&quot;IOException:  &quot; + exc.getMessage());</span>
+<span class="nc" id="L294">            }</span>
+<span class="nc" id="L295">        }</span>
+<span class="nc" id="L296">    }</span>
+
+    public void gameUpdated(GameUpdateEvent  evt)
+    {
+<span class="nc bnc" id="L300" title="All 2 branches missed.">        if (m_objOutput == null)</span>
+<span class="nc" id="L301">            return;</span>
+        
+        try
+        {
+<span class="nc" id="L305">            m_objOutput.reset();		// Clear so a new copy of the object will be sent.</span>
+
+<span class="nc" id="L307">            GameUpdateEnum  eventType = evt.getType();</span>
+            
+<span class="nc bnc" id="L309" title="All 2 branches missed.">            if (m_eventPacket == null)</span>
+<span class="nc" id="L310">                m_eventPacket = new EventPacket();</span>
+
+            // Fill the packet object with data
+<span class="nc" id="L313">            m_eventPacket.setType(eventType);</span>
+/*
+            m_eventPacket.setSelectedAnswer(m_gameState.getSelectedAnswer());
+            m_eventPacket.setSelectedLifeline(m_gameState.getSelectedLifeline());
+            m_eventPacket.setHighlightLevel(m_gameState.getHighlightLevel());
+            m_eventPacket.setTransitionMessage(m_gameState.getTransitionMessage());
+            m_eventPacket.setQuestionTimerTime(m_gameState.getQuestionTimerTime());
+            m_eventPacket.setLifelineTimerTime(m_gameState.getLifelineTimerTime());
+            m_eventPacket.setToggleStates(m_gameState.getToggleStates());
+            m_eventPacket.setStatusMessage(m_gameState.getStatusMessage());
+*/            
+<span class="nc" id="L324">            m_objOutput.writeObject(m_eventPacket);</span>
+        }
+<span class="nc" id="L326">        catch (IOException  e)</span>
+        {
+<span class="nc" id="L328">	    String  msg = Main.getMessage(&quot;err_sending_state&quot;)</span>
+		    + &quot; &quot; + m_hostname;
+
+<span class="nc" id="L331">            System.out.println(msg);</span>
+<span class="nc" id="L332">            System.out.println(e.getLocalizedMessage());</span>
+
+<span class="nc" id="L334">            JOptionPane.showMessageDialog(Main.getMain(),</span>
+		    msg,
+                    Main.getMessage(&quot;title_error&quot;),
+		    JOptionPane.ERROR_MESSAGE);
+
+            // Clean up
+            try {
+<span class="nc" id="L341">		System.out.println(Main.getMessage(&quot;msg_closing_connect&quot;)</span>
+			+ &quot; &quot; + m_hostname + &quot;:&quot; + m_port);
+
+<span class="nc" id="L344">                close();</span>
+            }
+<span class="nc" id="L346">            catch (IOException  exc)</span>
+            {
+<span class="nc" id="L348">                System.out.println(&quot;IOException:  &quot;</span>
+			+ exc.getLocalizedMessage());
+<span class="nc" id="L350">            }</span>
+<span class="nc" id="L351">        }</span>
+<span class="nc" id="L352">    }</span>
+
+    private MainSubset  m_main;
+    
+    private String  m_hostname;
+    
+    private int  m_port;
+    
+    private String  m_note;
+    
+<span class="nc" id="L362">    private int  m_progress = 0;</span>
+
+<span class="nc" id="L364">    private boolean  m_done = false;</span>
+    
+<span class="nc" id="L366">    private Socket m_socket = null;</span>
+    
+    private ObjectOutputStream  m_objOutput;
+    
+<span class="nc" id="L370">    private StatePacket     m_statePacket = null;</span>
+<span class="nc" id="L371">    private EventPacket     m_eventPacket = null;</span>
+    
+    private int m_type;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

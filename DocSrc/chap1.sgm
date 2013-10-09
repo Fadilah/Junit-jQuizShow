@@ -1,0 +1,153 @@
+<chapter>
+    <title>Basic Information</title>
+    <sect1>
+	<title>What is &jqs;</title>
+	<para>
+The &jqs; is based on the popular "Who Wants to Be a Millionaire" TV
+game show.  It forms the framework around which a group can play their own
+Millionaire-like game, with one person acting as the host, one person in
+the "hot seat," and with the remaining people forming the audience.
+Three helplines (50/50, ask a friend, and poll the audience) are available
+to the player.
+	</para>
+        <para>
+The &jqs; is fully customizable. It is easy to add your own questions
+and answers to the database (or use databases others have written),
+change the music and sound effects, modify the prize levels, and more. It
+includes network support to allow for a third-person to control the game
+(thus freeing up the host), or for allowing multiple computers to display
+the game screen simultaneously.
+        </para>
+        <para>
+It is ideal for use in a classroom or church youth group setting, or at
+the start of an meeting to break the ice.  Parents can even use
+it as a fun way to test their kids (or for kids to test their
+parents...).  Be creative!
+        </para>
+    </sect1>
+    <sect1>
+	<title>System Requirements</title>
+	<para>
+&jqs; is written in 100% Pure Java<superscript>tm</superscript> 2
+(v1.3) and, thus, can be run on any platform that supports Java
+(Windows<superscript>tm</superscript>, Mac <superscript>tm</superscript>,
+Linux, UNIX, etc.).
+	</para>
+	<para>
+&jqs; requires that the Java 2 Runtime Environment (JRE)
+version 1.3 or later be installed on your system in order to run.
+A quick test can be performed to see if you have the JRE installed on your
+system and to determine what version you have.  Execute the following
+at your system's command prompt:
+	<blockquote>
+	    <para>
+		<userinput>java -version</userinput>
+	    </para>
+	</blockquote>
+If you have the JRE installed properly on your system, this command will
+run and display the JRE version information.  If this command does not
+work, you will need to install a version of the JRE on your system.
+If the reported version of JRE is less than 1.3, you will need to
+install a more recent version of the JRE on your system.
+	</para>
+        <sidebar>
+            <title>What is Java 2 and the JRE?</title>
+	    <para>
+Java 2 is a computer programming language that was first created by
+the people at Sun Microsystems, Inc.  As with most programming languages,
+the human readable Java source code must be changed into a binary form
+before it can be executed by the computer.  This process is called 
+compiling.  What sets the Java binary code ("Java bytecode") apart from
+the binary code produced by most other computer languages is that
+Java bytecodes are "platform-independent," that is it can theoretically
+be run on any computer or other platform that supports Java (e.g.
+a web browser).
+	    </para>
+	    <para>
+What makes this all possible is the Java Virtual Machine
+(JVM<superscript>tm</superscript>).
+The JVM is a kind of translator that loads in the Java byte code and
+does what it says.  The JVM is the key component of the Java 2 Runtime
+Environment (JRE) and is required for running Java programs.
+For computer systems, the JRE can either be included as part of
+the operating system or it can be installed as a separate package
+as needed.
+	    </para>
+	    <para>
+For more information about Java, please visit the
+		<ulink url="http://java.sun.com/">
+		    <citetitle>java.sun.com</citetitle>
+		</ulink>
+web site.
+	    </para>
+	</sidebar>
+        <sect2>
+            <title>Getting the Java Runtime Environment (JRE)</title>
+	    <para>
+Versions of the JRE are provided by Sun Microsystems, Inc. for the Windows,
+Linux and Solaris platforms.  To download the latest version of the JRE
+for these platforms, please visit the 
+		<ulink url="http://java.sun.com/j2se">
+		    <citetitle>Java(TM) Platform, Standard Edition</citetitle>
+		</ulink> web page, and click on the "Download Now" link.
+            </para>
+            <para>
+For Mac users, Java is built into Mac OS X.  For more information regarding
+this, please see the Apple Computer, Inc. 
+		<ulink url="http://www.apple.com/java">
+		    <citetitle>Mac OS X - Technologies - Java 2</citetitle>
+		</ulink> web page.
+	    </para>
+	    <para>
+For most other platforms, a third-party port of Java is available.  For
+information on the platforms on which a port of Java is available,
+see Sun's
+		<ulink url="http://java.sun.com/cgi-bin/java-ports.cgi">
+		    <citetitle>Java(TM) Platform Ports</citetitle>
+		</ulink> web page.
+	    </para>
+        </sect2>
+    </sect1>
+    <sect1>
+	<title>License and Distribution</title>
+	<para>
+The &jqs; is provided <emphasis>free of charge</emphasis> for your use,
+whether personal, government, non-profit or commercial.  It is provided
+and distributed under the 
+	    <ulink url="http://www.gnu.org/licenses/gpl.html">
+		<citetitle>GNU General Public License</citetitle>
+	    </ulink>.
+	</para>
+	<para>
+Note, however, that add-ons to &jqs; may or may not be released under the
+same license.
+	</para>
+	<para>
+An example is the <emphasis><literal>jQuizShowSounds.jar</literal></emphasis>
+add-on.  Though it is completely free for use with the jQuizShow game, its
+contents, specifically the sound loops included in it,
+<emphasis>may not</emphasis> be repackaged nor
+redistributed for other purposes; a special license was granted by the
+author, Rob Kirkwood, for the distribution of his sound loops with the
+jQuizShow.  The original MP3 sound loops and other music tracks which
+Mr. Kirkwood has authored, however, can be acquired royalty-free
+directly from his site
+	    <ulink url="http://www.visibleform.co.uk/">
+		<citetitle>Visible Form</citetitle>
+	    </ulink>.
+See the terms of his generous royalty-free license at his site for details.
+	</para>
+	<para>
+The Java source code for the &jqs; is also available under the terms
+of the GNU GPL.   If you are interested in the source code, please
+visit the
+	    <ulink url="http://sourceforge.net/projects/quizshow">
+		<citetitle>jQuizShow Project</citetitle>
+	    </ulink>
+site.  While you are there, why not also consider becoming a part of the
+&jqs; development team?
+	</para>
+    </sect1>
+</chapter>
+
+

@@ -1,0 +1,843 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Main.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">Main.java</span></div><h1>Main.java</h1><pre class="source lang-java linenums">/*
+ * Main.java
+ *
+ * Created on April 1, 2001, 2:56 PM
+ *
+ * $Id: Main.java,v 1.4 2007/02/05 04:54:26 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: Main.java,v $
+ *    Revision 1.4  2007/02/05 04:54:26  sdchen
+ *    Updated copyright date range.
+ *
+ *    Revision 1.3  2007/02/05 04:05:34  sdchen
+ *    Replaced deprecated show() with setVisible(bool  s)
+ *
+ *    Revision 1.2  2007/02/05 03:55:48  sdchen
+ *    Removed CR (Ctrl-M) from lines.
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.11  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.10  2002/07/29 04:19:37  sdchen
+ *    Removed unneeded &quot;javax.swing.&quot; prefix for class data declarations.
+ *
+ *    Revision 1.9  2002/07/14 05:31:07  sdchen
+ *    Snapshot of conversion to InputMap/KeyMap/ActionMap for keyboard hot keys.
+ *
+ *    Revision 1.8  2002/07/05 06:54:59  sdchen
+ *    Put call to Main.appendMessage() into a Runnable passed into
+ *    SwingUtilities.invokeLater() so that it would be invoked in the event
+ *    thread and thus append properly to the associated JText.  Removed
+ *    desktopPane var -- changed all references to use m_desktopPane.
+ *
+ *    Revision 1.7  2002/06/22 19:57:31  sdchen
+ *    Removed unused m_questionList.
+ *
+ *    Revision 1.6  2002/06/18 05:00:58  sdchen
+ *    Fixed NullPointerException on startup -- attempted to execute setStatusLabel()
+ *    prior to initialization of dependent variable.
+ *
+ *    Revision 1.5  2002/06/06 04:50:03  sdchen
+ *    Made setStatusLabel public static.  Changed to start JFileChooser in &quot;user.dir&quot;
+ *    or &quot;user.home&quot; if &quot;user.dir&quot; undefined.  Changed to use &quot;questionEncoding&quot;
+ *    if specified to read in character encoded files.
+ *
+ *    Revision 1.4  2002/05/28 03:44:57  sdchen
+ *    Fixed bug loading JQSHelp.txt from JAR file.
+ *
+ *    Revision 1.3  2002/05/28 00:24:54  sdchen
+ *    Added code to output Exception.getMessage() when config file read files.
+ *    Also, added -sysprops option to output the system properties to aid in
+ *    debugging.
+ *
+ *    Revision 1.2  2002/05/23 05:05:30  sdchen
+ *    *** empty log message ***
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:40  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow;
+
+/**
+ *
+ * @author  Steven D. Chen
+ */
+
+import java.io.*;
+import java.net.*;
+import java.text.*;
+import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
+
+import jQuizShow.event.*;
+import jQuizShow.game.classic.*;
+import jQuizShow.quiz.*;
+import jQuizShow.net.*;
+import jQuizShow.util.*;
+
+
+public class Main extends JFrame
+{
+    public static final String JQS_VERSION = &quot;1.1&quot;;	// Version number
+
+    private static final int FRAME_MULT = 50;
+
+    private static final String CONTRIB_DIR = &quot;contrib/&quot;;
+
+    private static final String RESOURCE_BASENAME = &quot;contrib/jQuizShowLocale&quot;;
+
+    private static final String JQS_LOG_FILE = &quot;JQS_log.txt&quot;;
+    
+<span class="fc" id="L125">    private static final Main  m_singletonInstance = new Main();  // Create the singleton instance</span>
+    
+    /** Gets the singleton instance
+     */
+    public static Main getInstance() {
+<span class="fc" id="L130">        return m_singletonInstance;</span>
+    }
+
+    /** Returns a reference to the main desktop pane.
+     */
+    public static JDesktopPane  getDesktopPane() {
+<span class="fc" id="L136">        return m_desktopPane;</span>
+    }
+
+    /** Returns a reference to the main desktop pane.
+     */
+    public static void  setTitleString(String  subset)
+    {
+        // Display the hostname in the title
+        try
+        {
+<span class="fc" id="L146">            InetAddress  inetAddr = InetAddress.getLocalHost();</span>
+
+<span class="fc" id="L148">            m_singletonInstance.setTitle(&quot;jQuizShow - &quot; + subset</span>
+                    + &quot; [Hostname: &quot; + inetAddr.getHostName()
+                    + &quot; (&quot; + inetAddr.getHostAddress() + &quot;)]&quot;);
+        }
+<span class="nc" id="L152">        catch (UnknownHostException  evt)</span>
+        {
+<span class="nc" id="L154">            m_singletonInstance.setTitle(&quot;jQuizShow - &quot; + subset);</span>
+        }
+<span class="nc" id="L156">        catch (SecurityException  se)</span>
+	{
+<span class="nc" id="L158">            m_singletonInstance.setTitle(&quot;jQuizShow - &quot; + subset);</span>
+<span class="pc" id="L159">	}</span>
+<span class="fc" id="L160">    }</span>
+    
+    
+    /** Private constructor -- only callable from within the
+     * class.  This is called when the singleton instance is
+     * created.
+     */
+
+<span class="fc" id="L168">    private Main() {</span>
+
+	// Load the default resource bundle
+	try
+	{
+<span class="fc" id="L173">	    m_defaultBundle = ResourceBundle.getBundle(RESOURCE_BASENAME);</span>
+           //System.out.println(&quot;helo&quot; + RESOURCE_BASENAME);
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">	    if (m_defaultBundle == null)</span>
+	    {
+<span class="nc" id="L177">		System.out.println(&quot;ERROR!  Default resource bundle (&quot; + RESOURCE_BASENAME + &quot;) is missing&quot;);</span>
+<span class="nc" id="L178">		System.exit(1);</span>
+	    }
+
+<span class="fc" id="L181">	    m_msgFormat = new MessageFormat(&quot;&quot;);</span>
+	}
+<span class="nc" id="L183">	catch (MissingResourceException  mr_e)</span>
+	{
+<span class="nc" id="L185">	    System.out.println(&quot;ERROR!  The default resource bundle (&quot; + RESOURCE_BASENAME + &quot;) is missing&quot;);</span>
+<span class="nc" id="L186">	    System.out.println(&quot;        from the installation.  Please reinstall.  Program aborted.&quot;);</span>
+
+<span class="nc" id="L188">	    System.exit(1);</span>
+<span class="fc" id="L189">	}</span>
+
+<span class="fc" id="L191">        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);</span>
+
+	// Create the main window and its UI components
+<span class="fc" id="L194">        initComponents();</span>
+
+        // Configure the desktopPane instance
+<span class="fc" id="L197">        m_desktopPane.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);</span>
+        
+        // Display the Version
+<span class="fc" id="L200">        versionLabel.setText(&quot;Version &quot; + Main.JQS_VERSION);</span>
+
+     
+        // Create the message window
+<span class="fc" id="L204">        m_messageWindow = new MessageWindow();</span>
+<span class="fc" id="L205">        addWithOffset(m_messageWindow);</span>
+<span class="fc" id="L206">    }</span>
+    
+    /** Primary initialization method.  This will create the top level
+      * window and all desktop windows.
+      */
+    private void  initJQS()
+    {
+<span class="fc" id="L213">        Toolkit     tk = Toolkit.getDefaultToolkit();</span>
+
+<span class="fc" id="L215">        Dimension   screenSize = tk.getScreenSize();</span>
+
+<span class="fc" id="L217">        Dimension   initSize = new Dimension();</span>
+        
+<span class="fc" id="L219">        Point       initLocation = new Point();</span>
+        
+<span class="fc" id="L221">        setLocation(0, 0);</span>
+<span class="fc" id="L222">        setSize(screenSize);        // Full screen</span>
+
+	// If specified, use the locale specified in the config file
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">	if (m_gameConfig.getConfig(&quot;localeLanguage&quot;) != null)</span>
+	{
+<span class="nc" id="L227">	    initLocaleResourceBundle(</span>
+		    m_gameConfig.getConfig(&quot;localeLanguage&quot;),
+		    m_gameConfig.getConfig(&quot;localeCountry&quot;),
+		    m_gameConfig.getConfig(&quot;localeVariant&quot;));
+	}
+
+<span class="fc" id="L233">        setTitleString(&quot;&quot;);     // No subset name yet</span>
+        
+        // Initialize the SoundPlayer instance.  This will preload the
+	// sound effects.
+<span class="fc" id="L237">        SoundPlayer  soundPlayer = SoundPlayer.getInstance();</span>
+   
+        // Create an instace of the EventPacket
+<span class="fc" id="L240">        m_eventPacket = new EventPacket();</span>
+        
+        // Get the SoundPlayer singleton
+<span class="fc" id="L243">        m_soundPlayer = SoundPlayer.getInstance();</span>
+
+        // Instantiate the dialogs
+
+<span class="fc" id="L247">        m_soundCtrlDialog = new SoundCtrlDialog();</span>
+<span class="fc" id="L248">        addWithOffset(m_soundCtrlDialog);</span>
+
+<span class="fc" id="L250">        m_aboutDialog = new QuizShowAboutDialog();</span>
+<span class="fc" id="L251">        addWithOffset(m_aboutDialog);</span>
+
+<span class="fc" id="L253">        m_connectionDialog = new ConnectionDialog();</span>
+<span class="fc" id="L254">        addWithOffset(m_connectionDialog);</span>
+
+<span class="fc" id="L256">        m_randomSelector = new RandomSelector();</span>
+<span class="fc" id="L257">        addWithOffset(m_randomSelector);</span>
+<span class="fc" id="L258">    }</span>
+
+    
+    /** Load the questions from the specified database file */
+
+    
+    /** Sets the &quot;status&quot; label string.  The status label is located on
+      * the bottom left border of the main window.
+      */
+    public static void setStatusLabel(String  text) {
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        if (text == null)</span>
+<span class="nc" id="L269">            m_quizShow.statusLabel.setText(&quot;&quot;);</span>
+        else
+<span class="nc" id="L271">            m_quizShow.statusLabel.setText(text);</span>
+<span class="nc" id="L272">    }</span>
+
+    
+    /**
+     * Appends the string to the message log.  A newline is appended to
+     * end of the message.  The System.out() is redefined in main()
+     * to call this when debug mode is on.
+     */
+    private static void  appendMessage(String  message)
+    {
+<span class="fc" id="L282">        m_messageWindow.append(message + &quot;\n&quot;);</span>
+<span class="fc" id="L283">    }</span>
+
+    
+    /**
+     * Called from other classes to show the message dialog.
+     */
+    public static void showMessageDialog()
+    {
+<span class="nc" id="L291">        m_messageWindow.show();</span>
+<span class="nc" id="L292">    }</span>
+
+    
+    /**
+     * Called from other classes to show the &quot;About&quot; dialog
+     */
+    public static void showAboutJQSDialog()
+    {
+<span class="nc" id="L300">        m_aboutDialog.show();</span>
+<span class="nc" id="L301">    }</span>
+
+    
+    public void  addWithOffset(JInternalFrame  component)
+    {
+<span class="fc" id="L306">        m_desktopPane.add(component);</span>
+<span class="fc" id="L307">        component.setLocation(m_frameOffset * FRAME_MULT, m_frameOffset * FRAME_MULT);</span>
+<span class="fc" id="L308">        m_frameOffset++;</span>
+<span class="fc" id="L309">    }</span>
+    
+    
+    private void  loadConfig()
+    {
+        // Get the GameConfig singleton instance
+<span class="fc" id="L315">        m_gameConfig = GameConfig.getInstance();</span>
+
+<span class="fc" id="L317">        String  configFilepath = null;</span>
+        
+        try
+        {
+<span class="fc" id="L321">            configFilepath = FileUtils.searchForFile(m_configFile);</span>
+
+<span class="fc" id="L323">            m_gameConfig.loadGameConfig(configFilepath);</span>
+            
+<span class="fc" id="L325">            m_debugMode = m_gameConfig.getIntConfig(&quot;debugMode&quot;);</span>
+        }
+<span class="nc" id="L327">        catch (FileNotFoundException  e)</span>
+        {
+<span class="nc" id="L329">            System.out.println(e.getMessage());</span>
+<span class="nc" id="L330">            System.exit(1);</span>
+        }
+<span class="nc" id="L332">        catch (IOException  e)</span>
+        {
+<span class="nc" id="L334">	    Object  args[] =</span>
+		    {
+			configFilepath
+		    };
+
+<span class="nc" id="L339">            System.out.println(Main.getMessage(&quot;err_config_file_io&quot;, args));</span>
+<span class="nc" id="L340">            System.out.println(e.getLocalizedMessage());</span>
+
+<span class="nc" id="L342">            System.exit(1);           </span>
+<span class="pc" id="L343">        }</span>
+<span class="fc" id="L344">    }</span>
+    
+
+    /** This method is called from within the constructor to
+     * initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is
+     * always regenerated by the Form Editor.
+     */
+    private void initComponents() {
+<span class="fc" id="L353">        southPanel = new javax.swing.JPanel();</span>
+<span class="fc" id="L354">        statusLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L355">        versionLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L356">        m_desktopPane = new javax.swing.JDesktopPane();</span>
+        
+<span class="fc" id="L358">        setTitle(&quot;jQuizShow&quot;);</span>
+<span class="fc" id="L359">        setBackground(java.awt.Color.black);</span>
+
+<span class="fc" id="L361">        addWindowListener(new java.awt.event.WindowAdapter() {</span>
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+<span class="nc" id="L363">                exitForm(evt);</span>
+<span class="nc" id="L364">            }</span>
+        });
+        
+<span class="fc" id="L367">        southPanel.setLayout(new java.awt.GridBagLayout());</span>
+        java.awt.GridBagConstraints gridBagConstraints1;
+        
+<span class="fc" id="L370">        statusLabel.setText(&quot;&quot;);</span>
+<span class="fc" id="L371">        statusLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);</span>
+<span class="fc" id="L372">        gridBagConstraints1 = new java.awt.GridBagConstraints();</span>
+<span class="fc" id="L373">        gridBagConstraints1.anchor = java.awt.GridBagConstraints.WEST;</span>
+<span class="fc" id="L374">        gridBagConstraints1.weightx = 100.0;</span>
+<span class="fc" id="L375">        gridBagConstraints1.weighty = 100.0;</span>
+<span class="fc" id="L376">        southPanel.add(statusLabel, gridBagConstraints1);</span>
+        
+<span class="fc" id="L378">        versionLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);</span>
+<span class="fc" id="L379">        gridBagConstraints1 = new java.awt.GridBagConstraints();</span>
+<span class="fc" id="L380">        gridBagConstraints1.gridx = 2;</span>
+<span class="fc" id="L381">        gridBagConstraints1.anchor = java.awt.GridBagConstraints.EAST;</span>
+<span class="fc" id="L382">        gridBagConstraints1.weightx = 100.0;</span>
+<span class="fc" id="L383">        gridBagConstraints1.weighty = 100.0;</span>
+<span class="fc" id="L384">        southPanel.add(versionLabel, gridBagConstraints1);</span>
+        
+<span class="fc" id="L386">        getContentPane().add(southPanel, java.awt.BorderLayout.SOUTH);</span>
+        
+<span class="fc" id="L388">        m_desktopPane.setForeground(java.awt.Color.white);</span>
+<span class="fc" id="L389">        m_desktopPane.setBackground(java.awt.Color.black);</span>
+<span class="fc" id="L390">        getContentPane().add(m_desktopPane, java.awt.BorderLayout.CENTER);</span>
+        
+<span class="fc" id="L392">        pack();</span>
+<span class="fc" id="L393">    }</span>
+
+    public static void  setMenuBar(MainMenuBar  menuBar)
+    {
+<span class="nc" id="L397">        m_quizShow.setJMenuBar(menuBar);</span>
+<span class="nc" id="L398">    }</span>
+
+    public static void  showRandomPlayerSelector()
+    {
+<span class="nc" id="L402">	String  playersFile = m_gameConfig.getConfig(RandomSelector.PLAYERS_FILE_KEYWORD,</span>
+		RandomSelector.PLAYERS_DEFAULT_FILE);
+
+<span class="nc" id="L405">	String  usedPlayersFile = m_gameConfig.getConfig(RandomSelector.USED_PLAYERS_FILE_KEYWORD,</span>
+		RandomSelector.USED_PLAYERS_DEFAULT_FILE);
+
+        try
+        {
+<span class="nc" id="L410">            m_randomSelector.readDatabase(playersFile, usedPlayersFile);</span>
+      
+<span class="nc" id="L412">	    m_randomSelector.show();</span>
+        }
+<span class="nc" id="L414">        catch (IOException  e)</span>
+        {
+<span class="nc" id="L416">	    Object  args[] =</span>
+		    {
+			playersFile
+		    };
+
+<span class="nc" id="L421">	    String	msg = Main.getMessage(&quot;err_file_missing_unreadable&quot;, args);</span>
+
+<span class="nc" id="L423">            JOptionPane.showMessageDialog(m_desktopPane, msg);</span>
+<span class="nc" id="L424">        }</span>
+<span class="nc" id="L425">    }</span>
+
+
+    private void usingJQSActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc bnc" id="L429" title="All 2 branches missed.">        if (m_helpFrame == null)</span>
+        {
+<span class="nc" id="L431">	    String  filename = m_gameConfig.getConfig(&quot;helpFile&quot;, &quot;JQSHelp.txt&quot;);</span>
+<span class="nc" id="L432">	    String  helpFilename = filename;</span>
+
+            
+<span class="nc" id="L435">            m_helpFrame = new JInternalFrame(&quot;Help&quot;, true, true, true, true);</span>
+<span class="nc" id="L436">            m_helpFrame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);</span>
+<span class="nc" id="L437">            m_helpFrame.setSize(600, 400);</span>
+            
+<span class="nc" id="L439">            m_helpPane = new JTextArea();</span>
+<span class="nc" id="L440">            m_helpPane.setDisabledTextColor(java.awt.Color.black);</span>
+<span class="nc" id="L441">            m_helpPane.setEnabled(false);</span>
+            
+<span class="nc" id="L443">            JScrollPane  jScrollPanel = new JScrollPane();</span>
+<span class="nc" id="L444">            jScrollPanel.setViewportView(m_helpPane);</span>
+
+<span class="nc" id="L446">            m_helpFrame.getContentPane().add(jScrollPanel);</span>
+            
+<span class="nc" id="L448">            addWithOffset(m_helpFrame);</span>
+
+            // Locate and read the help file
+            try
+            {
+                String  line;
+
+<span class="nc" id="L455">		helpFilename = FileUtils.searchForFile(filename);</span>
+                
+<span class="nc" id="L457">                BufferedReader  fin = new BufferedReader(</span>
+                        new InputStreamReader(FileUtils.openFile(helpFilename)));
+                
+<span class="nc bnc" id="L460" title="All 2 branches missed.">                while ((line = fin.readLine()) != null)</span>
+                {
+
+<span class="nc" id="L463">                    m_helpPane.append(line + &quot;\n&quot;);</span>
+                }
+            }
+<span class="nc" id="L466">	    catch (FileNotFoundException  fnf_e)</span>
+	    {
+<span class="nc" id="L468">                m_helpPane.append(Main.getMessage(&quot;err_help_not_found&quot;));</span>
+<span class="nc" id="L469">                m_helpPane.append(fnf_e.getMessage());</span>
+	    }
+<span class="nc" id="L471">            catch (IOException  e)</span>
+            {
+<span class="nc" id="L473">		Object  args[] =</span>
+			{
+			    helpFilename
+			};
+
+<span class="nc" id="L478">                m_helpPane.append(Main.getMessage(&quot;err_help_file_io&quot;, args));</span>
+<span class="nc" id="L479">            }</span>
+        }
+
+<span class="nc" id="L482">        m_helpFrame.setVisible(true);</span>
+<span class="nc" id="L483">    }</span>
+
+    /** Exit the Application */
+    private void exitForm(java.awt.event.WindowEvent evt) {
+<span class="nc" id="L487">        confirmProgramExit();</span>
+<span class="nc" id="L488">    }</span>
+
+    public static void  confirmProgramExit()
+    {
+        // Confirm the exit
+        
+<span class="nc" id="L494">        GameConfig  gameConfig = GameConfig.getInstance();</span>
+        
+<span class="nc bnc" id="L496" title="All 2 branches missed.">        if (gameConfig.getIntConfig(&quot;testMode&quot;) == 0)</span>
+        {
+            // Normal mode -- confirm exit
+<span class="nc bnc" id="L499" title="All 2 branches missed.">            if (JOptionPane.showConfirmDialog(m_quizShow,</span>
+	    	    Main.getMessage(&quot;msg_confirm_exit&quot;),
+                    Main.getMessage(&quot;title_confirm_exit&quot;),
+		    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) ==
+                    JOptionPane.YES_OPTION)
+            {
+<span class="nc" id="L505">                System.exit(0);</span>
+            }
+        }
+        else
+        {
+            // Test mode -- just exit
+<span class="nc" id="L511">            System.exit(0);</span>
+        }
+<span class="nc" id="L513">    }</span>
+
+
+    /**
+    * Gets the main Component
+    */
+    public static Component  getMain()
+    {
+<span class="nc" id="L521">        return m_quizShow;</span>
+    }
+
+
+    /**
+    * Gets the locale message associated with the specified template key.
+    * The key specifies a template which is to be filled using the
+    * arguments provided.
+    */
+    public static String  getMessage(String  key, Object  args[])
+    {
+        ResourceBundle  localeBundle;
+
+<span class="pc bpc" id="L534" title="1 of 2 branches missed.">        if (m_localeBundle != null)</span>
+<span class="nc" id="L535">	    localeBundle = m_localeBundle;</span>
+	else
+<span class="fc" id="L537">	    localeBundle = m_defaultBundle;</span>
+
+        try
+	{
+<span class="fc" id="L541">	    m_msgFormat.applyPattern(localeBundle.getString(key));</span>
+	}
+<span class="nc" id="L543">	catch (MissingResourceException  mr_e)</span>
+	{
+	    try
+	    {
+<span class="nc" id="L547">	        m_msgFormat.applyPattern(m_defaultBundle.getString(key));</span>
+	    }
+<span class="nc" id="L549">	    catch (MissingResourceException  mr2_e)</span>
+	    {
+<span class="nc" id="L551">	        System.out.println(&quot;Resource bundle template key is undefined:  &quot;</span>
+			+ key);
+
+<span class="nc" id="L554">		return &quot;&lt;&quot; + key + &quot;&gt;&quot;;</span>
+<span class="nc" id="L555">	    }</span>
+<span class="fc" id="L556">	}</span>
+
+<span class="fc" id="L558">	return m_msgFormat.format(args);</span>
+    }
+
+
+    /**
+    * Gets the locale message associated with the specified key.
+    */
+    public static String  getMessage(String  key)
+    {
+        ResourceBundle  localeBundle;
+
+<span class="pc bpc" id="L569" title="1 of 2 branches missed.">        if (m_localeBundle != null)</span>
+<span class="nc" id="L570">	    localeBundle = m_localeBundle;</span>
+	else
+<span class="fc" id="L572">	    localeBundle = m_defaultBundle;</span>
+
+        try
+	{
+<span class="fc" id="L576">	    return localeBundle.getString(key);</span>
+	}
+<span class="nc" id="L578">	catch (MissingResourceException  mr_e)</span>
+	{
+	    try
+	    {
+<span class="nc" id="L582">	        return m_defaultBundle.getString(key);</span>
+	    }
+<span class="nc" id="L584">	    catch (MissingResourceException  mr2_e)</span>
+	    {
+<span class="nc" id="L586">	        System.out.println(&quot;Resource bundle key is undefined:  &quot;</span>
+			+ key);
+<span class="nc" id="L588">		return &quot;&lt;&quot; + key + &quot;&gt;&quot;;</span>
+	    }
+	}
+    }
+
+
+    /**
+    * Loads the locale-specific resource bundle.
+    */
+    public void  initLocaleResourceBundle(
+		    String  language,
+		    String  country,
+		    String  variant
+	    )
+    {
+        Locale  locale;
+
+<span class="nc bnc" id="L605" title="All 2 branches missed.">	if (country == null)</span>
+<span class="nc" id="L606">	    country = &quot;&quot;;</span>
+	
+<span class="nc bnc" id="L608" title="All 2 branches missed.">	if (variant != null)</span>
+<span class="nc" id="L609">	    locale = new Locale(language, country, variant);</span>
+	else
+<span class="nc" id="L611">	    locale = new Locale(language, country);</span>
+
+        try
+	{
+<span class="nc" id="L615">	    m_localeBundle = ResourceBundle.getBundle(RESOURCE_BASENAME,</span>
+	            locale);
+
+<span class="nc" id="L618">	    m_msgFormat.setLocale(locale);</span>
+	}
+<span class="nc" id="L620">	catch (MissingResourceException  mr_e)</span>
+	{
+<span class="nc" id="L622">	    Object  args[] =</span>
+		    {
+			locale.getDisplayName()
+		    };
+
+<span class="nc" id="L627">	    System.out.println(Main.getMessage(&quot;warn_locale_not_found&quot;, args));</span>
+
+<span class="nc" id="L629">	    m_localeBundle = null;</span>
+
+<span class="nc" id="L631">	    m_msgFormat.setLocale(locale);</span>
+<span class="nc" id="L632">	}</span>
+
+<span class="nc" id="L634">	return;</span>
+    }
+
+    
+    
+    /**
+     * Parse any command line arguments.
+     */
+    private void  parseArgs(String  args[])
+    {
+        int		i;
+
+<span class="pc bpc" id="L646" title="1 of 2 branches missed.">	for (i = 0; i &lt; args.length; i++)</span>
+	{
+<span class="nc" id="L648">	    Object  arguments[] =</span>
+		    {
+			args[i]
+		    };
+
+<span class="nc bnc" id="L653" title="All 2 branches missed.">	    if (args[i].equals(&quot;-sysprops&quot;))</span>
+	    {
+	        // Output the system properties -- for debugging
+<span class="nc" id="L656">		Properties  sysprops = System.getProperties();</span>
+<span class="nc" id="L657">		sysprops.list(System.out);</span>
+
+<span class="nc" id="L659">		System.exit(0);</span>
+<span class="nc" id="L660">	    }</span>
+	    else
+	    {
+<span class="nc" id="L663">	        System.out.println(Main.getMessage(&quot;warn_unknown_argument&quot;,</span>
+			arguments));
+	    }
+	}
+<span class="fc" id="L667">    }</span>
+    
+    
+    /**
+    * Main program entry point
+    *
+    * @param args the command line arguments
+    */
+    public static void main(String args[])
+    {
+        // Output the copyright notice
+<span class="fc" id="L678">        System.out.println(&quot;&quot;);</span>
+<span class="fc" id="L679">        System.out.println(&quot;jQuizShow &quot; + JQS_VERSION + &quot;, Copyright (C) 2001-2007 Steven D. Chen&quot;);</span>
+<span class="fc" id="L680">        System.out.println(&quot;jQuizShow comes with ABSOLUTELY NO WARRANTY.  This is free software,&quot;);</span>
+<span class="fc" id="L681">        System.out.println(&quot;and you are welcome to redistribute it under certain conditions.&quot;);</span>
+<span class="fc" id="L682">        System.out.println(&quot;See the LICENSE.txt file for details.&quot;);</span>
+<span class="fc" id="L683">        System.out.println(&quot;&quot;);</span>
+
+	// Get a reference to the singleton instance of class Main.
+<span class="fc" id="L686">        m_quizShow = Main.getInstance();</span>
+
+	// Parse any command line arguments
+<span class="fc" id="L689">        m_quizShow.parseArgs(args);</span>
+
+	// Read the game configuration file
+<span class="fc" id="L692">        m_quizShow.loadConfig();</span>
+
+        // Modify the standard output stream to redirect stdout messages
+        // to the MessageWindow.
+<span class="fc" id="L696">        PrintStream  optPrint = new PrintStream(System.out)</span>
+<span class="fc" id="L697">        {</span>
+<span class="fc" id="L698">            boolean firstPass = true;</span>
+
+            PrintStream  fileOut;
+            
+            public void println(String s)
+            {
+	        // This is used to ensure msg is appended in the
+		// AWT event dispatching thread since the msg window
+		// is a Swing component.
+<span class="fc" id="L707">		final String  finalStr = new String(s);</span>
+
+<span class="fc" id="L709">	        Runnable  doAppendMsg = new Runnable()</span>
+<span class="fc" id="L710">		{</span>
+		    public void run()
+		    {
+<span class="fc" id="L713">			Main.appendMessage(finalStr);</span>
+<span class="fc" id="L714">		    }</span>
+		};
+
+<span class="fc" id="L717">		SwingUtilities.invokeLater(doAppendMsg);</span>
+
+<span class="pc bpc" id="L719" title="1 of 2 branches missed.">                if ((m_debugMode &amp; GameConfig.DEBUG_MSGS_TO_STDOUT) != 0)</span>
+		{
+<span class="nc" id="L721">                    super.println(s);</span>
+		}
+
+<span class="pc bpc" id="L724" title="1 of 2 branches missed.">                if ((m_debugMode &amp; GameConfig.DEBUG_MSGS_TO_LOG) != 0)</span>
+		{
+<span class="nc bnc" id="L726" title="All 2 branches missed.">                    if (firstPass)</span>
+                    {
+                        try
+                        {
+<span class="nc" id="L730">                            File outputFile = new File(JQS_LOG_FILE);</span>
+
+<span class="nc" id="L732">                            fileOut = new PrintStream(new FileOutputStream(outputFile));</span>
+                        }
+<span class="nc" id="L734">                        catch (FileNotFoundException  fnf_e)</span>
+                        {
+<span class="nc" id="L736">                            System.out.println(&quot;ERROR -- Failed opening log file:  &quot;</span>
+                                    + JQS_LOG_FILE);
+<span class="nc" id="L738">                        }</span>
+
+<span class="nc" id="L740">                        firstPass = false;</span>
+                    }
+
+<span class="nc" id="L743">                    fileOut.println(s);</span>
+                }
+<span class="fc" id="L745">            }</span>
+        };
+
+<span class="fc" id="L748">        System.setOut(optPrint);</span>
+
+	// Examine the contents of the &quot;CONTRIB_DIR&quot; directory.
+<span class="fc" id="L751">	ContribManager  contribMgr = ContribManager.getInstance();</span>
+
+<span class="fc" id="L753">	contribMgr.initialize(CONTRIB_DIR);</span>
+
+	// Initialize the game UI
+<span class="fc" id="L756">        m_quizShow.initJQS();</span>
+
+        // Start with the last &quot;style&quot; used, else default to the Classic UI
+<span class="fc" id="L759">        MainClassicUI.initializeClass();</span>
+<span class="fc" id="L760">        m_quizShow.m_mainSubset = MainSubset.getInstance();</span>
+
+<span class="fc" id="L762">        m_quizShow.setTitleString(&quot;Classic Game&quot;);</span>
+        
+        // Initialize the game system.
+<span class="fc" id="L765">        m_quizShow.m_mainSubset.initialize();</span>
+
+	// Set up the Main instance to be properly &quot;shown&quot; from
+	// the event dispatch thread.
+	//
+	// Apparently, most examples (even the Java Tech Tips and
+	// tutorials) were wrong in executing Frame.show() from
+	// the main thread.  See the December 8, 2003 Java Tech
+	// Tips from http://java.sun.com for further information.
+<span class="fc" id="L774">	Runnable  runJQuizShow = new RunJQuizShow(m_quizShow);</span>
+<span class="fc" id="L775">	EventQueue.invokeLater(runJQuizShow);</span>
+<span class="fc" id="L776">    }</span>
+
+    // Runnable class that is used to ensure that the JFrame
+    // is rendered in the event dispatch thread.
+    private static class RunJQuizShow
+	implements Runnable
+    {
+	final Main    m_main;
+	
+	public RunJQuizShow(Main  main)
+<span class="fc" id="L786">	{</span>
+<span class="fc" id="L787">	    m_main = main;</span>
+<span class="fc" id="L788">	}</span>
+
+	public void run()
+	{
+	    // Display the main screen
+<span class="fc" id="L793">	    m_main.setVisible(true);</span>
+<span class="fc" id="L794">	}</span>
+    }
+
+    private JPanel  southPanel;
+    private JLabel  statusLabel;
+    private JLabel  versionLabel;
+    
+    private static Main  m_quizShow;
+
+    private static MainSubset  m_mainSubset;
+    
+    private static JDesktopPane  m_desktopPane;
+    
+    private static MessageWindow   m_messageWindow;
+
+    private static GameInputEvent  m_gameInputEvent;
+    
+<span class="fc" id="L811">    private final String    m_configFile = &quot;config.ini&quot;;</span>
+    
+    private static QuizShowAboutDialog  m_aboutDialog;
+    
+    private SoundCtrlDialog  m_soundCtrlDialog;
+
+    private ConnectionDialog  m_connectionDialog;
+
+    private static GameConfig      m_gameConfig;
+
+    private JInternalFrame  m_lifelineTimerFrame;
+    
+    private SoundPlayer  m_soundPlayer;
+    
+    private PacketProcessor  m_packetProcessor;
+
+    private EventPacket  m_eventPacket;
+    
+    private JInternalFrame  m_helpFrame;
+    private JTextArea  m_helpPane;
+    private static JFileChooser  m_fileChooser;
+    private static RandomSelector  m_randomSelector;
+
+    private static ResourceBundle  m_localeBundle;
+    private static ResourceBundle  m_defaultBundle;
+
+    private static MessageFormat  m_msgFormat;
+
+    private static int  m_debugMode;
+    
+<span class="fc" id="L841">    private static int  m_frameOffset = 0;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

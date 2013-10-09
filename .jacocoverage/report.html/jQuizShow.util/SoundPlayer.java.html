@@ -1,0 +1,809 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SoundPlayer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.util</a> &gt; <span class="el_source">SoundPlayer.java</span></div><h1>SoundPlayer.java</h1><pre class="source lang-java linenums">/*
+ * SoundPlayer.java
+ *
+ * Created on May 19, 2001, 4:36 PM
+ *
+ * $Id: SoundPlayer.java,v 1.1 2004/04/02 06:02:00 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: SoundPlayer.java,v $
+ *    Revision 1.1  2004/04/02 06:02:00  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.6  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.5  2002/06/24 04:54:01  sdchen
+ *    Added code to override the sound_BaseDirectory property with the property
+ *    specified in the sound.ini file (if read).  If option not specified, the
+ *    base directory is &quot;&quot;.
+ *
+ *    Revision 1.4  2002/06/23 04:14:57  sdchen
+ *    Added code to support JAR-specific sound file formats.
+ *
+ *    Revision 1.3  2002/06/06 03:24:40  sdchen
+ *    Added code to close the AudioStream after testing and loading the clip.
+ *
+ *    Revision 1.2  2002/05/28 00:21:28  sdchen
+ *    Added code to allow the user to specify a JAR file containing a sound.ini
+ *    and associated sound files.
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:32  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.util;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 1.0
+ */
+
+
+import java.io.*;
+import java.util.*;
+import java.util.jar.*;
+import java.lang.reflect.*;
+import javax.sound.sampled.*;
+
+import jQuizShow.*;
+
+public class SoundPlayer
+        implements LineListener
+{
+    /* Sound channels */
+    public static final int FOREGROUND_CHANNEL = 0;
+    public static final int BACKGROUND_CHANNEL = 1;
+    public static final int EFFECTS_CHANNEL = 2;
+    public static final int ALL_CHANNELS = 3;
+
+    private static final String  SOUND_CFG_FILE = &quot;sound.ini&quot;;
+    private static final String  DECODER_CLASS = &quot;FileDecoder&quot;;
+
+    
+    /** Creates/gets the SoundPlayer singleton instance.
+     */
+    public static SoundPlayer getInstance()
+    {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (m_soundPlayerSingleton == null)</span>
+<span class="fc" id="L96">            m_soundPlayerSingleton = new SoundPlayer();</span>
+        
+<span class="fc" id="L98">        return m_soundPlayerSingleton;</span>
+    }
+    
+    /** Creates the singleton of this class.
+     */
+    private SoundPlayer()
+<span class="fc" id="L104">    {</span>
+	String  jarFilename;
+
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if (AudioSystem.getMixer(null) == null)</span>
+	{
+<span class="nc" id="L109">            System.out.println(Main.getMessage(&quot;warn_sound_unavailable&quot;));</span>
+<span class="nc" id="L110">	    m_soundAvailable = false;</span>
+	}
+	else
+<span class="fc" id="L113">	    m_soundAvailable = true;</span>
+
+<span class="fc" id="L115">        m_playList = new LinkedList();</span>
+        
+        /* Get the names of the audio files */
+<span class="fc" id="L118">        m_audioFiles = new String[SoundIDEnum.length()];</span>
+
+<span class="fc" id="L120">        GameConfig  gameConfig = GameConfig.getInstance();</span>
+
+<span class="fc" id="L122">        m_debugMode = gameConfig.getIntConfig(&quot;debugMode&quot;, 0);</span>
+
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">	if (gameConfig.getIntConfig(&quot;soundEnabled&quot;, 1) == 0)</span>
+<span class="nc" id="L125">	    m_soundAvailable = false;</span>
+        
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">	if (m_soundAvailable == false)</span>
+<span class="nc" id="L128">	    return;</span>
+
+<span class="fc" id="L130">        m_baseDir = gameConfig.getConfig(&quot;sound_BaseDirectory&quot;, &quot;&quot;);</span>
+<span class="fc" id="L131">        m_baseDir = m_baseDir.replace('/', File.separatorChar);</span>
+
+<span class="fc" id="L133">        jarFilename = gameConfig.getConfig(&quot;sound_JarFile&quot;, &quot;&quot;);</span>
+<span class="fc" id="L134">        jarFilename = jarFilename.replace('/', File.separatorChar);</span>
+
+<span class="fc" id="L136">	File  jarFile = new File(jarFilename);</span>
+        
+<span class="pc bpc" id="L138" title="2 of 4 branches missed.">	if (jarFilename.endsWith(&quot;.jar&quot;) &amp;&amp; jarFile.canRead())</span>
+	{
+	    // JAR file specified.  Open it.
+	    {
+<span class="nc" id="L142">		Object  args[] =</span>
+			{
+			    jarFilename
+			};
+
+<span class="nc" id="L147">		System.out.println(Main.getMessage(&quot;msg_using_add_on_sound&quot;,</span>
+			args));
+	    }
+
+            try
+            {
+<span class="nc" id="L153">		m_jarFile = new JarFile(jarFilename);</span>
+            }
+<span class="nc" id="L155">            catch (IOException  e)</span>
+            {
+<span class="nc" id="L157">		Object  args[] =</span>
+			{
+			    jarFilename
+			};
+
+<span class="nc" id="L162">                m_jarFile = null;</span>
+                
+<span class="nc" id="L164">		System.out.println(Main.getMessage(&quot;err_reading_sound_jar&quot;,</span>
+			args));
+
+<span class="nc" id="L167">		m_soundAvailable = false;</span>
+<span class="nc" id="L168">		return;</span>
+<span class="nc" id="L169">            }</span>
+
+	    // Read the SOUND_CFG_FILE file in the JAR.  It is an error
+	    // if it is missing.
+	    String  filepath;
+
+	    try
+	    {
+<span class="nc" id="L177">		m_jarSoundConfig = new Properties();</span>
+
+<span class="nc" id="L179">                filepath = FileUtils.searchForFile(SOUND_CFG_FILE,</span>
+			m_jarFile);
+		
+<span class="nc" id="L182">		InputStream  fin = FileUtils.openFile(filepath, m_jarFile);</span>
+
+<span class="nc" id="L184">		m_jarSoundConfig.load(fin);</span>
+
+<span class="nc" id="L186">		fin.close();</span>
+
+		// Get the sound_BaseDirectory from the JAR's sound.ini.
+<span class="nc" id="L189">		m_baseDir = m_jarSoundConfig.getProperty(&quot;sound_BaseDirectory&quot;, &quot;&quot;);</span>
+<span class="nc" id="L190">		m_baseDir.trim();</span>
+<span class="nc" id="L191">		m_baseDir = m_baseDir.replace('/', File.separatorChar);</span>
+	    }
+<span class="nc" id="L193">	    catch (FileNotFoundException  fnf_e)</span>
+	    {
+<span class="nc" id="L195">		Object  args[] =</span>
+			{
+			    SOUND_CFG_FILE,
+			    m_jarFile.getName()
+			};
+
+<span class="nc" id="L201">		System.out.println(Main.getMessage(&quot;err_missing_sound_cfg&quot;,</span>
+			args));
+
+<span class="nc" id="L204">		m_soundAvailable = false;</span>
+<span class="nc" id="L205">		return;</span>
+	    }
+<span class="nc" id="L207">	    catch (IOException  io_e)</span>
+	    {
+<span class="nc" id="L209">		Object  args[] =</span>
+			{
+			    SOUND_CFG_FILE,
+			    m_jarFile.getName()
+			};
+
+<span class="nc" id="L215">		System.out.println(Main.getMessage(&quot;err_reading_sound_cfg&quot;,</span>
+			args));
+
+<span class="nc" id="L218">		m_soundAvailable = false;</span>
+<span class="nc" id="L219">		return;</span>
+<span class="nc" id="L220">	    }</span>
+
+	    /* Check if there is a SoundDecoder class in the JAR.
+	     * If there is, load it so it can be used to decode
+	     * the sound/music files.
+	     */
+	    try
+	    {
+<span class="nc" id="L228">		filepath = FileUtils.searchForFile(DECODER_CLASS + &quot;.class&quot;,</span>
+			m_jarFile);
+
+<span class="nc" id="L231">		ExternClassLoader  eClassLoader = new ExternClassLoader(null,</span>
+		        m_jarFile);
+
+                try
+		{
+<span class="nc" id="L236">		    Class  decoder = eClassLoader.loadClass(DECODER_CLASS);</span>
+		    
+<span class="nc" id="L238">		    Object  obj = decoder.newInstance();</span>
+
+<span class="nc" id="L240">		    m_decoder = (DecryptInputStream) obj;</span>
+		}
+<span class="nc" id="L242">		catch (ClassNotFoundException  cnf_e)</span>
+		{
+<span class="nc" id="L244">		    System.out.println(Main.getMessage(&quot;err_invalid_decoder_class&quot;));</span>
+<span class="nc" id="L245">		    System.out.println(cnf_e.getLocalizedMessage());</span>
+<span class="nc" id="L246">		    m_soundAvailable = false;</span>
+<span class="nc" id="L247">		    return;</span>
+		}
+<span class="nc" id="L249">		catch (InstantiationException  i_e)</span>
+		{
+<span class="nc" id="L251">		    System.out.println(Main.getMessage(&quot;err_inst_decoder_class&quot;));</span>
+<span class="nc" id="L252">		    System.out.println(i_e.getLocalizedMessage());</span>
+<span class="nc" id="L253">		    m_soundAvailable = false;</span>
+<span class="nc" id="L254">		    return;</span>
+		}
+<span class="nc" id="L256">		catch (IllegalAccessException  ia_e)</span>
+		{
+<span class="nc" id="L258">		    System.out.println(Main.getMessage(&quot;err_access_decoder_class&quot;));</span>
+<span class="nc" id="L259">		    System.out.println(ia_e.getLocalizedMessage());</span>
+<span class="nc" id="L260">		    m_soundAvailable = false;</span>
+<span class="nc" id="L261">		    return;</span>
+		}
+<span class="nc" id="L263">		catch (ClassCastException  cc_e)</span>
+		{
+<span class="nc" id="L265">		    System.out.println(Main.getMessage(&quot;err_cast_decoder_class&quot;));</span>
+<span class="nc" id="L266">		    System.out.println(cc_e.getLocalizedMessage());</span>
+<span class="nc" id="L267">		    m_soundAvailable = false;</span>
+<span class="nc" id="L268">		    return;</span>
+<span class="nc" id="L269">		}</span>
+	    }
+<span class="nc" id="L271">	    catch (FileNotFoundException  fnf_e)</span>
+	    {
+	        /* Okay if it does not exist. */
+<span class="nc" id="L274">	    }</span>
+	}
+
+<span class="pc bpc" id="L277" title="2 of 4 branches missed.">	if (m_baseDir.length() &gt; 0 &amp;&amp;</span>
+		m_baseDir.endsWith(File.separator) == false)
+	{
+<span class="fc" id="L280">            m_baseDir = new String(m_baseDir + File.separator);</span>
+	}
+
+        /* Attempt to load each of the specified audio files.
+	 * Disable those that are null or invalid.
+	 */
+<span class="fc bfc" id="L286" title="All 2 branches covered.">        for (Iterator  iter = SoundIDEnum.ANSWER_CORRECT.iterator(); iter.hasNext(); /**/ )</span>
+        {
+            String  filename;
+	    
+<span class="fc" id="L290">            SoundIDEnum   id = (SoundIDEnum) iter.next();</span>
+            
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">	    if (m_jarSoundConfig != null)</span>
+	    {
+<span class="nc" id="L294">		filename = m_jarSoundConfig.getProperty(id.toString());</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (filename != null)</span>
+<span class="nc" id="L296">                    filename.trim();</span>
+	    }
+	    else
+<span class="fc" id="L299">		filename = gameConfig.getConfig(id.toString());</span>
+            
+<span class="fc bfc" id="L301" title="All 4 branches covered.">            if (filename == null || filename.length() == 0)</span>
+<span class="fc" id="L302">                continue;</span>
+            
+            String  filepath;
+            
+            try
+            {
+<span class="fc" id="L308">                filepath = FileUtils.searchForFile(m_baseDir + filename,</span>
+			m_jarFile);
+
+                try
+                {
+<span class="fc" id="L313">                    AudioInputStream  audioStream = null;</span>
+
+<span class="fc" id="L315">		    BufferedInputStream  fin = new BufferedInputStream(</span>
+			    FileUtils.openFile(filepath, m_jarFile));
+
+<span class="pc bpc" id="L318" title="1 of 2 branches missed.">		    if (m_decoder != null)</span>
+		    {
+		        /* Decoder class specified.  Use it to decode the
+			 * InputStream.
+			 */
+<span class="nc bnc" id="L323" title="All 2 branches missed.">			if ((m_debugMode &amp; GameConfig.DEBUG_SOUND) != 0)</span>
+<span class="nc" id="L324">			    System.out.println(&quot;Decoding &quot; + filepath);</span>
+
+		        try
+			{
+<span class="nc" id="L328">			    m_decoder.setInputStream(fin);</span>
+
+<span class="nc" id="L330">			    audioStream = AudioSystem.getAudioInputStream(</span>
+			    	    m_decoder);
+			}
+<span class="nc" id="L333">			catch (Throwable  e)</span>
+			{
+<span class="nc" id="L335">			    Object  args[] =</span>
+				    {
+					e.getLocalizedMessage()
+				    };
+<span class="nc" id="L339">			    System.out.println(Main.getMessage(&quot;err_decoding&quot;,</span>
+				    args));
+<span class="nc" id="L341">			}</span>
+		    }
+		    else
+		    {
+		        /* Load the specified audio file */
+<span class="fc" id="L346">			audioStream = AudioSystem.getAudioInputStream(fin);</span>
+		    }
+
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">                    if (audioStream != null)</span>
+		    {
+<span class="fc" id="L351">			m_audioFiles[id.value()] = filepath;</span>
+
+<span class="fc" id="L353">			audioStream.close();</span>
+		    }
+                }
+<span class="nc" id="L356">                catch (UnsupportedAudioFileException  e)</span>
+                {
+<span class="nc" id="L358">		    Object  args[] =</span>
+			    {
+				filename
+			    };
+
+<span class="nc" id="L363">                    System.out.println(Main.getMessage(&quot;err_sound_fmt&quot;, args));</span>
+                }
+<span class="nc" id="L365">                catch (IOException  e)</span>
+                {
+<span class="nc" id="L367">		    Object  args[] =</span>
+			    {
+				filename
+			    };
+
+<span class="nc" id="L372">                    System.out.println(Main.getMessage(&quot;err_sound_io&quot;, args));</span>
+<span class="nc" id="L373">                    System.out.println(e.getLocalizedMessage());</span>
+<span class="pc" id="L374">                }</span>
+            }
+<span class="nc" id="L376">            catch (FileNotFoundException  e)</span>
+            {
+<span class="nc" id="L378">		Object  args[] =</span>
+			{
+			    id.toString()
+			};
+
+<span class="nc" id="L383">                System.out.println(Main.getMessage(&quot;warn_sound_missing&quot;, args));</span>
+<span class="fc" id="L384">            }</span>
+<span class="fc" id="L385">        }</span>
+        
+<span class="fc" id="L387">        m_currentClip = new Clip[m_channels.length];</span>
+<span class="fc" id="L388">        m_loop = new boolean[m_channels.length];</span>
+        
+        /* Initialize the gain levels */
+
+<span class="fc" id="L392">        m_gainLevels = new int[m_channels.length];</span>
+        
+<span class="fc bfc" id="L394" title="All 2 branches covered.">        for (int  i = 0; i &lt; m_gainLevels.length; i++)</span>
+<span class="fc" id="L395">            m_gainLevels[i] = 70;           // Default gain level</span>
+
+        int  gain;
+        
+<span class="fc" id="L399">        gain = gameConfig.getIntConfig(&quot;volumeForeground&quot;, 70);</span>
+<span class="pc bpc" id="L400" title="2 of 4 branches missed.">        gain = gain &lt; 0 ? 0 : (gain &gt; 100 ? 100 : gain);</span>
+<span class="fc" id="L401">        m_gainLevels[FOREGROUND_CHANNEL] = gain;</span>
+<span class="fc" id="L402">        m_gainLevels[EFFECTS_CHANNEL] = gain;</span>
+        
+<span class="fc" id="L404">        gain = gameConfig.getIntConfig(&quot;volumeBackground&quot;, 70);</span>
+<span class="pc bpc" id="L405" title="2 of 4 branches missed.">        gain = gain &lt; 0 ? 0 : (gain &gt; 100 ? 100 : gain);</span>
+<span class="fc" id="L406">        m_gainLevels[BACKGROUND_CHANNEL] = gain;</span>
+<span class="fc" id="L407">    }</span>
+
+    /** Load a sound into the jukebox */
+    public void  loadSound(SoundIDEnum  soundId, int  type, boolean  loop)
+    {
+<span class="nc bnc" id="L412" title="All 6 branches missed.">        if (m_soundAvailable == false || type &lt; 0 || type &gt;= m_currentClip.length)</span>
+<span class="nc" id="L413">            return;</span>
+
+<span class="nc bnc" id="L415" title="All 2 branches missed.">        if (m_currentClip[type] != null)</span>
+        {
+<span class="nc" id="L417">            stop(type);</span>
+<span class="nc" id="L418">            m_currentClip[type] = null;</span>
+        }
+        
+<span class="nc bnc" id="L421" title="All 2 branches missed.">        if (m_audioFiles[soundId.value()] == null)</span>
+        {
+<span class="nc" id="L423">            return;</span>
+        }
+
+<span class="nc" id="L426">        String  filepath = m_audioFiles[soundId.value()];</span>
+        
+        try
+        {
+<span class="nc" id="L430">	    BufferedInputStream  fin = new BufferedInputStream(</span>
+	    	    FileUtils.openFile(filepath, m_jarFile));
+
+<span class="nc bnc" id="L433" title="All 2 branches missed.">	    if (m_decoder != null)</span>
+	    {
+		/* Decoder class specified.  Use it to decode the
+		 * InputStream.
+		 */
+<span class="nc" id="L438">		m_decoder.setInputStream(fin);</span>
+
+<span class="nc" id="L440">		m_audioStream = AudioSystem.getAudioInputStream(m_decoder);</span>
+	    }
+	    else
+	    {
+		/* Load the specified audio file */
+<span class="nc" id="L445">		m_audioStream = AudioSystem.getAudioInputStream(fin);</span>
+	    }
+        }
+<span class="nc" id="L448">        catch (UnsupportedAudioFileException  e)</span>
+        {
+<span class="nc" id="L450">	    Object  args[] =</span>
+		    {
+			filepath
+		    };
+
+<span class="nc" id="L455">            System.out.println(Main.getMessage(&quot;err_sound_fmt&quot;, args));</span>
+<span class="nc" id="L456">            return;</span>
+        }
+<span class="nc" id="L458">        catch (IOException  e)</span>
+        {
+<span class="nc" id="L460">	    Object  args[] =</span>
+		    {
+			filepath
+		    };
+
+<span class="nc" id="L465">            System.out.println(Main.getMessage(&quot;err_sound_io&quot;, args));</span>
+<span class="nc" id="L466">            return;</span>
+<span class="nc" id="L467">        }</span>
+
+<span class="nc" id="L469">        AudioFormat  format = m_audioStream.getFormat();</span>
+
+        try
+        {
+<span class="nc" id="L473">            DataLine.Info info = new DataLine.Info(</span>
+                    Clip.class, m_audioStream.getFormat(), 
+                    ((int) m_audioStream.getFrameLength() *
+                      format.getFrameSize()));
+
+<span class="nc" id="L478">            m_currentClip[type] = (Clip) AudioSystem.getLine(info);</span>
+<span class="nc" id="L479">            m_currentClip[type].addLineListener(this);</span>
+
+<span class="nc" id="L481">            m_currentClip[type].open(m_audioStream);</span>
+
+<span class="nc" id="L483">            m_loop[type] = loop;</span>
+            
+<span class="nc" id="L485">            setClipGain(type, m_gainLevels[type]);</span>
+        }
+<span class="nc" id="L487">        catch (LineUnavailableException  e)</span>
+        {
+<span class="nc" id="L489">	    Object  args[] =</span>
+		    {
+			filepath,
+			soundChannels[type]
+		    };
+
+<span class="nc" id="L495">            System.out.println(Main.getMessage(&quot;err_line_unavailable&quot;, args));</span>
+<span class="nc" id="L496">            m_currentClip[type] = null;</span>
+            
+<span class="nc" id="L498">            stop(ALL_CHANNELS);</span>
+            
+<span class="nc" id="L500">            m_soundAvailable = false;</span>
+<span class="nc" id="L501">            return;</span>
+        }
+<span class="nc" id="L503">        catch (IOException  e)</span>
+        {
+<span class="nc" id="L505">	    Object  args[] =</span>
+		    {
+			filepath
+		    };
+
+<span class="nc" id="L510">            System.out.println(Main.getMessage(&quot;err_sound_io&quot;, args));</span>
+<span class="nc" id="L511">            m_currentClip[type] = null;</span>
+<span class="nc" id="L512">        }</span>
+
+	/* Close the audio stream since it was loaded when the Clip was
+	 * opened.
+	 */
+        try
+	{
+<span class="nc" id="L519">	    m_audioStream.close();</span>
+	}
+<span class="nc" id="L521">	catch (IOException  ie)</span>
+	{
+<span class="nc" id="L523">	    Object  args[] =</span>
+		    {
+			filepath
+		    };
+
+<span class="nc" id="L528">            System.out.println(Main.getMessage(&quot;err_closing_stream&quot;, args));</span>
+<span class="nc" id="L529">	    System.out.println(ie.getLocalizedMessage());</span>
+<span class="nc" id="L530">	}</span>
+<span class="nc" id="L531">    }</span>
+
+    /**
+     * Load a playlist into the jukebox.  This will play the specified
+     * SoundIDEnum sequence, one after the other.
+     */
+    public void  loadPlayList(SoundIDEnum[]  soundIDs)
+    {
+<span class="nc bnc" id="L539" title="All 4 branches missed.">        if (m_soundAvailable == false || soundIDs.length == 0)</span>
+<span class="nc" id="L540">            return;</span>
+
+<span class="nc bnc" id="L542" title="All 2 branches missed.">        if (m_currentClip[BACKGROUND_CHANNEL] != null)</span>
+        {
+<span class="nc" id="L544">            stop(BACKGROUND_CHANNEL);</span>
+<span class="nc" id="L545">            m_currentClip[BACKGROUND_CHANNEL] = null;</span>
+        }
+        
+<span class="nc" id="L548">        m_playList.clear();</span>
+        
+<span class="nc bnc" id="L550" title="All 2 branches missed.">        for (int  idx = 0; idx &lt; soundIDs.length; idx++)</span>
+        {
+<span class="nc" id="L552">            m_playList.add(soundIDs[idx]);</span>
+        }
+        
+<span class="nc" id="L555">        m_iter = m_playList.iterator();</span>
+<span class="nc" id="L556">        loadSound((SoundIDEnum) m_iter.next(), BACKGROUND_CHANNEL, false);</span>
+<span class="nc" id="L557">    }</span>
+    
+    public void  start(int  type)
+    {
+<span class="nc bnc" id="L561" title="All 8 branches missed.">        if (m_soundAvailable == false || type &lt; 0 ||</span>
+                (type &gt;= m_currentClip.length &amp;&amp; type != ALL_CHANNELS))
+<span class="nc" id="L563">            return;</span>
+
+<span class="nc" id="L565">        int  first = 0;</span>
+<span class="nc" id="L566">        int  last = m_currentClip.length;</span>
+        
+<span class="nc bnc" id="L568" title="All 2 branches missed.">        if (type != ALL_CHANNELS)</span>
+        {
+<span class="nc" id="L570">            first = type;</span>
+<span class="nc" id="L571">            last = type + 1;</span>
+        }
+
+<span class="nc bnc" id="L574" title="All 2 branches missed.">        for (int  i = first; i &lt; last; i++)</span>
+        {
+<span class="nc bnc" id="L576" title="All 4 branches missed.">            if (m_currentClip[i] != null &amp;&amp; m_currentClip[i].isRunning() == false)</span>
+            {
+<span class="nc" id="L578">                m_currentClip[i].setFramePosition(0);</span>
+            
+<span class="nc bnc" id="L580" title="All 2 branches missed.">                if (m_loop[i])</span>
+<span class="nc" id="L581">                    m_currentClip[type].loop(Clip.LOOP_CONTINUOUSLY);</span>
+                
+<span class="nc" id="L583">                m_currentClip[i].start();</span>
+            }
+        }
+
+<span class="nc" id="L587">        return;</span>
+    }
+
+    public void stop(int  type)
+    {
+<span class="nc bnc" id="L592" title="All 8 branches missed.">        if (m_soundAvailable == false || type &lt; 0 ||</span>
+                (type &gt;= m_currentClip.length &amp;&amp; type != ALL_CHANNELS))
+<span class="nc" id="L594">            return;</span>
+
+<span class="nc" id="L596">        int  first = 0;</span>
+<span class="nc" id="L597">        int  last = m_currentClip.length;</span>
+        
+<span class="nc bnc" id="L599" title="All 2 branches missed.">        if (type != ALL_CHANNELS)</span>
+        {
+<span class="nc" id="L601">            first = type;</span>
+<span class="nc" id="L602">            last = type + 1;</span>
+        }
+
+<span class="nc bnc" id="L605" title="All 2 branches missed.">        for (int  i = first; i &lt; last; i++)</span>
+        {
+<span class="nc bnc" id="L607" title="All 2 branches missed.">            if (m_currentClip[i] != null)</span>
+            {
+                // If this is the background channel and the playlist is not
+                // empty, clear the playlist.
+<span class="nc bnc" id="L611" title="All 4 branches missed.">                if (i == BACKGROUND_CHANNEL &amp;&amp; m_playList.isEmpty() == false)</span>
+<span class="nc" id="L612">                    m_playList.clear();</span>
+            
+                // Stop the clip on this channel
+<span class="nc" id="L615">                m_currentClip[i].stop();</span>
+            }
+        }
+
+<span class="nc" id="L619">        return;</span>
+    }
+
+    public boolean getMute()
+    {
+<span class="nc" id="L624">        return m_muted;</span>
+    }
+
+    public void setMute(boolean  mute)
+    {
+<span class="nc bnc" id="L629" title="All 2 branches missed.">        if (m_soundAvailable == false)</span>
+<span class="nc" id="L630">            return;</span>
+
+<span class="nc" id="L632">        m_muted = mute;</span>
+
+        /* Set the levels -- if muted, setClipGain() will take care of it. */
+<span class="nc bnc" id="L635" title="All 2 branches missed.">        for (int  i = 0; i &lt; m_currentClip.length; i++)</span>
+<span class="nc" id="L636">            setClipGain(i, m_gainLevels[i]);</span>
+
+<span class="nc" id="L638">        return;</span>
+    }
+
+    public boolean  isPlaying(int  type)
+    {
+<span class="nc bnc" id="L643" title="All 6 branches missed.">        if (m_soundAvailable == false || type &lt; 0 || type &gt;= m_currentClip.length)</span>
+<span class="nc" id="L644">            return false;</span>
+
+<span class="nc bnc" id="L646" title="All 2 branches missed.">        if (m_currentClip[type] != null)</span>
+<span class="nc" id="L647">            return m_currentClip[type].isRunning();</span>
+        else
+<span class="nc" id="L649">            return false;</span>
+    }
+
+    
+    public int  getGain(int  type)
+    {
+        // Sanity checks
+<span class="nc bnc" id="L656" title="All 6 branches missed.">        if (m_soundAvailable == false || type &lt; 0 || type &gt;= m_gainLevels.length)</span>
+<span class="nc" id="L657">            return 0;</span>
+
+<span class="nc" id="L659">        return m_gainLevels[type];</span>
+    }
+    
+    
+    public void  setGain(int  type, int  level)
+    {
+<span class="nc bnc" id="L665" title="All 8 branches missed.">        if (m_soundAvailable == false || type &lt; 0 ||</span>
+                (type &gt;= m_currentClip.length &amp;&amp; type != ALL_CHANNELS))
+<span class="nc" id="L667">            return;</span>
+        
+<span class="nc bnc" id="L669" title="All 2 branches missed.">        if (level &lt; 0)</span>
+<span class="nc" id="L670">            level = 0;</span>
+<span class="nc bnc" id="L671" title="All 2 branches missed.">        else if (level &gt; 100)</span>
+<span class="nc" id="L672">            level = 100;</span>
+        
+<span class="nc" id="L674">        int  first = 0;</span>
+<span class="nc" id="L675">        int  last = m_currentClip.length;</span>
+
+<span class="nc bnc" id="L677" title="All 2 branches missed.">        for (int  i = 0; i &lt; m_currentClip.length; i++)</span>
+        {
+<span class="nc" id="L679">            m_gainLevels[type] = level;</span>
+
+<span class="nc" id="L681">            setClipGain(type, m_gainLevels[type]);</span>
+        }
+<span class="nc" id="L683">    }</span>
+
+    
+    private void  setClipGain(int  type, int  level)
+    {
+        // Sanity checks
+<span class="nc bnc" id="L689" title="All 8 branches missed.">        if (m_soundAvailable == false || type &lt; 0 ||</span>
+                (type &gt;= m_currentClip.length &amp;&amp; type != ALL_CHANNELS))
+<span class="nc" id="L691">            return;</span>
+        
+<span class="nc bnc" id="L693" title="All 4 branches missed.">        if (level &lt; 0 || m_muted)</span>
+<span class="nc" id="L694">            level = 0;</span>
+<span class="nc bnc" id="L695" title="All 2 branches missed.">        else if (level &gt; 100)</span>
+<span class="nc" id="L696">            level = 100;</span>
+
+<span class="nc" id="L698">        double value = level / 100.0;</span>
+
+<span class="nc" id="L700">        int  first = 0;</span>
+<span class="nc" id="L701">        int  last = m_currentClip.length;</span>
+        
+<span class="nc bnc" id="L703" title="All 2 branches missed.">        if (type != ALL_CHANNELS)</span>
+        {
+<span class="nc" id="L705">            first = type;</span>
+<span class="nc" id="L706">            last = type + 1;</span>
+        }
+        
+<span class="nc bnc" id="L709" title="All 2 branches missed.">        for (int  i = first; i &lt; last; i++)</span>
+        {
+<span class="nc bnc" id="L711" title="All 2 branches missed.">            if (m_currentClip[i] == null)</span>
+<span class="nc" id="L712">                continue;</span>
+            
+            try
+            {
+<span class="nc" id="L716">                FloatControl gainControl = </span>
+                        (FloatControl) m_currentClip[i].getControl(FloatControl.Type.MASTER_GAIN);
+<span class="nc bnc" id="L718" title="All 2 branches missed.">                float dB = (float) </span>
+                    (Math.log(value == 0.0 ? 0.0001 : value) / Math.log(10.0) * 20.0);
+
+<span class="nc" id="L721">                gainControl.setValue(dB);</span>
+            }
+<span class="nc" id="L723">            catch (Exception ex)</span>
+            {
+<span class="nc" id="L725">                ex.printStackTrace();</span>
+<span class="nc" id="L726">            }</span>
+        }
+<span class="nc" id="L728">    }</span>
+    
+    
+    public void update(javax.sound.sampled.LineEvent lineEvent)
+    {
+<span class="nc bnc" id="L733" title="All 2 branches missed.">        if ((m_debugMode &amp; GameConfig.DEBUG_SOUND) != 0)</span>
+<span class="nc" id="L734">            System.out.println(&quot;LineEvent:  &quot; + lineEvent.toString());</span>
+        
+        // Check if a playlist sample has ended.  If there are more samples
+        // in the playlist, start the next one playing.
+<span class="nc bnc" id="L738" title="All 6 branches missed.">        if (lineEvent.getType() == LineEvent.Type.STOP &amp;&amp;</span>
+                lineEvent.getLine() == m_currentClip[BACKGROUND_CHANNEL] &amp;&amp;
+                m_playList.isEmpty() == false)
+        {
+<span class="nc bnc" id="L742" title="All 2 branches missed.">            if (m_iter.hasNext() == false)</span>
+            {
+                // End of list -- resplay from top
+<span class="nc" id="L745">                m_iter = m_playList.iterator();</span>
+            }
+
+<span class="nc" id="L748">            SoundIDEnum  id = (SoundIDEnum) m_iter.next();</span>
+
+<span class="nc" id="L750">            m_currentClip[BACKGROUND_CHANNEL] = null;    // Clear so stop() won't call this again</span>
+            
+<span class="nc" id="L752">            loadSound((SoundIDEnum) id, BACKGROUND_CHANNEL, false);</span>
+<span class="nc" id="L753">            start(SoundPlayer.BACKGROUND_CHANNEL);</span>
+        }
+<span class="nc" id="L755">    }</span>
+
+
+    private static SoundPlayer  m_soundPlayerSingleton;      // Singleton
+
+<span class="fc" id="L760">    private boolean  m_soundAvailable = false;</span>
+    
+    private AudioInputStream  m_audioStream;
+    
+    private Clip[]  m_currentClip;
+    
+    private int  m_gainLevels[];         // Last gain levels used
+
+    private boolean  m_loop[];
+
+<span class="fc" id="L770">    private LinkedList  m_playList = null;         // Background music playlist</span>
+<span class="fc" id="L771">    private Iterator  m_iter = null;               // Current position in playlist</span>
+    
+    private String[]  m_audioFiles;
+
+    private String  m_baseDir;
+
+    private FloatControl  m_gainControl;
+
+<span class="fc" id="L779">    private boolean  m_muted = false;</span>
+
+<span class="fc" id="L781">    private boolean  m_soundEnabled = true;</span>
+    
+<span class="fc" id="L783">    private int  m_debugMode = 0;</span>
+
+    private JarFile  m_jarFile;
+
+    private Properties  m_jarSoundConfig;
+
+<span class="fc" id="L789">    private DecryptInputStream  m_decoder = null;</span>
+
+<span class="fc" id="L791">    private static final int m_channels[] =</span>
+    {
+        BACKGROUND_CHANNEL,
+        FOREGROUND_CHANNEL,
+        EFFECTS_CHANNEL
+    };
+
+    
+    /** Channel names.
+     * NOTE:  These MUST match the m_channels[] above!
+     */
+<span class="fc" id="L802">    private static final String[]  soundChannels =</span>
+    {
+        &quot;Foreground&quot;,
+        &quot;Background&quot;,
+        &quot;Effects&quot;,
+    };
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

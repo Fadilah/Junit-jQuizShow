@@ -1,0 +1,689 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ResizableText.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">ResizableText.java</span></div><h1>ResizableText.java</h1><pre class="source lang-java linenums">/*
+ * ResizableText.java
+ *
+ * Created on February 11, 2004  7:04 PM
+ *
+ * $Id: ResizableText.java,v 1.2 2007/02/05 04:05:34 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ResizableText.java,v $
+ *    Revision 1.2  2007/02/05 04:05:34  sdchen
+ *    Replaced deprecated show() with setVisible(bool  s)
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow;
+
+import java.awt.*;
+import java.awt.geom.*;
+import java.awt.font.*;
+import java.awt.image.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.text.*;
+import javax.swing.event.*;
+import java.util.*;
+
+import jQuizShow.event.*;
+
+/**
+ *
+ * @author  Steven D. Chen
+ */
+public class ResizableText
+        extends JPanel
+        implements ActionListener
+{
+    private static final int  FADER_DELAY = 50;
+    
+    private static final int  LEFT_MARGIN = 0;
+    private static final int  TOP_MARGIN = 0;
+    private static final int  BOTTOM_MARGIN = 0;
+
+    private static final int  WRAP_BIAS = 15;    // Bias to word wrapping
+    
+    private static final boolean  Debug = true;
+    
+    /** Creates new ResizableText */
+
+    public ResizableText(int id)
+<span class="nc" id="L77">    {</span>
+<span class="nc" id="L78">        initialize(id, &quot;SansSerif&quot;, Font.BOLD);</span>
+<span class="nc" id="L79">    }</span>
+
+    
+    public ResizableText(int id, String  fontName, int  fontStyle)
+<span class="nc" id="L83">    {</span>
+<span class="nc" id="L84">        initialize(id, fontName, fontStyle);</span>
+<span class="nc" id="L85">    }</span>
+
+
+    private void  initialize(int  id, String  fontName, int  fontStyle)
+    {
+<span class="nc" id="L90">        m_id = id;</span>
+
+<span class="nc" id="L92">        m_gameConfig = GameConfig.getInstance();</span>
+        
+<span class="nc" id="L94">        m_text = new String();</span>
+
+<span class="nc" id="L96">        m_timer = new javax.swing.Timer(FADER_DELAY, this);</span>
+        
+<span class="nc" id="L98">        m_fontName = fontName;</span>
+<span class="nc" id="L99">        m_fontStyle = fontStyle;</span>
+
+<span class="nc" id="L101">        m_renderBounds = new Dimension();</span>
+        
+<span class="nc" id="L103">        restoreDefaultColors();</span>
+       
+        // Initialize the GameActionEvent and the listener list
+<span class="nc" id="L106">        m_evt = new GameInputEvent(this);</span>
+<span class="nc" id="L107">        m_eventListenerList = new EventListenerList();</span>
+
+        // Add a listener for component resize events
+<span class="nc" id="L110">        addComponentListener(new java.awt.event.ComponentAdapter()</span>
+<span class="nc" id="L111">        {</span>
+            public void componentResized(java.awt.event.ComponentEvent evt)
+            {
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                if (m_columnHint &gt; 0)</span>
+                {
+                    // Calculate new font size based on the number of
+                    // columns to display.
+                    
+                    // Save the current text
+<span class="nc" id="L120">                    String  saveText = m_text;</span>
+
+<span class="nc" id="L122">                    StringBuffer  buf = new StringBuffer();</span>
+<span class="nc" id="L123">                    buf.setLength(m_columnHint);</span>
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                    for (int  idx = 0; idx &lt; m_columnHint; idx++)</span>
+<span class="nc" id="L126">                        buf.setCharAt(idx, 'W');</span>
+
+<span class="nc" id="L128">                    m_text = buf.toString();</span>
+
+<span class="nc" id="L130">                    calcFont();</span>
+                    
+<span class="nc" id="L132">                    m_maxPointSize = m_pointSize;</span>
+
+<span class="nc" id="L134">                    m_text = saveText;</span>
+                }
+
+                // Recalculate size for optimum font (for the current text string)
+<span class="nc" id="L138">                calcFont();</span>
+<span class="nc" id="L139">            }</span>
+        });
+
+        
+        // Add a listener for mouse events
+<span class="nc" id="L144">        addMouseListener(new MouseAdapter()</span>
+<span class="nc" id="L145">        {</span>
+            public void mousePressed(MouseEvent  evt)
+            {
+<span class="nc" id="L148">                m_evt.setType(GameInputEnum.ANSWER_SELECTED);</span>
+<span class="nc" id="L149">                m_evt.setSelectedIndex(m_id);</span>
+<span class="nc" id="L150">                fireGameInputEvent(m_evt);</span>
+<span class="nc" id="L151">            }</span>
+        } );
+<span class="nc" id="L153">    }</span>
+
+    
+    /**
+     * Get the object's assigned ID.
+     */
+    public int  getId()
+    {
+<span class="nc" id="L161">        return m_id;</span>
+    }
+    
+
+    /**
+     * Adds the specified object as a listener for game input events
+     * (e.g. mouse clicks) associated with this instance.
+     */
+    public void addGameInputListener(GameInputListener  l)
+    {
+<span class="nc" id="L171">        m_eventListenerList.add(GameInputListener.class, l);</span>
+<span class="nc" id="L172">    }</span>
+    
+    
+    /**
+     * Removes the specified object from the game input listener list.
+     */
+    public void removeGameInputListener(GameInputListener  l)
+    {
+<span class="nc" id="L180">        m_eventListenerList.remove(GameInputListener.class, l);</span>
+<span class="nc" id="L181">    }</span>
+    
+    
+    protected void  fireGameInputEvent(GameInputEvent  evt)
+    {
+        // Guaranteed to return a non-null array
+<span class="nc" id="L187">        Object[] listeners = m_eventListenerList.getListenerList();</span>
+
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        for (int i = listeners.length - 2; i &gt;= 0; i -= 2)</span>
+        {
+<span class="nc bnc" id="L193" title="All 2 branches missed.">            if (listeners[i] == GameInputListener.class)</span>
+            {
+<span class="nc" id="L195">                ((GameInputListener)listeners[i+1]).gameInputReceived(evt);</span>
+            }
+        }        
+<span class="nc" id="L198">    }</span>
+
+    
+    /**
+     * Set number of columns to display.  This is a hint which is used to
+     * calculate the approximate maximum point size to display the given
+     * number of columns.  When this is accomplished, the font will not
+     * exceed the calculated maximum size until this is reset.
+     *
+     * @param rows  maximum number of rows to display (0 = no limit)
+     * @param columns  columns to display (0 = no limit)
+     */
+    public void setRowColumnHint(int  rows, int  columns)
+    {
+        // Clear the max point size initially.
+<span class="nc" id="L213">        m_maxPointSize = 0;</span>
+        
+<span class="nc" id="L215">        m_rowHint = rows;</span>
+<span class="nc" id="L216">        m_columnHint = columns;</span>
+
+        // Recalculate the font to show text at new size
+<span class="nc" id="L219">        calcFont();</span>
+<span class="nc" id="L220">        repaint();</span>
+<span class="nc" id="L221">    }</span>
+
+    
+    /**
+     * Sets the text to display.
+     */
+    public void setText(String text)
+    {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (text != null)</span>
+<span class="nc" id="L230">            m_text = new String(text);</span>
+        else
+<span class="nc" id="L232">            m_text = null;</span>
+
+<span class="nc" id="L234">        m_timer.stop();</span>
+        
+<span class="nc" id="L236">        calcFont();</span>
+        
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        if (m_fadeDuration &gt; 0)</span>
+        {
+<span class="nc" id="L240">            m_alphaDelta = 1.0f / m_fadeDuration * FADER_DELAY;</span>
+<span class="nc" id="L241">            m_elapsedTime = 0;      // Reset elapsed time</span>
+<span class="nc" id="L242">            m_alpha = 0.0f;         // Set alpha to be initially totally transparent</span>
+<span class="nc" id="L243">            m_timer.start();        // Start the fade-in timer</span>
+        }
+        else
+<span class="nc" id="L246">            m_alpha = 1.0f;</span>
+        
+<span class="nc" id="L248">        repaint();</span>
+        
+<span class="nc" id="L250">        return;</span>
+    }
+
+    
+    /**
+     * Sets the default colors used for rendering the text and background
+     * (if opaque).  These are used when restoreDefaultColors() is called.
+     */
+    public void setDefaultTextColor(Color  textColor, Color  bgColor)
+    {
+<span class="nc" id="L260">        m_textColorDefault = textColor;</span>
+<span class="nc" id="L261">        m_bgColorDefault = bgColor;</span>
+        
+<span class="nc" id="L263">        restoreDefaultColors();</span>
+<span class="nc" id="L264">    }</span>
+    
+    
+    /**
+     * Resets the colors to those stored by setDefaultTextColor().
+     */
+    public void restoreDefaultColors()
+    {
+<span class="nc" id="L272">        setTextColor(m_textColorDefault, m_bgColorDefault);</span>
+<span class="nc" id="L273">    }</span>
+
+    
+    /**
+     * Sets the text and opaque background (if used) to the specified colors.
+     */
+    public void setTextColor(Color textColor, Color  bgColor)
+    {
+<span class="nc" id="L281">        m_textColor = textColor;</span>
+        
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        if (bgColor == null)</span>
+<span class="nc" id="L284">            setOpaque(false);</span>
+        else
+        {
+<span class="nc" id="L287">            m_bgColor = bgColor;</span>
+<span class="nc" id="L288">            setOpaque(true);</span>
+        }
+
+<span class="nc" id="L291">        repaint();</span>
+<span class="nc" id="L292">    }</span>
+
+    
+    /**
+     * Sets the fade-in delay time (in milliseconds).  If this is &lt;= 0, the text
+     * is displayed instantly (i.e. no fade-in).
+     */
+    public void  setFadeInDelay(int  msecs)
+    {
+<span class="nc" id="L301">        m_timer.stop();</span>
+
+<span class="nc bnc" id="L303" title="All 2 branches missed.">        if (msecs &gt; 0)</span>
+<span class="nc" id="L304">            m_fadeDuration = msecs;</span>
+        else
+<span class="nc" id="L306">            m_fadeDuration = 0;</span>
+<span class="nc" id="L307">    }</span>
+
+    
+    /**
+     * Enables/disables the fade-in delay.
+     */
+    public void  enableFadeInDelay(boolean  enable)
+    {
+<span class="nc" id="L315">        m_fadeEnabled = enable;</span>
+<span class="nc" id="L316">    }</span>
+
+    
+    /**
+     * Sets the font name and style for the text.  The 'fontStyle' uses the
+     * values defined for the java.awt.Font class (i.e. Font.PLAIN, Font.BOLD,
+     * Font.ITALIC, or Font.BOLD | Font.ITALIC).
+     */
+    public void  setTextFont(String  fontName, int  fontStyle)
+    {
+<span class="nc" id="L326">        m_fontName = fontName;</span>
+<span class="nc" id="L327">        m_fontStyle = fontStyle;</span>
+<span class="nc" id="L328">    }</span>
+    
+    
+    /**
+     * Centers the text horizontally if set &quot;true&quot;.
+     */
+    public void centerText(boolean  center)
+    {
+<span class="nc" id="L336">        m_center = center;</span>
+<span class="nc" id="L337">    }</span>
+
+    
+    /**
+     * Draws the ResizableText as an opaque rectangle.  By default, the
+     * text is drawn transparently.  The background color is used as the
+     * color for the background rectangle.
+     */
+    public void setOpaque(boolean  state)
+    {
+<span class="nc" id="L347">        m_opaque = state;</span>
+<span class="nc" id="L348">    }</span>
+
+    
+    /**
+     * Sets the point size to be used for the text.  If 0, the text
+     * size will automatically scaled to fit the bounding box.
+     */
+    public void setPointSize(int ptSize)
+    {
+<span class="nc bnc" id="L357" title="All 2 branches missed.">        if (ptSize &lt;= 0)</span>
+<span class="nc" id="L358">            calcFont();</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">        else if (ptSize != m_pointSize)</span>
+<span class="nc" id="L360">            setFontToSize(ptSize);</span>
+<span class="nc" id="L361">    }</span>
+
+    
+    /**
+     * Gets the point size that was calculated that would cause the text
+     * to fill the bounding box.  This is used by the ResizableTextGroup
+     * to set all fonts in the group to the same size.
+     */
+    public int getPointSize()
+    {
+<span class="nc" id="L371">        return m_pointSize;</span>
+    }
+
+
+    /** Calculates the font needed to render the text as large as possible
+     * in the given space.
+     */
+    private void  calcFont()
+    {
+<span class="nc" id="L380">        Graphics  g = getGraphics();</span>
+        
+<span class="nc bnc" id="L382" title="All 2 branches missed.">        if (g == null)</span>
+<span class="nc" id="L383">            return;</span>
+
+<span class="nc" id="L385">        Dimension  size = getSize();</span>
+
+<span class="nc bnc" id="L387" title="All 4 branches missed.">        if (m_text != null &amp;&amp; m_text.length() &gt; 0)</span>
+        {
+<span class="nc" id="L389">            int  ptSize = size.height - TOP_MARGIN - BOTTOM_MARGIN;</span>
+
+            int  rows;
+            int  loop;
+        
+            // Limit font size to the maximum allowed size
+<span class="nc bnc" id="L395" title="All 4 branches missed.">            if (m_maxPointSize &gt; 0 &amp;&amp; ptSize &gt; m_maxPointSize)</span>
+<span class="nc" id="L396">                ptSize = m_maxPointSize;</span>
+
+<span class="nc bnc" id="L398" title="All 2 branches missed.">            for (loop = 0; loop &lt; 20; loop++)</span>
+            {
+<span class="nc" id="L400">                rows = setFontToSize(ptSize);</span>
+                
+<span class="nc bnc" id="L402" title="All 6 branches missed.">                if (m_renderBounds.height &lt; size.height</span>
+                        &amp;&amp; (m_rowHint == 0 || rows &lt;= m_rowHint))
+<span class="nc" id="L404">                    break;      // Text fits within the specified parameters.  Exit loop.</span>
+
+                // Calculate a new guess for the font size
+<span class="nc" id="L407">                ptSize = (int) (ptSize * (1 - 1.0 / (loop + 3)));</span>
+            }
+
+            if (Debug || loop == 20)
+            {
+<span class="nc" id="L412">                System.out.println(&quot;calcFont(&quot; + m_id +</span>
+                        &quot;) width/height=&quot; + getWidth() + &quot;/&quot; + getHeight()
+                        + &quot;, loop=&quot; + (loop + 1)
+                        + &quot;, ptSize=&quot; + ptSize);
+            }
+            
+<span class="nc" id="L418">            m_pointSize = ptSize;</span>
+        }
+<span class="nc" id="L420">    }</span>
+
+
+    /** Sets the font size to the specified size.
+     *
+     * @param ptSize  Font point size
+     *
+     * @return Number of rows the text will span
+     */
+    private int  setFontToSize(int  ptSize)
+    {
+<span class="nc" id="L431">        Graphics  g = getGraphics();</span>
+
+<span class="nc" id="L433">        float height = 0.0f;</span>
+
+<span class="nc" id="L435">        float width = 0.0f;</span>
+
+<span class="nc" id="L437">        int  rows = 0;</span>
+        
+<span class="nc bnc" id="L439" title="All 2 branches missed.">        if (g == null)</span>
+<span class="nc" id="L440">            return 0;</span>
+        
+<span class="nc" id="L442">        Graphics2D g2d = (Graphics2D) g.create();   // Create a copy of &quot;g&quot;</span>
+
+<span class="nc" id="L444">        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,</span>
+                RenderingHints.VALUE_ANTIALIAS_ON);
+
+<span class="nc" id="L447">        Dimension  size = new Dimension();</span>
+
+<span class="nc" id="L449">        size.width = getWidth();</span>
+<span class="nc" id="L450">        size.height = getHeight() - TOP_MARGIN - BOTTOM_MARGIN;</span>
+        
+<span class="nc bnc" id="L452" title="All 4 branches missed.">        if (m_text != null &amp;&amp; m_text.length() &gt; 0)</span>
+        {
+<span class="nc" id="L454">            float wrappingWidth = size.width - LEFT_MARGIN - WRAP_BIAS;</span>
+
+<span class="nc" id="L456">            m_font = new Font(m_fontName, m_fontStyle, ptSize);</span>
+
+<span class="nc" id="L458">            m_attrString = new AttributedString(m_text);</span>
+<span class="nc" id="L459">            m_attrString.addAttribute(TextAttribute.FONT, m_font);           </span>
+
+<span class="nc" id="L461">            m_attrIter = m_attrString.getIterator();</span>
+
+<span class="nc" id="L463">            FontRenderContext  frc = g2d.getFontRenderContext();</span>
+
+<span class="nc" id="L465">            m_measurer = new LineBreakMeasurer(m_attrIter, frc);</span>
+
+<span class="nc" id="L467">            height = 0.0f;</span>
+<span class="nc" id="L468">            width = 0.0f;</span>
+
+<span class="nc" id="L470">            m_measurer.setPosition(0);</span>
+
+
+            int  i;
+
+            // Calculate the offset in order to center the text vertically.
+<span class="nc bnc" id="L476" title="All 2 branches missed.">            while (m_measurer.getPosition() &lt; m_attrIter.getEndIndex())</span>
+            {
+<span class="nc" id="L478">                TextLayout layout = m_measurer.nextLayout(wrappingWidth);</span>
+
+<span class="nc" id="L480">                height += layout.getAscent() + layout.getDescent() +</span>
+                        layout.getLeading();
+
+<span class="nc" id="L483">                float  advance = layout.getAdvance();</span>
+
+<span class="nc bnc" id="L485" title="All 2 branches missed.">                if (advance &gt; width)</span>
+<span class="nc" id="L486">                    width = advance;</span>
+                
+<span class="nc" id="L488">                rows++;</span>
+<span class="nc" id="L489">            }</span>
+            
+            if (Debug)
+            {
+<span class="nc" id="L493">                System.out.println(&quot;setFontToSize(&quot; + m_id</span>
+                        + &quot;) -- width/height=&quot;
+                        + getWidth()
+                        + &quot;/&quot; + getHeight()
+                        + &quot;, ptSize=&quot; + ptSize
+                        + &quot;, width=&quot; + width
+                        + &quot;, height=&quot; + height
+                        + &quot;, rows=&quot; + rows);
+            }
+
+<span class="nc" id="L503">            m_renderBounds.width = (int) width;</span>
+<span class="nc" id="L504">            m_renderBounds.height = (int) height;</span>
+        }
+
+<span class="nc" id="L507">        return rows;</span>
+    }
+
+    
+    public void paintComponent(Graphics  g)
+    {
+<span class="nc" id="L513">        Graphics2D g2d = (Graphics2D) g.create();   // Create a copy of &quot;g&quot;</span>
+
+<span class="nc" id="L515">        BufferedImage buffImg = new BufferedImage(getWidth(), getHeight(),</span>
+                                    BufferedImage.TYPE_INT_ARGB);
+<span class="nc" id="L517">        Graphics2D gbi = buffImg.createGraphics();</span>
+
+<span class="nc" id="L519">        gbi.setRenderingHint(RenderingHints.KEY_ANTIALIASING,</span>
+                RenderingHints.VALUE_ANTIALIAS_ON);
+
+<span class="nc" id="L522">        Dimension  size = this.getSize();</span>
+
+<span class="nc bnc" id="L524" title="All 6 branches missed.">        if ((m_opaque &amp;&amp; m_bgColor != null) ||</span>
+                (m_gameConfig.getIntConfig(&quot;debugMode&quot;) &amp; GameConfig.DEBUG_SHOW_TEXT_BOXES) != 0)
+        {
+            // Clear everything
+<span class="nc bnc" id="L528" title="All 2 branches missed.">            if (m_bgColor == null)</span>
+<span class="nc" id="L529">                gbi.setBackground(new Color(0xf0e0d0));</span>
+            else
+<span class="nc" id="L531">                gbi.setBackground(m_bgColor);</span>
+            
+<span class="nc" id="L533">            gbi.clearRect(0, 0, size.width, size.height);</span>
+        }
+        
+<span class="nc" id="L536">        Point2D.Float pen = new Point2D.Float(LEFT_MARGIN, TOP_MARGIN);</span>
+        
+<span class="nc bnc" id="L538" title="All 4 branches missed.">        if (m_fadeEnabled &amp;&amp; m_alpha &lt; 1.0f)</span>
+        {
+<span class="nc" id="L540">            gbi.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,</span>
+                    m_alpha));
+        }
+        
+        // Draw the text
+        
+<span class="nc bnc" id="L546" title="All 4 branches missed.">        if (m_text != null &amp;&amp; m_text.length() &gt; 0)</span>
+        {
+<span class="nc" id="L548">            gbi.setColor(m_textColor);</span>
+<span class="nc" id="L549">            gbi.setFont(m_font);</span>
+
+<span class="nc" id="L551">            float wrappingWidth = size.width - LEFT_MARGIN - WRAP_BIAS;</span>
+            
+<span class="nc" id="L553">            pen.y = (size.height - m_renderBounds.height) / 2;</span>
+
+            // Draw the text
+<span class="nc" id="L556">            m_measurer.setPosition(0);</span>
+
+<span class="nc" id="L558">            float  xOffset = 0.0f;</span>
+
+<span class="nc bnc" id="L560" title="All 2 branches missed.">            if (m_center)</span>
+<span class="nc" id="L561">                xOffset = (wrappingWidth - m_renderBounds.width) * 0.5f;</span>
+
+<span class="nc bnc" id="L563" title="All 2 branches missed.">            while (m_measurer.getPosition() &lt; m_attrIter.getEndIndex())</span>
+            {
+<span class="nc" id="L565">                TextLayout layout = m_measurer.nextLayout(wrappingWidth);</span>
+<span class="nc" id="L566">                pen.y += (layout.getAscent());</span>
+<span class="nc" id="L567">                layout.draw(gbi, pen.x + xOffset, pen.y);</span>
+<span class="nc" id="L568">                pen.y += layout.getDescent() + layout.getLeading();</span>
+<span class="nc" id="L569">            }</span>
+        }
+
+<span class="nc" id="L572">        g2d.drawImage(buffImg, null, 0, 0);</span>
+        
+<span class="nc" id="L574">        g2d.dispose();      // Clean up copy of &quot;g&quot;</span>
+<span class="nc" id="L575">    }</span>
+    
+    
+    /**
+     * Listener callback for Timer events.
+     */
+    public void actionPerformed(ActionEvent evt) {
+<span class="nc bnc" id="L582" title="All 2 branches missed.">        if (evt.getSource() == m_timer)</span>
+        {
+<span class="nc" id="L584">            m_elapsedTime++;</span>
+
+<span class="nc" id="L586">            m_alpha += m_alphaDelta;</span>
+            
+<span class="nc bnc" id="L588" title="All 4 branches missed.">            if (m_elapsedTime &gt;= m_fadeDuration || m_alpha &gt; 1.0f)</span>
+            {
+                /* Time elapsed (or full opaque).  Stop timer. */
+<span class="nc" id="L591">                m_timer.stop();</span>
+<span class="nc" id="L592">                m_alpha = 1.0f;      // Set to full opaque</span>
+            }
+
+<span class="nc" id="L595">            repaint();</span>
+        }
+<span class="nc" id="L597">    }</span>
+
+    
+    /**
+     * Test program
+     * @param args the command line arguments
+    */
+    public static void main (String args[]) {
+<span class="nc" id="L605">        Toolkit     tk = Toolkit.getDefaultToolkit();</span>
+<span class="nc" id="L606">        Dimension   screenSize = tk.getScreenSize();</span>
+        
+<span class="nc" id="L608">        Dimension   initSize = new Dimension();</span>
+        
+<span class="nc" id="L610">        Point       initLocation = new Point();</span>
+
+<span class="nc" id="L612">        JFrame  jframe = new JFrame();</span>
+
+<span class="nc" id="L614">        jframe.addWindowListener(new java.awt.event.WindowAdapter()</span>
+<span class="nc" id="L615">        {</span>
+            public void windowClosing(java.awt.event.WindowEvent evt)
+            {
+<span class="nc" id="L618">                System.exit(0);</span>
+<span class="nc" id="L619">            }</span>
+        });
+
+<span class="nc" id="L622">        initSize.width = (int) (screenSize.width * 0.5);</span>
+<span class="nc" id="L623">        initSize.height = (int) (screenSize.height * 0.2f);</span>
+        
+<span class="nc" id="L625">        System.out.println(&quot;Dimension = &quot; + initSize);</span>
+        
+<span class="nc" id="L627">        jframe.setSize(initSize);</span>
+<span class="nc" id="L628">        jframe.setLocation(50, 50);</span>
+        
+<span class="nc" id="L630">        ResizableText  text = new ResizableText(111);</span>
+        
+<span class="nc" id="L632">        text.setText(&quot;The quick brown fox jumps over the lazy dog but was scared away when he saw the grumpy cat&quot;);</span>
+<span class="nc" id="L633">        text.setOpaque(true);</span>
+<span class="nc" id="L634">        text.centerText(false);</span>
+
+<span class="nc" id="L636">        text.setTextColor(Color.YELLOW, Color.BLACK);</span>
+        
+<span class="nc" id="L638">        jframe.getContentPane().add(text);</span>
+<span class="nc" id="L639">        jframe.setVisible(true);</span>
+<span class="nc" id="L640">    }</span>
+    
+    private GameConfig  m_gameConfig;   // GameConfig instance
+    
+    private int  m_id;              // Instance ID
+
+<span class="nc" id="L646">    private int  m_pointSize = 0;       // Font point size</span>
+
+<span class="nc" id="L648">    private int  m_rowHint = 0;      // Maximum number of rows to display -- used to calc a m_maxPointSize (0 = no limit)</span>
+<span class="nc" id="L649">    private int  m_columnHint = 0;      // Number of columns to display -- used to calc m_maxPointSize (0 = no limit)</span>
+<span class="nc" id="L650">    private int  m_maxPointSize = 0;    // Maximum point size that will be used (0 = no limit)</span>
+    
+    private Dimension  m_renderBounds;    // Bounds for the rendered text
+    
+<span class="nc" id="L654">    private boolean  m_center = false;      // Center text if true</span>
+
+<span class="nc" id="L656">    private boolean  m_opaque = false;       // Transparent or opaque</span>
+
+    private String  m_text;         // Text string
+
+    private String  m_numLines;     // Number of text lines
+
+    private javax.swing.Timer  m_timer;     // Fade-in timer
+<span class="nc" id="L663">    private boolean  m_fadeEnabled = true;  // true = fade-in delay enabled</span>
+<span class="nc" id="L664">    private int  m_fadeDuration = 0;       // Fade-in time duration (ms)</span>
+<span class="nc" id="L665">    private int  m_elapsedTime = 0;       // Current elapsed time (ms)</span>
+    private float  m_alphaDelta;      // Delta alpha for each timer tick.
+<span class="nc" id="L667">    private float  m_alpha = 1.0f;    // Current alpha value (0.0 - 1.0)</span>
+    
+<span class="nc" id="L669">    private String  m_fontName = &quot;SansSerif&quot;;     // Font name</span>
+<span class="nc" id="L670">    private int  m_fontStyle = Font.BOLD;       // Font style</span>
+    
+    private Font  m_font;           // Font for text
+
+<span class="nc" id="L674">    private AttributedString  m_attrString = null;</span>
+<span class="nc" id="L675">    private AttributedCharacterIterator  m_attrIter = null;</span>
+<span class="nc" id="L676">    private LineBreakMeasurer  m_measurer = null;</span>
+    
+<span class="nc" id="L678">    private Color  m_textColor = Color.YELLOW;</span>
+<span class="nc" id="L679">    private Color  m_bgColor = Color.BLACK;</span>
+    
+<span class="nc" id="L681">    private Color  m_textColorDefault = Color.YELLOW;</span>
+<span class="nc" id="L682">    private Color  m_bgColorDefault = null;</span>
+    
+    private Color  m_parentBG;      // Parent component's background color
+    
+<span class="nc" id="L686">    private GameInputEvent  m_evt = null;</span>
+    protected EventListenerList  m_eventListenerList;   // Listeners interested in a selection
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ConnectionDialog.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.net</a> &gt; <span class="el_source">ConnectionDialog.java</span></div><h1>ConnectionDialog.java</h1><pre class="source lang-java linenums">/*
+ * ConnectionDialog.java
+ *
+ * Created on August 11, 2001, 4:00 PM
+ *
+ * $Id: ConnectionDialog.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ConnectionDialog.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.2  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:42  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.net;
+
+/**
+ *
+ * @author  Steven D. Chen
+ */
+
+import java.io.*;
+import java.net.*;
+import java.awt.event.*;
+import javax.swing.*;
+
+import jQuizShow.*;
+import jQuizShow.event.*;
+
+public class ConnectionDialog extends javax.swing.JInternalFrame
+        implements ActionListener
+{
+    
+    /** Creates new form ConnectionDialog */
+    public ConnectionDialog() {
+<span class="fc" id="L67">        super(Main.getMessage(&quot;title_connection_dialog&quot;), true, false,</span>
+		false, false);
+
+<span class="fc" id="L70">        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);</span>
+
+<span class="fc" id="L72">        initComponents();</span>
+
+<span class="fc" id="L74">        isMasterCheckBox.setSelected(false);</span>
+<span class="fc" id="L75">        hostnameLabel.setEnabled(false);</span>
+<span class="fc" id="L76">        hostnameText.setEnabled(false);</span>
+        
+<span class="fc" id="L78">        portNumText.setText(String.valueOf(m_portNum));</span>
+<span class="fc" id="L79">    }</span>
+
+    public String getHostname() {
+<span class="nc" id="L82">        return m_hostname;</span>
+    }    
+
+    public int getPortNum() {
+<span class="nc" id="L86">        return m_portNum;</span>
+    }
+    
+
+    private void initComponents() {
+<span class="fc" id="L91">        textEntryPanel = new javax.swing.JPanel();</span>
+<span class="fc" id="L92">        hostnameLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L93">        hostnameText = new javax.swing.JTextField();</span>
+<span class="fc" id="L94">        portNumLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L95">        portNumText = new javax.swing.JTextField();</span>
+<span class="fc" id="L96">        controlSelectionPanel = new javax.swing.JPanel();</span>
+<span class="fc" id="L97">        isMasterCheckBox = new javax.swing.JCheckBox();</span>
+<span class="fc" id="L98">        okayCancelPanel = new javax.swing.JPanel();</span>
+<span class="fc" id="L99">        connectButton = new javax.swing.JButton();</span>
+<span class="fc" id="L100">        cancelButton = new javax.swing.JButton();</span>
+        
+<span class="fc" id="L102">        getContentPane().setLayout(new java.awt.GridBagLayout());</span>
+        java.awt.GridBagConstraints gridBagConstraints1;
+        
+      
+<span class="fc" id="L106">        textEntryPanel.setLayout(new java.awt.GridLayout(2, 2));</span>
+        
+<span class="fc" id="L108">        hostnameLabel.setText(Main.getMessage(&quot;connect_hostname&quot;));</span>
+<span class="fc" id="L109">        textEntryPanel.add(hostnameLabel);</span>
+        
+<span class="fc" id="L111">        textEntryPanel.add(hostnameText);</span>
+        
+<span class="fc" id="L113">        portNumLabel.setText(Main.getMessage(&quot;connect_port&quot;));</span>
+<span class="fc" id="L114">        textEntryPanel.add(portNumLabel);</span>
+        
+<span class="fc" id="L116">        textEntryPanel.add(portNumText);</span>
+        
+<span class="fc" id="L118">        gridBagConstraints1 = new java.awt.GridBagConstraints();</span>
+<span class="fc" id="L119">        gridBagConstraints1.gridy = 0;</span>
+<span class="fc" id="L120">        gridBagConstraints1.fill = java.awt.GridBagConstraints.HORIZONTAL;</span>
+<span class="fc" id="L121">        gridBagConstraints1.weightx = 100.0;</span>
+<span class="fc" id="L122">        gridBagConstraints1.weighty = 100.0;</span>
+<span class="fc" id="L123">        getContentPane().add(textEntryPanel, gridBagConstraints1);</span>
+        
+<span class="fc" id="L125">        isMasterCheckBox.setText(Main.getMessage(&quot;run_as_master&quot;));</span>
+<span class="fc" id="L126">        isMasterCheckBox.addActionListener(this);</span>
+<span class="fc" id="L127">        controlSelectionPanel.add(isMasterCheckBox);</span>
+        
+<span class="fc" id="L129">        gridBagConstraints1 = new java.awt.GridBagConstraints();</span>
+<span class="fc" id="L130">        gridBagConstraints1.gridy = 1;</span>
+<span class="fc" id="L131">        gridBagConstraints1.fill = java.awt.GridBagConstraints.HORIZONTAL;</span>
+<span class="fc" id="L132">        gridBagConstraints1.weightx = 100.0;</span>
+<span class="fc" id="L133">        gridBagConstraints1.weighty = 100.0;</span>
+<span class="fc" id="L134">        getContentPane().add(controlSelectionPanel, gridBagConstraints1);</span>
+        
+<span class="fc" id="L136">        connectButton.setText(Main.getMessage(&quot;label_connect&quot;));</span>
+<span class="fc" id="L137">	connectButton.setActionCommand(&quot;Connect&quot;);</span>
+<span class="fc" id="L138">        connectButton.addActionListener(this);</span>
+<span class="fc" id="L139">        okayCancelPanel.add(connectButton);</span>
+        
+<span class="fc" id="L141">        cancelButton.setText(Main.getMessage(&quot;label_cancel&quot;));</span>
+<span class="fc" id="L142">	cancelButton.setActionCommand(&quot;Cancel&quot;);</span>
+<span class="fc" id="L143">        cancelButton.addActionListener(this);</span>
+<span class="fc" id="L144">        okayCancelPanel.add(cancelButton);</span>
+        
+<span class="fc" id="L146">        gridBagConstraints1 = new java.awt.GridBagConstraints();</span>
+<span class="fc" id="L147">        gridBagConstraints1.gridy = 2;</span>
+<span class="fc" id="L148">        gridBagConstraints1.fill = java.awt.GridBagConstraints.HORIZONTAL;</span>
+<span class="fc" id="L149">        gridBagConstraints1.weightx = 100.0;</span>
+<span class="fc" id="L150">        gridBagConstraints1.weighty = 100.0;</span>
+<span class="fc" id="L151">        getContentPane().add(okayCancelPanel, gridBagConstraints1);</span>
+        
+<span class="fc" id="L153">        pack();</span>
+<span class="fc" id="L154">    }</span>
+
+    /** Closes the dialog */
+    public void actionPerformed(ActionEvent  e) {
+<span class="nc" id="L158">        Object  source = e.getSource();</span>
+
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (source == cancelButton)</span>
+        {
+            /* Just close window and return */
+<span class="nc" id="L164">            doDefaultCloseAction();</span>
+<span class="nc" id="L165">            return;</span>
+        }
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        else if (source == isMasterCheckBox)</span>
+        {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (isMasterCheckBox.isSelected())</span>
+            {
+<span class="nc" id="L171">                hostnameLabel.setEnabled(true);</span>
+<span class="nc" id="L172">                hostnameText.setEnabled(true);</span>
+            }
+            else
+            {
+<span class="nc" id="L176">                hostnameLabel.setEnabled(false);</span>
+<span class="nc" id="L177">                hostnameText.setEnabled(false);</span>
+            }
+        }
+        else
+        {
+<span class="nc" id="L182">            m_hostname = hostnameText.getText();</span>
+
+<span class="nc" id="L184">            String portNum = portNumText.getText();</span>
+            
+            try
+            {
+<span class="nc" id="L188">                m_portNum = (int) Integer.parseInt(portNum);</span>
+            }
+<span class="nc" id="L190">            catch (NumberFormatException  exc)</span>
+            {
+<span class="nc" id="L192">                m_portNum = 0;</span>
+<span class="nc" id="L193">            }</span>
+            
+            // Ensure input parameters are valid
+<span class="nc bnc" id="L196" title="All 4 branches missed.">            if (isMasterCheckBox.isSelected() &amp;&amp; m_hostname.length() == 0)</span>
+            {
+<span class="nc" id="L198">                JOptionPane.showInternalMessageDialog(this,</span>
+			Main.getMessage(&quot;err_host_not_specified&quot;),
+                        Main.getMessage(&quot;title_error&quot;),
+			JOptionPane.ERROR_MESSAGE);
+<span class="nc" id="L202">                return;</span>
+            }
+
+<span class="nc bnc" id="L205" title="All 4 branches missed.">            if (m_portNum &lt; 512 || m_portNum &gt; 32767)</span>
+            {
+<span class="nc" id="L207">                JOptionPane.showInternalMessageDialog(this,</span>
+			Main.getMessage(&quot;err_invalid_port_number&quot;),
+                        Main.getMessage(&quot;title_error&quot;),
+			JOptionPane.ERROR_MESSAGE);
+<span class="nc" id="L211">                return;</span>
+            }
+
+            // Close the dialog
+<span class="nc" id="L215">            doDefaultCloseAction();</span>
+
+<span class="nc bnc" id="L217" title="All 2 branches missed.">            if (m_statusPane == null)</span>
+<span class="nc" id="L218">                m_statusPane = new JOptionPane();</span>
+            
+<span class="nc bnc" id="L220" title="All 2 branches missed.">            if (e.getActionCommand().equals(&quot;Connect&quot;))</span>
+            {
+                String  taskTitle;
+                
+<span class="nc bnc" id="L224" title="All 2 branches missed.">                if (isMasterCheckBox.isSelected())</span>
+                {
+<span class="nc" id="L226">                    taskTitle = Main.getMessage(&quot;msg_connect_as_master&quot;) +</span>
+		            &quot; (host=&quot;
+                            + m_hostname + &quot;)&quot;;
+                }
+                else
+                {
+                    try
+                    {
+<span class="nc" id="L234">                        InetAddress  inetAddr = InetAddress.getLocalHost();</span>
+
+<span class="nc" id="L236">			Object  args[] =</span>
+				{
+				    inetAddr.getHostName(),
+				    inetAddr.getHostAddress()
+				};
+                        
+<span class="nc" id="L242">                        taskTitle = Main.getMessage(&quot;msg_connect_as_display&quot;,</span>
+				args);
+                    }
+<span class="nc" id="L245">                    catch (UnknownHostException  evt)</span>
+                    {
+<span class="nc" id="L247">			Object  args[] =</span>
+				{
+				    new Integer(m_portNum)
+				};
+
+		        // Failed getting host info.  Display port number.
+<span class="nc" id="L253">                        taskTitle = Main.getMessage(&quot;msg_connect_as_display_port&quot;,</span>
+				args);
+<span class="nc" id="L255">                    }</span>
+                }
+
+<span class="nc" id="L258">                System.out.println(taskTitle);</span>
+                
+<span class="nc" id="L260">                m_progressMonitor = new ProgressMonitor(Main.getMain(),</span>
+			taskTitle,
+			Main.getMessage(&quot;title_status&quot;),
+			0, 100);
+                
+<span class="nc" id="L265">                m_progressMonitor.setProgress(0);</span>
+<span class="nc" id="L266">                m_progressMonitor.setMillisToDecideToPopup(10);</span>
+<span class="nc" id="L267">                m_progressMonitor.setMillisToPopup(0);</span>
+                
+<span class="nc" id="L269">                m_timer = new Timer(500, new TimerListener());</span>
+<span class="nc" id="L270">                m_timer.start();</span>
+                
+<span class="nc bnc" id="L272" title="All 2 branches missed.">                if (isMasterCheckBox.isSelected())</span>
+<span class="nc" id="L273">                    runAsMaster();</span>
+                else
+<span class="nc" id="L275">                    runAsSlave();</span>
+            }
+        }
+<span class="nc" id="L278">    }</span>
+
+    /** Setup master connection
+     */
+    private void  runAsMaster()
+    {
+<span class="nc" id="L284">        m_connection = new ConnectionMaster(m_hostname, m_portNum);</span>
+
+<span class="nc" id="L286">        m_connection.start();</span>
+        
+<span class="nc" id="L288">        MainSubset.getInstance().setGameMode(GameModeEnum.MASTER);</span>
+<span class="nc" id="L289">    }</span>
+    
+    /** Set-up slave connection
+     */
+    private void  runAsSlave()
+    {
+<span class="nc" id="L295">        m_connection = ConnectionSlave.getInstance(m_portNum);</span>
+        
+<span class="nc" id="L297">        m_connection.start();</span>
+        
+<span class="nc" id="L299">        MainSubset.getInstance().setGameMode(GameModeEnum.SLAVE);</span>
+<span class="nc" id="L300">    }</span>
+
+    /**
+     * The actionPerformed method in this class
+     * is called each time the Timer &quot;goes off&quot;.
+     */
+<span class="nc" id="L306">    class TimerListener implements ActionListener {</span>
+        public void actionPerformed(ActionEvent evt) {
+<span class="nc bnc" id="L308" title="All 4 branches missed.">            if (m_progressMonitor.isCanceled() || m_connection.done())</span>
+            {
+<span class="nc" id="L310">                m_progressMonitor.close();</span>
+                
+<span class="nc bnc" id="L312" title="All 2 branches missed.">                if (m_progressMonitor.isCanceled())</span>
+<span class="nc" id="L313">                    m_connection.stop();</span>
+                
+<span class="nc" id="L315">                m_timer.stop();</span>
+                
+<span class="nc bnc" id="L317" title="All 2 branches missed.">                if (m_connection.done())</span>
+                {
+<span class="nc" id="L319">                    String  message = Main.getMessage(&quot;msg_connect_established&quot;);</span>
+
+<span class="nc" id="L321">                    JOptionPane.showMessageDialog(Main.getMain(), message,</span>
+                            Main.getMessage(&quot;title_status&quot;),
+			    JOptionPane.INFORMATION_MESSAGE);
+
+<span class="nc" id="L325">                    System.out.println(Main.getMessage(message));</span>
+<span class="nc" id="L326">                }</span>
+                else
+                {
+<span class="nc" id="L329">                    String  message = Main.getMessage(&quot;msg_connect_cancelled&quot;);</span>
+
+<span class="nc" id="L331">                    JOptionPane.showMessageDialog(Main.getMain(), message,</span>
+                            Main.getMessage(&quot;title_status&quot;),
+			    JOptionPane.INFORMATION_MESSAGE);
+
+<span class="nc" id="L335">                    System.out.println(Main.getMessage(message));</span>
+<span class="nc" id="L336">                }</span>
+            }
+            else
+            {
+<span class="nc" id="L340">                m_progressMonitor.setNote(m_connection.getNote());</span>
+<span class="nc" id="L341">                m_progressMonitor.setProgress(m_connection.getProgress());</span>
+            }
+<span class="nc" id="L343">        }</span>
+    }
+    
+    // Variables declaration
+    private javax.swing.JPanel textEntryPanel;
+    private javax.swing.JLabel hostnameLabel;
+    private javax.swing.JTextField hostnameText;
+    private javax.swing.JLabel portNumLabel;
+    private javax.swing.JTextField portNumText;
+    private javax.swing.JPanel controlSelectionPanel;
+    private javax.swing.JCheckBox isMasterCheckBox;
+    private javax.swing.JPanel okayCancelPanel;
+    private javax.swing.JButton connectButton;
+    private javax.swing.JButton cancelButton;
+
+    private ProgressMonitor  m_progressMonitor;
+    private Timer  m_timer;
+    
+    private String m_hostname;
+    
+<span class="fc" id="L363">    private int m_portNum = 13536;</span>
+    
+    private ConnectionInterface  m_connection;
+        
+    private JOptionPane     m_statusPane;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

@@ -1,0 +1,400 @@
+<chapter>
+    <title>Starting &jqs;</title>
+    <sect1>
+	<title>General Startup</title>
+	<para>
+To start &jqs; from a command shell, first change your shell's current
+directory to the directory containing the <filename>jQuizShow.jar</filename>
+file.  Then enter:
+	</para>
+	<blockquote>
+	    <para>
+		<userinput>java -jar jQuizShow.jar</userinput>
+	    </para>
+	</blockquote>
+	<sect2>
+	    <title>Microsoft Windows</title>
+	    <para>
+The &jqs; can be started by double-clicking on the jQuizShow.jar
+file icon itself.
+	    </para>
+	    <note>
+		<title>NOTE:</title>
+		<para>
+The jQuizShow.jar icon may be labelled as <filename>jQuizShow</filename>
+in Windows Explorer, depending on the Folder Settings for that folder.
+		</para>
+	    </note>
+	    <para>
+A Windows shortcut to this file can also be made and placed on the Windows
+desktop or within the Windows <guimenu>Start</guimenu> menu for easy
+access.
+	    </para>
+	</sect2>
+	<sect2>
+	    <title>Mac OS X</title>
+	    <para>
+The &jqs; can be started by double-clicking on the jQuizShow.jar file icon
+itself.
+	    </para>
+	</sect2>
+    </sect1>
+    <sect1>
+	<title>Playing the Game</title>
+	<sect2>
+	    <title>Example Game</title>
+	    <para>
+After &jqs; is started, the main &jqs; screen should appear.
+From the <guimenu>File</guimenu>, select the
+<guimenuitem>New Player...</guimenuitem> option to begin a new round.
+Two windows will appear on the screen.  The first is the current score
+screen, and the second is a window asking if you are ready.
+Press <keycap>SPACE</keycap> when you are ready to start.
+The ready message will now be replaced with the primary game window.
+The parts of the &jqs; game are labelled below.
+	    </para>
+	    <mediaobject>
+		<imageobject>
+		    <imagedata fileref="game_window.png" format="PNG">
+		</imageobject>
+	    </mediaobject>
+	    <para>
+The <guilabel>Score Screen</guilabel> displays the current accomplishment
+(or prize) level that the player has reached.  The red bar marks the
+current level being attempted.  The levels marked in white are the
+key transition levels for the game.  When a player reaches one of these
+levels, the player's earnings will not drop below that level; that is,
+his winnings are guaranteed to be at least that amount if the player
+misses a question.
+	    </para>
+	    <para>
+The <guilabel>Game Screen</guilabel> is the primary focus of the game.
+This screen shows the states of the current lifelines, the question
+and all the possible answers.  It also displays the current question
+timer which begins counting down after the last of the possible answer
+is displayed.  This timer is simply a means to help keep the game
+moving by limiting the amount of time a player can spend on any given
+question.  This timer is optional and can be disabled from the Options
+menu.
+	    </para>
+	    <para>
+From this point, pressing the <keycap>SPACE</keycap> key will display the
+first question.  Additional presses of the <keycap>SPACE</keycap> key
+will display each of the possible answers to the question one-by-one
+until all the possible answers are displayed.
+	    </para>
+	    <mediaobject>
+		<imageobject>
+		    <imagedata fileref="answer_shown.png" format="PNG">
+		</imageobject>
+	    </mediaobject>
+	    <para>
+After all the answers have been displayed, the question timer will start.
+The player at this point is asked to choose one of the answers.  The player's
+choice is selected by either using the mouse to select one of the answers,
+or by using the keyboard to enter the character associated with the
+answer (A, B, C or D in this example).  This will highlight the answer in
+orange.
+	    </para>
+	    <mediaobject>
+		<imageobject>
+		    <imagedata fileref="answer_selected.png" format="PNG">
+		</imageobject>
+	    </mediaobject>
+	    <para>
+After selecting an answer, the player is still allowed to change their
+selection or to choose a lifeline.  However, at some point, the player
+will have to indicate that the choice is their final answer, whether by
+saying so or by answering yes to the host's question as to whether it
+is the player's final answer.
+            </para>
+            <para>
+To finalize the answer, press the <keycap>ENTER</keycap>.  An appropriate
+sound effect will be played to acknowledge this event.  At this point, the
+chosen answer cannot be changed nor a lifeline selected.  Pressing
+<keycap>SPACE</keycap> will reveal the correct answer to the question.
+If the selected answer was correct, the orange highlight will change to
+green and a sound effect will be played.
+	    </para>
+	    <mediaobject>
+		<imageobject>
+		    <imagedata fileref="answer_correct.png" format="PNG">
+		</imageobject>
+	    </mediaobject>
+            <para>
+Pressing <keycap>SPACE</keycap> once more will cause &jqs; to display the
+transition screen.  This screen displays the current level achieved
+by the player.
+            </para>
+	    <mediaobject>
+		<imageobject>
+		    <imagedata fileref="transition_screen.png" format="PNG">
+		</imageobject>
+	    </mediaobject>
+	    <para>
+On the other hand, if the answer was incorrect, the wrong answer sound
+effect will be played and the correct answer will be highlighted in green.
+	    </para>
+	    <mediaobject>
+		<imageobject>
+		    <imagedata fileref="answer_wrong.png" format="PNG">
+		</imageobject>
+	    </mediaobject>
+	    <para>
+The game is over at this point.  The player's final earnings will be
+displayed.  The final earnings after a wrong answer is given is determined
+by the last key transition level reached by the player (white levels on
+the Score Screen).  If the player had not reached a key transition level,
+the player will win nothing.
+	    </para>
+	</sect2>
+	<sect2>
+	    <title>Helplines</title>
+	    <para>
+There are three helplines available for the player to use during the game.
+Helplines are options that the player can choose to help the player choose
+the correct answer.
+            </para>
+            <para>
+The helplines are:
+	        <itemizedlist>
+		    <listitem>
+			<para>
+Fifty-fifty
+			</para>
+		    </listitem>
+		    <listitem>
+			<para>
+Ask-a-Friend
+			</para>
+		    </listitem>
+		    <listitem>
+			<para>
+Poll the Audience
+			</para>
+		    </listitem>
+	        </itemizedlist>
+	    </para>
+	    <para>
+Each helpline can only be used once during the game.  Once it is used, it is
+eliminated from the available list of helplines; this is indicated by a
+red "X" over its icon.  A player may choose to use more than one helpline
+during a round if desired.
+            </para>
+            <para>
+A helpline can be selected by either using the hotkey associated with the
+helpline or by selecting the helpline with the mouse.  Helplines can
+only be selected after all the possible answers have been displayed, and
+prior to finalizing a chosen answer.  The
+<keycode>ENTER</keycode> is used to confirm and activate the helpline.
+Select an answer or a different helpline or press
+<keycode>BACKSPACE</keycode> to cancel the current selection.
+            </para>
+            <para>
+Each of the helplines are described in the following sections.
+            </para>
+	    <sect3>
+	        <title>Fifty-fifty helpline</title>
+		<para>
+Fifty-fifty is the only helpline that does not involve audience participation.
+It works by randomly eliminating two of the three wrong answers, leaving
+only one wrong answer and the correct answer.  This gives the player
+a fifty-fifty chance at guessing the right answer.  The next two figures
+show snapshots of the before and after effects of using the fifty-fifty
+helpline.
+		</para>
+		<para>
+Before:
+		</para>
+		<mediaobject>
+		    <imageobject>
+			<imagedata fileref="fifty_fifty_selected.png" format="PNG">
+		    </imageobject>
+		</mediaobject>
+		<para>
+After:
+		</para>
+		<mediaobject>
+		    <imageobject>
+			<imagedata fileref="fifty_fifty.png" format="PNG">
+		    </imageobject>
+		</mediaobject>
+	    </sect3>
+	    <sect3>
+	        <title>Ask-a-Friend helpline</title>
+		<para>
+The idea behind the Ask-a-Friend helpline was for the player to choose
+one person from a list of pre-chosen friends to advise the player
+regarding the answer to the question.  The interaction between the
+player and the friend is timed (default is 30 seconds).  When the
+time limit has elapsed, no further communication with the friend
+(or anyone else in the audience for that matter) is allowed.
+		</para>
+		<para>
+This helpline was implemented with a large game timer which counts down
+the time remaining.  The <keycode>SPACE</keycode> key is used to
+start and pause the timer.  Press <keycode>RETURN</keycode> to close
+the timer and resume the game play.
+		</para>
+	    </sect3>
+	    <sect3>
+	        <title>Poll the Audience helpline</title>
+		<para>
+How to handle the Poll the Audience helpline is up to the host.  Ideas
+include:
+		    <itemizedlist>
+		        <listitem>
+			  <para>
+The audience raise their hands (or yells) to vote for the correct answer
+as the host reads through each answer.
+			  </para>
+			</listitem>
+		        <listitem>
+			  <para>
+The audience gets up and moves to forms groups around the room based on
+what they think the correct answer is.
+			  </para>
+			</listitem>
+		        <listitem>
+			  <para>
+Or, [put your idea here]
+			  </para>
+		        </listitem>
+		    </itemizedlist>
+		</para>
+		<para>
+The Poll the Audience option simply plays a music loop when the helpline
+is activated.  To end the Poll the Audience phase and return game play,
+press <keycode>SPACE</keycode>.
+		</para>
+	    </sect3>
+	</sect2>
+    </sect1>
+    <sect1>
+	<title>Keyboard/Mouse Controls</title>
+	<para>
+The current version of &jqs; uses the keyboard as its primary control input
+when playing the game.
+	</para>
+	<sect2>
+	    <title>Keyboard Controls</title>
+	    <para>
+The primary controls using the keyboard are:
+		<blockquote>
+		    <table frame='all'><title>Keyboard Controls</title>
+			<tgroup cols="2" align="left" colsep="1" rowsep="1">
+			    <thead>
+				<row>
+				    <entry>Key</entry>
+				    <entry>Description</entry>
+				</row>
+			    </thead>
+			    <tbody>
+				<row>
+				    <entry>SPACE BAR</entry>
+				    <entry>Move from one state to another</entry>
+				</row>
+				<row>
+				    <entry>ENTER KEY</entry>
+				    <entry>Finalize the answer or use helpline</entry>
+				</row>
+				<row>
+				    <entry>letter keys</entry>
+				    <entry>Select an answer</entry>
+				</row>
+				<row>
+				    <entry>, (comma)</entry>
+				    <entry>Select 50/50 helpline</entry>
+				</row>
+				<row>
+				    <entry>. (period)</entry>
+				    <entry>Select Call-a-Friend helpline</entry>
+				</row>
+				<row>
+				    <entry>/ (slash)</entry>
+				    <entry>Select Ask-the-Audience helpline</entry>
+				</row>
+				<row>
+				    <entry>ENTER KEY</entry>
+				    <entry>End Call-a-Friend helpline mode</entry>
+				</row>
+				<row> 
+				    <entry>BACKSPACE KEY</entry>
+				    <entry>Cancels helpline selection or finalized answer</entry>
+				</row>
+				<row>
+				    <entry>= (equals)</entry>
+				    <entry>Walk away from game with current earnings</entry>
+				</row>
+				<row>
+				    <entry>~ (tilde)</entry>
+				    <entry>Toggle score screen on/off</entry>
+				</row>
+			    </tbody>
+			</tgroup>
+		    </table>
+		</blockquote>
+	    </para>
+	    <para>
+The SPACE BAR is the most used key.  If in doubt what to do, press it to
+move to the next game state (e.g. to display each possible answer
+one-by-one, to move from the transition screen to the next round,
+start/stop the Call-a-Friend timer, etc.).
+	    </para>
+	    <para>
+In addition, the number keys (0-9) can be configured to play custom
+sound samples.
+	    </para>
+	</sect2>
+	<sect2>
+	    <title>Mouse Controls</title>
+	    <para>
+    In the current version of &jqs;, the mouse does not play a very large role
+    when the game is actually being played; the keyboard controls are the primary
+    controls during a game.  The mouse can be used in the following ways on
+    the game screen itself:
+	    </para>
+	    <itemizedlist>
+		<listitem>
+		    <para>
+    Selection of an answer
+		    </para>
+		</listitem>
+		<listitem>
+		    <para>
+    Selection of a helpline
+		    </para>
+		</listitem>
+	    </itemizedlist>
+	    <para>
+    In addition, the mouse can be used to interact with the &jqs; windows as
+    normal (e.g. move or resize a window, close it, select a menu option, etc.).
+	    </para>
+	</sect2>
+    </sect1>
+    <sect1>
+	<title>Game Options</title>
+	<sect2>
+	    <title>Message Window</title>
+	    <para>
+	    </para>
+	</sect2>
+	<sect2>
+	    <title>Skip Current Question</title>
+	    <para>
+	    </para>
+	</sect2>
+    </sect1>
+    <sect1>
+	<title>Random Player Selection</title>
+	<para>
+	</para>
+    </sect1>
+    <sect1>
+	<title>Frequently Asked Questions (FAQs)</title>
+	<para>
+	</para>
+    </sect1>
+</chapter>
+
+

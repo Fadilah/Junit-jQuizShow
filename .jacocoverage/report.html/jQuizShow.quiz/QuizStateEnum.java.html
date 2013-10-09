@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>QuizStateEnum.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.quiz</a> &gt; <span class="el_source">QuizStateEnum.java</span></div><h1>QuizStateEnum.java</h1><pre class="source lang-java linenums">/*
+ * QuizStateEnum.java
+ *
+ * Created on January 30, 2004, 6:21 PM
+ *
+ * $Id: QuizStateEnum.java,v 1.1 2004/04/02 06:02:00 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: QuizStateEnum.java,v $
+ *    Revision 1.1  2004/04/02 06:02:00  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow.quiz;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 
+ */
+
+import java.util.*;
+
+import jQuizShow.event.*;
+
+public final class QuizStateEnum implements GameStateChangeEnum
+{
+    // ArrayList of enumerations (used for readResolve())
+<span class="nc" id="L54">    private static ArrayList  privateList = new ArrayList();</span>
+
+    /* Define the &quot;enumeration&quot; values */
+<span class="nc" id="L57">    public static final QuizStateEnum IDLE = new QuizStateEnum(&quot;IDLE&quot;);</span>
+<span class="nc" id="L58">    public static final QuizStateEnum SET_CURRENT_LEVEL = new QuizStateEnum(&quot;SET_CURRENT_LEVEL&quot;);</span>
+<span class="nc" id="L59">    public static final QuizStateEnum SET_QUESTION_TIMER_LIMIT = new QuizStateEnum(&quot;SET_QUESTION_TIMER_LIMIT&quot;);</span>
+<span class="nc" id="L60">    public static final QuizStateEnum NEW_GAME = new QuizStateEnum(&quot;NEW_GAME&quot;);</span>
+<span class="nc" id="L61">    public static final QuizStateEnum WAIT_TO_START_ROUND = new QuizStateEnum(&quot;WAIT_TO_START_ROUND&quot;);</span>
+<span class="nc" id="L62">    public static final QuizStateEnum DISPLAY_QUESTION = new QuizStateEnum(&quot;DISPLAY_QUESTION&quot;);</span>
+<span class="nc" id="L63">    public static final QuizStateEnum DISPLAY_ANSWER = new QuizStateEnum(&quot;DISPLAY_ANSWER&quot;);</span>
+<span class="nc" id="L64">    public static final QuizStateEnum WAIT_FOR_ANSWER = new QuizStateEnum(&quot;WAIT_FOR_ANSWER&quot;);</span>
+<span class="nc" id="L65">    public static final QuizStateEnum WAIT_TO_REVEAL_ANSWER = new QuizStateEnum(&quot;WAIT_TO_REVEAL_ANSWER&quot;);</span>
+<span class="nc" id="L66">    public static final QuizStateEnum ANSWER_WAS_CORRECT = new QuizStateEnum(&quot;ANSWER_WAS_CORRECT&quot;);</span>
+<span class="nc" id="L67">    public static final QuizStateEnum ANSWER_WAS_WRONG = new QuizStateEnum(&quot;ANSWER_WAS_WRONG&quot;);</span>
+<span class="nc" id="L68">    public static final QuizStateEnum QUESTION_TIMER_EXPIRED = new QuizStateEnum(&quot;QUESTION_TIMER_EXPIRED&quot;);</span>
+<span class="nc" id="L69">    public static final QuizStateEnum END_OF_GAME = new QuizStateEnum(&quot;END_OF_GAME&quot;);</span>
+<span class="nc" id="L70">    public static final QuizStateEnum SET_SHOW_ANSWERS_MODE = new QuizStateEnum(&quot;SET_SHOW_ANSWERS_MODE&quot;);</span>
+    
+    /** Creates new QuizStateEnum (private) */
+<span class="nc" id="L73">    private QuizStateEnum(String name) {</span>
+<span class="nc" id="L74">        this.name = new String(name);</span>
+<span class="nc" id="L75">        privateList.add(this);          // Add this enumeration to the list</span>
+<span class="nc" id="L76">        ordinal = privateList.indexOf(this);</span>
+<span class="nc" id="L77">    }</span>
+
+    public String  toString() {
+<span class="nc" id="L80">        return name;</span>
+    }
+    
+    // Prevent subclasses from overriding Object.equals
+    public final boolean equals(Object that) {
+<span class="nc" id="L85">        return super.equals(that);</span>
+    }
+
+    public final int hashCode() {
+<span class="nc" id="L89">        return super.hashCode();</span>
+    }
+    
+    // Override readResolve() to prevent duplicate constants from
+    // coexisting as a result of deserialization.
+    private Object  readResolve() throws java.io.ObjectStreamException {
+<span class="nc" id="L95">        return privateList.get(ordinal);     // Canonicalize</span>
+    }
+    
+    //*** Private Data
+    
+    // Assign an ordinal to this enumeration
+    // @serial Ordinal number of enumeration
+    private int ordinal;
+
+    // Name of this enumeration
+    private transient final String name;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

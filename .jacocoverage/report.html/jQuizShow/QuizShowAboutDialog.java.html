@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>QuizShowAboutDialog.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">QuizShowAboutDialog.java</span></div><h1>QuizShowAboutDialog.java</h1><pre class="source lang-java linenums">/*
+ * QuizShowAboutDialog.java
+ *
+ * Created on October 22, 2000, 6:03 PM
+ *
+ * $Id: QuizShowAboutDialog.java,v 1.3 2007/02/05 04:54:26 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: QuizShowAboutDialog.java,v $
+ *    Revision 1.3  2007/02/05 04:54:26  sdchen
+ *    Updated copyright date range.
+ *
+ *    Revision 1.2  2007/02/05 03:55:48  sdchen
+ *    Removed CR (Ctrl-M) from lines.
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.4  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.3  2002/05/23 05:02:56  sdchen
+ *    *** empty log message ***
+ *
+ *    Revision 1.2  2002/05/23 04:47:38  sdchen
+ *    *** empty log message ***
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:29  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 
+ */
+
+import java.awt.*;
+
+public class QuizShowAboutDialog extends javax.swing.JInternalFrame {
+
+    /** Creates new form QuizShowAboutDialog */
+    public QuizShowAboutDialog() {
+<span class="fc" id="L72">        super(&quot;About JQS&quot;, false, true, false, false);</span>
+
+<span class="fc" id="L74">        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);</span>
+
+<span class="fc" id="L76">        initComponents ();</span>
+<span class="fc" id="L77">        pack ();</span>
+<span class="fc" id="L78">    }</span>
+
+    
+    public void  showIt()
+    {
+<span class="nc" id="L83">        super.show();</span>
+<span class="nc" id="L84">    }</span>
+    
+    
+    /** This method is called from within the constructor to
+     * initialize the form.
+     */
+    private void initComponents() {
+<span class="fc" id="L91">        programNameLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L92">        authorLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L93">        versionLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L94">        copyrightLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L95">        disclaimerLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L96">        closeButton = new javax.swing.JButton();</span>
+        
+	GridBagConstraints	gridBagConstraints;
+
+<span class="fc" id="L100">        setResizable(false);</span>
+<span class="fc" id="L101">        setBackground(java.awt.Color.lightGray);</span>
+
+<span class="fc" id="L103">        getContentPane().setLayout(new GridBagLayout());</span>
+
+<span class="fc" id="L105">        programNameLabel.setText(&quot;jQuizShow&quot;);</span>
+<span class="fc" id="L106">        programNameLabel.setForeground(java.awt.Color.blue);</span>
+<span class="fc" id="L107">        programNameLabel.setBackground(java.awt.Color.white);</span>
+<span class="fc" id="L108">        programNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);</span>
+<span class="fc" id="L109">        programNameLabel.setFont(new java.awt.Font(&quot;Dialog&quot;, 1, 36));</span>
+
+<span class="fc" id="L111">	gridBagConstraints = new GridBagConstraints();</span>
+<span class="fc" id="L112">	gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;</span>
+<span class="fc" id="L113">	gridBagConstraints.weightx = 10.0;</span>
+<span class="fc" id="L114">	gridBagConstraints.weighty = 10.0;</span>
+
+<span class="fc" id="L116">        getContentPane().add(programNameLabel, gridBagConstraints);</span>
+        
+<span class="fc" id="L118">        authorLabel.setText(&quot;by Steven D. Chen&quot;);</span>
+<span class="fc" id="L119">        authorLabel.setForeground(java.awt.Color.black);</span>
+<span class="fc" id="L120">        authorLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);</span>
+
+<span class="fc" id="L122">	gridBagConstraints = new GridBagConstraints();</span>
+<span class="fc" id="L123">	gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;</span>
+<span class="fc" id="L124">	gridBagConstraints.weightx = 10.0;</span>
+<span class="fc" id="L125">	gridBagConstraints.weighty = 10.0;</span>
+<span class="fc" id="L126">        getContentPane().add(authorLabel, gridBagConstraints);</span>
+        
+<span class="fc" id="L128">        versionLabel.setText(&quot;&lt;html&gt;&lt;h3&gt;jQuizShow version &quot; + Main.JQS_VERSION + &quot;&lt;/h3&gt;&quot;);</span>
+<span class="fc" id="L129">        versionLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);</span>
+
+<span class="fc" id="L131">	gridBagConstraints = new GridBagConstraints();</span>
+<span class="fc" id="L132">	gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;</span>
+<span class="fc" id="L133">	gridBagConstraints.weightx = 10.0;</span>
+<span class="fc" id="L134">	gridBagConstraints.weighty = 10.0;</span>
+<span class="fc" id="L135">        getContentPane().add(versionLabel, gridBagConstraints);</span>
+        
+<span class="fc" id="L137">        copyrightLabel.setText(&quot;Copyright (C) 2001-2007 Steven D. Chen&quot;);</span>
+<span class="fc" id="L138">        copyrightLabel.setForeground(java.awt.Color.black);</span>
+<span class="fc" id="L139">        copyrightLabel.setBackground(java.awt.Color.white);</span>
+<span class="fc" id="L140">        copyrightLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);</span>
+
+<span class="fc" id="L142">	gridBagConstraints = new GridBagConstraints();</span>
+<span class="fc" id="L143">	gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;</span>
+<span class="fc" id="L144">	gridBagConstraints.weightx = 10.0;</span>
+<span class="fc" id="L145">	gridBagConstraints.weighty = 10.0;</span>
+<span class="fc" id="L146">        getContentPane().add(copyrightLabel, gridBagConstraints);</span>
+        
+<span class="fc" id="L148">        disclaimerLabel.setText(&quot;&lt;html&gt;&lt;center&gt;&lt;h3&gt;jQuizShow comes with ABSOLUTELY NO WARRANTY.&lt;/h3&gt;&quot;</span>
+		+ &quot;This is free software, and you are welcome to distribute it&quot;
+                + &quot;&lt;br&gt;under certain conditions; see the LICENSE.txt for details.&lt;/center&gt;&quot;);
+<span class="fc" id="L151">        disclaimerLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);</span>
+
+<span class="fc" id="L153">	gridBagConstraints = new GridBagConstraints();</span>
+<span class="fc" id="L154">	gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;</span>
+<span class="fc" id="L155">	gridBagConstraints.weightx = 10.0;</span>
+<span class="fc" id="L156">	gridBagConstraints.weighty = 10.0;</span>
+<span class="fc" id="L157">        getContentPane().add(disclaimerLabel, gridBagConstraints);</span>
+        
+<span class="fc" id="L159">        closeButton.setText(Main.getMessage(&quot;label_close&quot;));</span>
+<span class="fc" id="L160">        closeButton.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L162">                closeButtonActionPerformed(evt);</span>
+<span class="nc" id="L163">            }</span>
+        });
+        
+<span class="fc" id="L166">	gridBagConstraints = new GridBagConstraints();</span>
+<span class="fc" id="L167">	gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;</span>
+<span class="fc" id="L168">	gridBagConstraints.weightx = 10.0;</span>
+<span class="fc" id="L169">	gridBagConstraints.weighty = 10.0;</span>
+<span class="fc" id="L170">	gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="fc" id="L171">        getContentPane().add(closeButton, gridBagConstraints);</span>
+        
+<span class="fc" id="L173">    }</span>
+
+
+    private void closeButtonActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L177">        setVisible(false);</span>
+<span class="nc" id="L178">    }</span>
+
+
+
+    private javax.swing.JLabel programNameLabel;
+    private javax.swing.JLabel versionLabel;
+    private javax.swing.JLabel authorLabel;
+    private javax.swing.JLabel copyrightLabel;
+    private javax.swing.JLabel disclaimerLabel;
+    private javax.swing.JLabel distribution1Label;
+    private javax.swing.JLabel distribution2Label;
+    private javax.swing.JButton closeButton;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

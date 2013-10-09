@@ -1,0 +1,77 @@
+                           jQuizShow
+               Copyright(c) 2001 Steven D. Chen
+
+
+Licensing:
+==========
+
+    This file is part of jQuizShow.
+
+    jQuizShow is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    jQuizShow is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License (GPL)
+    along with jQuizShow; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+            
+
+Playing the game:
+=================
+
+    jQuizShow was designed to work in a group environment, with a "hot
+    seat", game host, audience and simulated "call-a-friend".  Thus, the
+    controls are centered around either the game host selecting and
+    controlling the game play or a 3rd party.
+
+    Select "New Player..." from the File menu to start a game.
+
+    The primary keys are:
+
+        SPACE BAR         -- Move from one state to another
+        ENTER KEY         -- Finalize the answer or use helpline
+        letter keys       -- Select an answer
+
+        , (comma)         -- Select 50/50 helpline
+        . (period)        -- Select Call-a-Friend helpline
+        / (slash)         -- Select Ask-the-Audience helpline
+        ENTER KEY           -- End Call-a-Friend helpline mode
+
+        BACKSPACE KEY     -- Cancels helpline selection or finalized
+	                     answer
+
+        = (equals)        -- Walk away from game with current earnings
+
+        ~ (tilde)         -- Toggle score screen on/off
+
+    The SPACE BAR is the most used key.  If in doubt what to do, press it to
+    move to the next game state (e.g. to display each possible answer
+    one-by-one, to move from the transition screen to the next round,
+    start/stop the Call-a-Friend timer, etc.).
+
+    In addition, the number keys (0-9) can be configured to play custom
+    sound samples.
+
+    NOTE:  If for some reason the keys do not appear to work, try using
+    the mouse to select the "Game Screen" to make it the active window
+    (highlighted border).
+
+
+Contact:
+========
+
+    Home page:
+
+        http://quizshow.sourceforge.net
+
+    Bug reports/suggestions/development/source:
+
+        http://sourceforge.net/projects/quizshow
+
+

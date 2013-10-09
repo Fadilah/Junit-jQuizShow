@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ScoreScreen.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.game.classic</a> &gt; <span class="el_source">ScoreScreen.java</span></div><h1>ScoreScreen.java</h1><pre class="source lang-java linenums">/*
+ * ScoreScreen.java
+ *
+ * Created on May 8, 2001, 8:50 PM
+ *
+ * $Id: ScoreScreen.java,v 1.2 2007/02/06 05:20:21 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ScoreScreen.java,v $
+ *    Revision 1.2  2007/02/06 05:20:21  sdchen
+ *    Added key listener to overcome keyboard focus problem.
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.2  2002/06/06 05:23:25  sdchen
+ *    Removed lifeline icons from this screen.  Redundant with the GameScreen
+ *    and removing it allows the ScoreScreen size to be more flexible (icons
+ *    did not resize).
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:30  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.game.classic;
+
+/** This class is responsible for managing the Score Screen, the
+ * window which displays the player's current accomplishment level.
+ *
+ * @author  Steven D. Chen
+ */
+
+import java.net.*;
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.border.*;
+
+import jQuizShow.*;
+import jQuizShow.game.*;
+import jQuizShow.event.*;
+
+public class ScoreScreen extends JInternalFrame
+        implements GameStateChangeListener,
+            GameUpdateListener
+{
+    /** Creates a new ScoreScreen */
+    public ScoreScreen(Point  initLocation, Dimension  initSize, GameState  gameState)
+    {
+<span class="fc" id="L74">        super(&quot;Score Screen&quot;, true, true, false, true);</span>
+
+<span class="fc" id="L76">        setSize(initSize);</span>
+<span class="fc" id="L77">        setLocation(initLocation);</span>
+
+<span class="fc" id="L79">        setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);</span>
+
+<span class="fc" id="L81">        getContentPane().setBackground(Color.black);</span>
+        
+<span class="fc" id="L83">        m_gameState = gameState;</span>
+<span class="fc" id="L84">        m_gameState.addGameStateChangeListener(this);</span>
+<span class="fc" id="L85">        m_gameState.addGameUpdateListener(this);</span>
+        
+        // Get the level titles and initialize the ScorePanel with them.
+<span class="fc" id="L88">        GameConfig  gameConfig = GameConfig.getInstance();</span>
+        
+<span class="fc" id="L90">        int  numLevels = gameConfig.getNumLevels();</span>
+        
+<span class="fc" id="L92">        String[]  titles = new String[numLevels];</span>
+        
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        for (int  i = 1; i &lt;= numLevels; i++)</span>
+<span class="fc" id="L95">            titles[i - 1] = gameConfig.getConfig(&quot;levelName&quot; + i, &quot;Level &quot; + i);</span>
+
+<span class="fc" id="L97">        m_scorePanel = new ScorePanel(titles);</span>
+
+        // Get the level numbers to highlight, if any
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">        for (int  i = 1; i &lt;= numLevels; i++)</span>
+        {
+            int     level;
+            
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            if ((level = gameConfig.getIntConfig(&quot;transitionLevel&quot; + i, -1)) &gt; 0)</span>
+<span class="fc" id="L105">                m_scorePanel.setHighlight(level, true);</span>
+            else
+                break;
+        }
+
+<span class="fc" id="L110">        getContentPane().add(m_scorePanel);</span>
+
+        // Listen for keyboard events
+<span class="fc" id="L113">        addKeyListener(new java.awt.event.KeyAdapter()</span>
+<span class="fc" id="L114">        {</span>
+            public void keyPressed(java.awt.event.KeyEvent evt)
+            {
+<span class="nc" id="L117">                int  keyCode = evt.getKeyCode();</span>
+<span class="nc" id="L118">                char  keyChar = evt.getKeyChar();</span>
+                
+<span class="nc" id="L120">                GameState  gState = GameState.getInstance(false);</span>
+                
+<span class="nc" id="L122">                GameInputEvent  event = new GameInputEvent(this);</span>
+
+<span class="nc" id="L124">                event.setType(GameInputEnum.KEY_TYPED);</span>
+<span class="nc" id="L125">                event.setKeyCode(keyCode, keyChar);</span>
+<span class="nc" id="L126">                gState.fireGameInputEvent(event);</span>
+<span class="nc" id="L127">            }</span>
+        } );
+        
+<span class="fc" id="L130">        setFocusable(true);        </span>
+<span class="fc" id="L131">    }</span>
+    
+    
+    /** Listener for GameStateChange events
+     */
+    public void  gameStateChanged(GameStateChangeEvent  evt)
+    {
+<span class="nc" id="L138">        GameStateEnum  type = (GameStateEnum) evt.getType();</span>
+        
+<span class="nc bnc" id="L140" title="All 8 branches missed.">        if (type == GameStateEnum.NEW_GAME ||</span>
+                type == GameStateEnum.WAIT_TO_START_ROUND ||
+                type == GameStateEnum.ANSWER_WAS_WRONG ||
+                type == GameStateEnum.SET_CURRENT_LEVEL)
+        {
+            // Highlight the current highlight level
+<span class="nc" id="L146">            m_scorePanel.setHighlightBorder(m_gameState.getHighlightLevel());</span>
+
+<span class="nc" id="L148">            m_scorePanel.setCurrentLevel(m_gameState.getCurrentLevel());</span>
+        }
+
+<span class="nc" id="L151">        return;</span>
+    }
+
+
+    /** Listener for GameUpdateEvents
+     */
+    public void gameUpdated(GameUpdateEvent evt) {
+<span class="nc" id="L158">        GameUpdateEnum  type = evt.getType();</span>
+        
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        if (type == GameUpdateEnumGame.HIGHLIGHT_LEVEL)</span>
+        {
+<span class="nc" id="L162">            m_scorePanel.setHighlightBorder(m_gameState.getHighlightLevel());</span>
+        }    
+<span class="nc bnc" id="L164" title="All 2 branches missed.">        else if (type == GameUpdateEnumGame.TOGGLE_STATE)</span>
+        {
+            boolean  state;
+            
+<span class="nc" id="L168">            state = m_gameState.getToggleState(GameState.SCORES_SHOWN);</span>
+            
+<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (state != m_scoreShown)</span>
+            {
+<span class="nc" id="L172">                setVisible(state);</span>
+                
+<span class="nc" id="L174">                m_scoreShown = state;</span>
+            }
+        }
+<span class="nc" id="L177">    }    </span>
+
+    // Variables declaration
+    private ScorePanel  m_scorePanel;
+    private GameState  m_gameState;
+    
+<span class="fc" id="L183">    private boolean  m_scoreShown = false;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

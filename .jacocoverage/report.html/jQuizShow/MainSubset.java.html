@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MainSubset.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">MainSubset.java</span></div><h1>MainSubset.java</h1><pre class="source lang-java linenums">/*
+ * MainSubset.java
+ *
+ * Created on January 18, 2001, 7:14 PM
+ *
+ * $Id: MainSubset.java,v 1.2 2007/02/05 03:55:48 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: MainSubset.java,v $
+ *    Revision 1.2  2007/02/05 03:55:48  sdchen
+ *    Removed CR (Ctrl-M) from lines.
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow;
+
+import java.io.*;
+import java.net.*;
+import java.text.*;
+import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
+
+import jQuizShow.event.*;
+import jQuizShow.net.*;
+import jQuizShow.util.*;
+
+/**
+ * This is the interface that defines the top-level &quot;program entry&quot; class for
+ * the major jQuizShow program subsets.  All subsets MUST be derived from this
+ * interface in order to be run from jQuizShow.
+ *
+ * The class should be implemented using the Singleton design pattern.
+ *
+ * @author  Steven D. Chen
+ */
+
+<span class="fc" id="L67">public abstract class MainSubset</span>
+{   
+    /**
+     * Gets the singleton instance for this subset.
+     */
+    public static MainSubset getInstance()
+    {
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (m_instance == null)</span>
+<span class="nc" id="L75">            System.out.println(&quot;ERROR -- MainSubset.setInstance() was not initialized!&quot;);</span>
+        
+<span class="fc" id="L77">        return m_instance;</span>
+    }
+    
+    /**
+     * Sets the singleton instance. The derived class must call this method
+     * to set a reference to its Singleton instance so that the other
+     * classes can reference it.
+     */
+    protected static void setInstance(MainSubset  instance)
+    {
+<span class="fc" id="L87">        m_instance = instance;</span>
+        
+<span class="fc" id="L89">        return;</span>
+    }
+
+    
+    /**
+     * Initializes this Singleton class.  It must be called once prior to
+     * the initial use in order to properly set the getInstance() method
+     * of the parent class.
+     *
+     * ---&gt; NOTE:  This must be defined in the child class.
+     *
+     * public static void initializeClass();
+    */
+    
+    
+    /**
+     * Initialize the subset.  At a minimum, the implementation should
+     * create the main menu bar and add it to the main window via
+     * Main.setMenuBar().
+     */
+    public abstract void initialize();
+
+    
+    /**
+     * Loads a new question database for the subset.
+     */
+    public abstract void  loadQuestionDatabase();
+
+    
+    /**
+     * Starts a new &quot;game&quot;.
+     */
+    public abstract void  startNewGame();
+
+    
+    /**
+     * Uninstalls this subset from the system.  This is called prior to
+     * switching game modes to &quot;close&quot; the subset in preparation for
+     * loading a new subset.
+     */
+    public abstract void  uninstall();
+
+    
+    /** Sets the game mode (standalone, master or slave)
+     */
+    public void  setGameMode(GameModeEnum  newGameMode)
+    {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (m_restricted)</span>
+<span class="nc" id="L137">            throw new UnsupportedOperationException(&quot;Restricted mode&quot;);</span>
+
+        // Fire event only if mode is changed
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        if (m_gameMode != newGameMode)</span>
+        {
+<span class="nc" id="L142">            m_gameMode = newGameMode;</span>
+            
+<span class="nc" id="L144">            this.fireGameModeChangeEvent(this, m_gameMode);</span>
+        }
+        
+<span class="nc" id="L147">        return;</span>
+    }
+
+    
+    // Methods for managing and firing the GameInputEvent
+    public void addGameModeChangeListener(GameModeChangeListener  l)
+    {
+<span class="nc" id="L154">        m_GameModeChangeListenerList.add(GameModeChangeListener.class, l);</span>
+<span class="nc" id="L155">    }</span>
+    
+    public void removeGameModeChangeListener(GameModeChangeListener  l)
+    {
+<span class="nc" id="L159">        m_GameModeChangeListenerList.remove(GameModeChangeListener.class, l);</span>
+<span class="nc" id="L160">    }</span>
+
+    public void  fireGameModeChangeEvent(Object  source, GameModeEnum  type)
+    {
+        // Guaranteed to return a non-null array
+<span class="nc" id="L165">        Object[] listeners = m_GameModeChangeListenerList.getListenerList();</span>
+
+<span class="nc" id="L167">        GameModeChangeEvent  event = new GameModeChangeEvent();</span>
+<span class="nc" id="L168">        event.setSource(source);</span>
+<span class="nc" id="L169">        event.setType(type);</span>
+        
+        // Store a local copy of this event for sending to remote nodes
+        
+        // Process the listeners last to first, notifying
+        // those that are interested in this event
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        for (int i = listeners.length - 2; i &gt;= 0; i -= 2)</span>
+        {
+<span class="nc bnc" id="L177" title="All 4 branches missed.">            if (listeners[i] == GameModeChangeListener.class &amp;&amp;</span>
+                    listeners[i] != source)
+            {
+<span class="nc" id="L180">                ((GameModeChangeListener)listeners[i+1]).gameModeChanged(event);</span>
+            }
+        }        
+<span class="nc" id="L183">    }</span>
+
+    
+    /*
+     * Private variables definitions
+     */
+    
+    /**
+     * Stores a reference to the singleton instance.
+     */
+    private static MainSubset    m_instance; 
+    
+    /**
+     * Game mode (standalone, master or slave)
+     */
+    private GameModeEnum    m_gameMode; 
+
+<span class="fc" id="L200">    private boolean  m_restricted = false;</span>
+
+<span class="fc" id="L202">    private EventListenerList  m_GameModeChangeListenerList = new EventListenerList();</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

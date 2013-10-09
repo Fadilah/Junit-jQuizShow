@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ScorePanel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.game.classic</a> &gt; <span class="el_source">ScorePanel.java</span></div><h1>ScorePanel.java</h1><pre class="source lang-java linenums">/*
+ * ScorePanel.java
+ *
+ * Created on May 8, 2001, 9:14 PM
+ *
+ * $Id: ScorePanel.java,v 1.2 2007/02/05 04:05:34 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: ScorePanel.java,v $
+ *    Revision 1.2  2007/02/05 04:05:34  sdchen
+ *    Replaced deprecated show() with setVisible(bool  s)
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:29  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.game.classic;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.*;
+import java.util.*;
+import javax.swing.*;
+import javax.swing.event.*;
+
+
+/**
+ *
+ * @author  Steven D. Chen
+ */
+public class ScorePanel extends javax.swing.JPanel
+{
+    public static final int HIGHLIGHT_OFF = -1;
+    
+    /** Creates new form ScorePanel */
+<span class="fc" id="L64">    public ScorePanel(String[]  titles) {</span>
+<span class="fc" id="L65">        initComponents();</span>
+
+<span class="fc" id="L67">        m_titles = titles;</span>
+
+<span class="fc" id="L69">        m_indexColor = Color.orange;</span>
+<span class="fc" id="L70">        m_indicatorColor = Color.white;</span>
+<span class="fc" id="L71">        m_textColor = Color.orange;</span>
+<span class="fc" id="L72">        m_background = Color.red;</span>
+<span class="fc" id="L73">        m_highlightColor = Color.white;</span>
+        
+<span class="fc" id="L75">        m_highlightTitles = new BitSet(m_titles.length);</span>
+        
+        /* Listen for resize events */
+<span class="fc" id="L78">        addComponentListener(new java.awt.event.ComponentAdapter()</span>
+<span class="fc" id="L79">        {</span>
+            public void componentResized(java.awt.event.ComponentEvent evt)
+            {
+<span class="fc" id="L82">                Component  component = evt.getComponent();</span>
+<span class="fc" id="L83">                Graphics  g = component.getGraphics();</span>
+<span class="fc" id="L84">                m_size = component.getSize();</span>
+
+<span class="fc" id="L86">                m_parentBG = component.getParent().getBackground();</span>
+                
+                /* Scale the font to fit to the size of the actual panel
+                 *
+                 * Make initial guess too large
+                 */
+<span class="fc" id="L92">                int  ptSize = (int) (m_size.width / 5.0f);</span>
+
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                for (int  loop = 0; loop &lt; 10; loop++)</span>
+                {
+<span class="fc" id="L96">                    m_font = new Font(&quot;Helvetica&quot;, Font.BOLD, ptSize);</span>
+<span class="fc" id="L97">                    m_fontMetrics = g.getFontMetrics(m_font);</span>
+                    
+<span class="fc" id="L99">                    int  fontHeight = m_fontMetrics.getHeight();</span>
+                    
+<span class="fc" id="L101">                    int  height = m_titles.length * fontHeight;</span>
+                    
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                    if (height &gt; m_size.height)</span>
+                    {
+<span class="fc" id="L105">                        ptSize *= (1.0f - (height - m_size.height) / ((float) height));</span>
+<span class="fc" id="L106">                        continue;</span>
+                    }
+
+                    int  i;
+
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                    for (i = 0; i &lt; m_titles.length; i++)</span>
+                    {
+<span class="fc" id="L113">                        int  width = m_fontMetrics.stringWidth(m_titles[i] + &quot;88&quot;) +</span>
+                                fontHeight + 2 * m_fontMetrics.stringWidth(&quot;W&quot;);
+
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">                        if (width &gt; m_size.width)</span>
+                        {
+<span class="nc" id="L118">                            ptSize *= (1.0f - (width - m_size.width) / ((float) width));</span>
+<span class="nc" id="L119">                            break;</span>
+                        }
+                    }
+                    
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                    if (i != m_titles.length)</span>
+<span class="nc" id="L124">                        continue;</span>
+                    else
+                        break;
+                }
+
+<span class="fc" id="L129">                component.repaint();</span>
+<span class="fc" id="L130">            }</span>
+        });
+<span class="fc" id="L132">    }</span>
+
+    /** Set the current question level. */
+    public void  setCurrentLevel(int  level)
+    {
+<span class="nc" id="L137">        m_currentLevel = level;</span>
+<span class="nc" id="L138">        repaint();</span>
+<span class="nc" id="L139">    }</span>
+
+    /** Sets the highlight state of the specified level. */
+    public void  setHighlight(int  index, boolean  highlight)
+    {
+<span class="pc bpc" id="L144" title="2 of 4 branches missed.">        if (index &lt; 0 || index &gt; m_highlightTitles.size())</span>
+<span class="nc" id="L145">            return;</span>
+        
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        if (highlight)</span>
+<span class="fc" id="L148">            m_highlightTitles.set(index);</span>
+        else
+<span class="nc" id="L150">            m_highlightTitles.clear(index);</span>
+
+<span class="fc" id="L152">        return;</span>
+    }
+
+    /** Draw the highlight border index */
+    public void  setHighlightBorder(int  index)
+    {
+<span class="nc bnc" id="L158" title="All 6 branches missed.">        if (index == HIGHLIGHT_OFF ||</span>
+                (index &gt;= 0 &amp;&amp; index &lt; m_titles.length))
+        {
+<span class="nc" id="L161">            m_highlightBorderIndex = index;</span>
+        }
+        
+<span class="nc" id="L164">        repaint();</span>
+<span class="nc" id="L165">        return;</span>
+    }
+    
+    public void paintComponent(Graphics  g)
+    {
+<span class="nc" id="L170">        Graphics2D  g2 = (Graphics2D) g;</span>
+        
+<span class="nc" id="L172">        final int  borderWidth = 6;</span>
+        
+        // Save the original (current) graphics transform
+<span class="nc" id="L175">        AffineTransform  origTransform = g2.getTransform();</span>
+        
+        // Clear everything
+<span class="nc" id="L178">        g2.setBackground(m_parentBG);</span>
+<span class="nc" id="L179">        g2.clearRect(0, 0, m_size.width, m_size.height);</span>
+    
+<span class="nc" id="L181">        Dimension  size = new Dimension(m_size);</span>
+
+<span class="nc" id="L183">        g2.translate(0, borderWidth);</span>
+        
+<span class="nc" id="L185">        size.height -= borderWidth * 2;</span>
+
+<span class="nc" id="L187">        int  lineHeight = m_fontMetrics.getMaxAscent();</span>
+        
+<span class="nc" id="L189">        g2.setFont(m_font);</span>
+        
+<span class="nc" id="L191">        Point2D.Float origin = new Point2D.Float(5.0f, lineHeight);</span>
+
+<span class="nc" id="L193">        float  spacing = (float) size.height  / m_titles.length;</span>
+        
+        // Draw the text
+
+<span class="nc" id="L197">        Point2D.Float pen = new Point2D.Float(origin.x, origin.y + m_lineHeight);</span>
+    
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        for (int  line = m_titles.length; line &gt; 0; line--)</span>
+        {
+            String  title;
+            
+            int     width;
+
+<span class="nc" id="L205">            boolean  highlight = m_highlightTitles.get(line);</span>
+            
+<span class="nc" id="L207">            pen.x = origin.x;</span>
+
+            // If m_highlightBorderIndex is explicitly set, draw highlight box if this is the
+            // specified line.
+<span class="nc bnc" id="L211" title="All 4 branches missed.">            if (m_highlightBorderIndex != HIGHLIGHT_OFF &amp;&amp; m_highlightBorderIndex == line - 1)</span>
+            {
+<span class="nc" id="L213">                Rectangle2D rect2D = new Rectangle2D.Float(0,</span>
+                        pen.y - m_fontMetrics.getMaxAscent(),
+                        m_size.width,
+                        m_fontMetrics.getMaxAscent() + m_fontMetrics.getMaxDescent());
+
+<span class="nc" id="L218">                g2.setColor(m_background);</span>
+<span class="nc" id="L219">                g2.fill(rect2D);</span>
+
+<span class="nc" id="L221">                GeneralPath  path = new GeneralPath();</span>
+                
+<span class="nc" id="L223">                path.moveTo(0, pen.y - m_fontMetrics.getMaxAscent());</span>
+<span class="nc" id="L224">                path.lineTo(m_size.width, pen.y - m_fontMetrics.getMaxAscent());</span>
+<span class="nc" id="L225">                path.moveTo(m_size.width, pen.y + m_fontMetrics.getMaxDescent());</span>
+<span class="nc" id="L226">                path.lineTo(0, pen.y + m_fontMetrics.getMaxDescent());</span>
+
+<span class="nc" id="L228">                g2.setColor(m_highlightColor);</span>
+<span class="nc" id="L229">                g2.draw(path);</span>
+            }
+
+            // Draw the level number
+
+<span class="nc bnc" id="L234" title="All 2 branches missed.">            if (highlight)</span>
+<span class="nc" id="L235">                g2.setColor(m_highlightColor);</span>
+            else
+<span class="nc" id="L237">                g2.setColor(m_indexColor);</span>
+
+<span class="nc" id="L239">            width = m_fontMetrics.stringWidth(&quot;88&quot;);</span>
+            
+<span class="nc" id="L241">            g2.drawString(String.valueOf(line), pen.x, pen.y);</span>
+            
+<span class="nc" id="L243">            pen.x += width + m_fontMetrics.stringWidth(&quot;W&quot;);</span>
+
+            // Draw the &quot;diamond&quot;
+
+<span class="nc bnc" id="L247" title="All 2 branches missed.">            if (m_currentLevel &gt;= line)</span>
+            {
+<span class="nc" id="L249">                GeneralPath  path = new GeneralPath();</span>
+
+<span class="nc" id="L251">                float  halfHeight = lineHeight * 0.5f;</span>
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">                if (highlight)</span>
+<span class="nc" id="L254">                    g2.setColor(m_highlightColor);</span>
+                else
+<span class="nc" id="L256">                    g2.setColor(m_indicatorColor);</span>
+                
+<span class="nc" id="L258">                path.moveTo(pen.x, pen.y - halfHeight);</span>
+<span class="nc" id="L259">                path.lineTo(pen.x + halfHeight, pen.y - lineHeight);</span>
+<span class="nc" id="L260">                path.lineTo(pen.x + lineHeight, pen.y - halfHeight);</span>
+<span class="nc" id="L261">                path.lineTo(pen.x + halfHeight, pen.y);</span>
+<span class="nc" id="L262">                path.closePath();</span>
+                
+<span class="nc" id="L264">                g2.fill(path);</span>
+            }
+            
+<span class="nc" id="L267">            pen.x += lineHeight + m_fontMetrics.stringWidth(&quot;W&quot;);</span>
+            
+            // Draw the level description
+            
+<span class="nc bnc" id="L271" title="All 2 branches missed.">            if (highlight)</span>
+<span class="nc" id="L272">                g2.setColor(m_highlightColor);</span>
+            else
+<span class="nc" id="L274">                g2.setColor(m_textColor);</span>
+
+<span class="nc" id="L276">            title = m_titles[line - 1];</span>
+            
+<span class="nc" id="L278">            width = m_fontMetrics.stringWidth(title);</span>
+            
+<span class="nc" id="L280">            g2.drawString(title, pen.x, pen.y);</span>
+            
+<span class="nc" id="L282">            pen.y += spacing;</span>
+        }
+        
+        // Restore the original graphics transform
+<span class="nc" id="L286">        g2.setTransform(origTransform);</span>
+<span class="nc" id="L287">    }</span>
+    
+    
+    /** This method is called from within the constructor to
+     * initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is
+     * always regenerated by the Form Editor.
+     */
+    private void initComponents() {//GEN-BEGIN:initComponents
+        
+<span class="fc" id="L297">        setLayout(new java.awt.BorderLayout());</span>
+        
+<span class="fc" id="L299">        setForeground(java.awt.Color.white);</span>
+<span class="fc" id="L300">        setBackground(java.awt.Color.black);</span>
+<span class="fc" id="L301">    }//GEN-END:initComponents</span>
+
+
+    /**
+     * Test program
+     * @param args the command line arguments
+    */
+    public static void main (String args[]) {
+<span class="nc" id="L309">        Toolkit     tk = Toolkit.getDefaultToolkit();</span>
+<span class="nc" id="L310">        Dimension   screenSize = tk.getScreenSize();</span>
+        
+<span class="nc" id="L312">        Dimension   initSize = new Dimension();</span>
+        
+<span class="nc" id="L314">        Point       initLocation = new Point();</span>
+
+<span class="nc" id="L316">        JFrame  jframe = new JFrame();</span>
+
+<span class="nc" id="L318">        jframe.addWindowListener(new java.awt.event.WindowAdapter()</span>
+<span class="nc" id="L319">        {</span>
+            public void windowClosing(java.awt.event.WindowEvent evt)
+            {
+<span class="nc" id="L322">                System.exit(0);</span>
+<span class="nc" id="L323">            }</span>
+        });
+
+<span class="nc" id="L326">        initSize.width = (int) (screenSize.width * 0.5);</span>
+<span class="nc" id="L327">        initSize.height = (int) (screenSize.height * 0.2f);</span>
+        
+<span class="nc" id="L329">        System.out.println(&quot;Dimension = &quot; + initSize);</span>
+        
+<span class="nc" id="L331">        jframe.setSize(initSize);</span>
+<span class="nc" id="L332">        jframe.setLocation(50, 50);</span>
+
+<span class="nc" id="L334">        String[]  titles =</span>
+        {
+            &quot;$ 100&quot;,
+            &quot;$ 200&quot;,
+            &quot;$ 300&quot;,
+            &quot;$ 500&quot;,
+            &quot;$ 1,000,000&quot;,
+            &quot;$ This is a really long line&quot;
+        };
+        
+<span class="nc" id="L344">        ScorePanel  scorePanel = new ScorePanel(titles);</span>
+        
+<span class="nc" id="L346">        jframe.getContentPane().add(scorePanel);</span>
+<span class="nc" id="L347">        jframe.setVisible(true);</span>
+<span class="nc" id="L348">    }</span>
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+
+    private String[]  m_titles;   // Ordered list of titles to display
+
+    private BitSet  m_highlightTitles;   // Mask of bits to highlight
+
+    private float  m_lineHeight;
+    
+    private Font  m_font;           // Font for text
+
+    private FontMetrics  m_fontMetrics;  // Font metrics
+    
+    private Dimension  m_size;      // Current dimension of JPanel
+    
+    private int  m_currentLevel;    // Current question level
+    
+<span class="fc" id="L367">    private int  m_highlightBorderIndex = HIGHLIGHT_OFF;  // Line to highlight w/bar</span>
+
+    private Color  m_parentBG;      // Parent component's background color
+
+    private Color  m_indexColor;      // Index number's color
+    
+    private Color  m_indicatorColor;  // Color for level indicator
+    
+    private Color  m_textColor;       // Color for description text
+
+    private Color  m_background;    // Background color (for highlighting)
+    
+    private Color  m_highlightColor;    // Highlight text color
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

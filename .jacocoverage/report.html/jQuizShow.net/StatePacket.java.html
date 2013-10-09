@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>StatePacket.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow.net</a> &gt; <span class="el_source">StatePacket.java</span></div><h1>StatePacket.java</h1><pre class="source lang-java linenums">/*
+ * StatePacket.java
+ *
+ * Created on August 15, 2001, 6:44 PM
+ *
+ * $Id: StatePacket.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: StatePacket.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:45  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow.net;
+
+/**
+ *
+ * @author  Steven D. Chen
+ * @version 1.0
+ */
+
+import java.io.*;
+import java.util.*;
+
+import jQuizShow.*;
+import jQuizShow.event.*;
+
+public class StatePacket implements Serializable {
+    
+    /** Creates new SetupPacket */
+<span class="fc" id="L59">    public StatePacket() {</span>
+<span class="fc" id="L60">    }</span>
+
+    /*
+     * Accessors
+     */
+    public GameStateChangeEnum  getType() {
+<span class="nc" id="L66">        return m_gameStateEnum;</span>
+    }
+
+    public int  getMaxNumberOfLevels() {
+<span class="nc" id="L70">        return m_maxNumberOfLevels;</span>
+    }
+
+    public int  getCurrentLevel() {
+<span class="nc" id="L74">        return m_currentLevel;</span>
+    }
+
+    public String  getLevelTitle() {
+<span class="nc" id="L78">        return m_levelTitle;</span>
+    }
+    
+    public String  getQuestionID() {
+<span class="nc" id="L82">        return m_questionID;</span>
+    }
+    
+    public String  getQuestion() {
+<span class="nc" id="L86">        return m_question;</span>
+    }
+
+    public String[]  getAnswers() {
+<span class="nc" id="L90">        return m_answers;</span>
+    }
+
+    public int  getQuestionTimerLimit() {
+<span class="nc" id="L94">        return m_questionTimerLimit;</span>
+    }
+
+    public int  getLifelineTimerLimit() {
+<span class="nc" id="L98">        return m_lifelineTimerLimit;</span>
+    }
+
+    public BitSet getAnswersVisible() {
+<span class="nc" id="L102">        return m_answersVisible;</span>
+    }
+
+    public int getCorrectAnswer() {
+<span class="nc" id="L106">        return m_correctAnswer;</span>
+    }
+
+    
+    /*
+     * Manipulators
+     */
+    
+    public void  setType(GameStateChangeEnum  type) {
+<span class="nc" id="L115">        m_gameStateEnum = type;</span>
+<span class="nc" id="L116">    }</span>
+    
+    public void  setMaxNumberOfLevels(int  max) {
+<span class="nc" id="L119">        m_maxNumberOfLevels = max;</span>
+<span class="nc" id="L120">    }</span>
+
+    public void  setCurrentLevel(int  level) {
+<span class="nc" id="L123">        m_currentLevel = level;</span>
+<span class="nc" id="L124">    }</span>
+
+    public void  setLevelTitle(String  title) {
+<span class="nc" id="L127">        m_levelTitle = title;</span>
+<span class="nc" id="L128">    }</span>
+    
+    public void  setQuestionID(String  id) {
+<span class="nc" id="L131">        m_questionID = id;</span>
+<span class="nc" id="L132">    }</span>
+    
+    public void  setQuestion(String  question) {
+<span class="nc" id="L135">        m_question = question;</span>
+<span class="nc" id="L136">    }</span>
+
+    public void  setAnswers(String[]  answers) {
+<span class="nc" id="L139">        m_answers = answers;</span>
+<span class="nc" id="L140">    }</span>
+
+    public void  setQuestionTimerLimit(int  seconds) {
+<span class="nc" id="L143">        m_questionTimerLimit = seconds;</span>
+<span class="nc" id="L144">    }</span>
+
+    public void  setLifelineTimerLimit(int  seconds) {
+<span class="nc" id="L147">        m_lifelineTimerLimit = seconds;</span>
+<span class="nc" id="L148">    }</span>
+
+    public void setAnswersVisible(BitSet  answersVisible) {
+<span class="nc" id="L151">        m_answersVisible = answersVisible;</span>
+<span class="nc" id="L152">    }</span>
+
+    public void setCorrectAnswer(int  index) {
+<span class="nc" id="L155">        m_correctAnswer = index;</span>
+<span class="nc" id="L156">    }</span>
+    
+    private GameStateChangeEnum  m_gameStateEnum;
+    
+    private int  m_maxNumberOfLevels;
+    private int  m_currentLevel;
+
+    private String  m_questionID;
+    private String  m_question;
+    private String[]  m_answers;
+
+    private String  m_levelTitle;
+    
+    private int  m_questionTimerLimit;
+
+    private int  m_lifelineTimerLimit;
+
+    private BitSet  m_answersVisible;
+
+    private int  m_correctAnswer;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>QuizShowSkin.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">QuizShowSkin.java</span></div><h1>QuizShowSkin.java</h1><pre class="source lang-java linenums">/*
+ * QuizShowSkin.java
+ *
+ * Created on February 4, 2004, 7:30 PM
+ *
+ * $Id: QuizShowSkin.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: QuizShowSkin.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow;
+
+import java.awt.*;
+import java.awt.image.*;
+import java.io.*;
+import java.util.*;
+
+/**
+ *
+ * @author  Steve
+ */
+public abstract class QuizShowSkin {
+    
+    private static final int DEFAULT_BKG_COLOR = 0xFFFFFF;
+    
+    /** Creates a new instance of QuizShowSkin */
+<span class="nc" id="L55">    public QuizShowSkin() {</span>
+<span class="nc" id="L56">        m_answerBoxes = new Vector();</span>
+<span class="nc" id="L57">        m_answerLabelBoxes = new Vector();</span>
+<span class="nc" id="L58">    }</span>
+    
+    abstract public void load(String name, String filename) throws IOException;
+
+    public String  getName() {
+<span class="nc" id="L63">        return m_name;</span>
+    }
+    
+    protected void  setName(String  name) {
+<span class="nc" id="L67">        m_name = name;</span>
+<span class="nc" id="L68">    }</span>
+    
+    public String  getFilename() {
+<span class="nc" id="L71">        return m_filename;</span>
+    }
+
+    protected void  setFilename(String  filename) {
+<span class="nc" id="L75">        m_filename = filename;</span>
+<span class="nc" id="L76">    }</span>
+    
+    public Color getBkgColor() {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (m_bkgColor == null)</span>
+<span class="nc" id="L80">            return new Color(DEFAULT_BKG_COLOR);</span>
+        else
+<span class="nc" id="L82">            return m_bkgColor;</span>
+    }
+ 
+    protected void  setBkgColor(Color  color)
+    {
+<span class="nc" id="L87">        m_bkgColor = color;</span>
+<span class="nc" id="L88">    }</span>
+
+    public BufferedImage getBkgImage() {
+<span class="nc" id="L91">        return m_bkgImage;</span>
+    }
+ 
+    protected void  setBkgImage(BufferedImage  image)
+    {
+<span class="nc" id="L96">        m_bkgImage = image;</span>
+<span class="nc" id="L97">    }    </span>
+    
+    public TextBoxConfig getQuestionLabelBox() {
+<span class="nc" id="L100">        return m_questionLabelBox;</span>
+    }
+
+    protected void  setQuestionLabelBox(TextBoxConfig  box) {
+<span class="nc" id="L104">        m_questionLabelBox = box;</span>
+<span class="nc" id="L105">    }</span>
+    
+    public TextBoxConfig getQuestionBox() {
+<span class="nc" id="L108">        return m_questionBox;</span>
+    }
+
+    protected void  setQuestionBox(TextBoxConfig  box) {
+<span class="nc" id="L112">        m_questionBox = box;</span>
+<span class="nc" id="L113">    }</span>
+    
+    public TextBoxConfig getTimerBox() {
+<span class="nc" id="L116">        return m_timerBox;</span>
+    }
+
+    protected void  setTimerBox(TextBoxConfig  box) {
+<span class="nc" id="L120">        m_timerBox = box;</span>
+<span class="nc" id="L121">    }</span>
+    
+    public TextBoxConfig getCommentBox() {
+<span class="nc" id="L124">        return m_commentBox;</span>
+    }
+
+    protected void  setCommentBox(TextBoxConfig  box) {
+<span class="nc" id="L128">        m_commentBox = box;</span>
+<span class="nc" id="L129">    }</span>
+    
+    public TextBoxConfig getTransitionBox() {
+<span class="nc" id="L132">        return m_transtionBox;</span>
+    }
+
+    protected void  setTransitionBox(TextBoxConfig  box) {
+<span class="nc" id="L136">        m_transtionBox = box;</span>
+<span class="nc" id="L137">    }</span>
+
+    public int getNumAnswers() {
+<span class="nc" id="L140">        return m_numAnswers;</span>
+    }
+
+    protected void  setNumAnswers(int  numAnswers)
+    {
+<span class="nc" id="L145">        m_numAnswers = numAnswers;</span>
+<span class="nc" id="L146">    }</span>
+    
+    public TextBoxConfig getAnswerLabelBox(int answerNum) {
+<span class="nc bnc" id="L149" title="All 4 branches missed.">        if (answerNum &gt;= 0 &amp;&amp; answerNum &lt; m_answerBoxes.size())</span>
+<span class="nc" id="L150">            return (TextBoxConfig) m_answerLabelBoxes.get(answerNum);</span>
+        else
+<span class="nc" id="L152">            return null;</span>
+    } 
+    
+    protected void  addAnswerLabelBox(TextBoxConfig  bounds) {
+<span class="nc" id="L156">        m_answerLabelBoxes.add(bounds);</span>
+<span class="nc" id="L157">        return;</span>
+    }
+    
+    public TextBoxConfig getAnswerBox(int answerNum) {
+<span class="nc bnc" id="L161" title="All 4 branches missed.">        if (answerNum &gt;= 0 &amp;&amp; answerNum &lt; m_answerBoxes.size())</span>
+<span class="nc" id="L162">            return (TextBoxConfig) m_answerBoxes.get(answerNum);</span>
+        else
+<span class="nc" id="L164">            return null;</span>
+    } 
+    
+    protected void  addAnswerBox(TextBoxConfig  bounds) {
+<span class="nc" id="L168">        m_answerBoxes.add(bounds);</span>
+<span class="nc" id="L169">        return;</span>
+    }
+
+    
+    protected String m_name;
+    
+    protected String m_filename;
+    
+    private Color m_bkgColor;
+    
+    private BufferedImage m_bkgImage;
+
+    private TextBoxConfig  m_questionLabelBox;
+    private TextBoxConfig  m_questionBox;
+
+    private TextBoxConfig  m_timerBox;
+    private TextBoxConfig  m_commentBox;
+    private TextBoxConfig  m_transtionBox;
+    
+<span class="nc" id="L188">    private int  m_numAnswers = 4;</span>
+    
+    private Vector  m_answerLabelBoxes;
+    private Vector  m_answerBoxes;   
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

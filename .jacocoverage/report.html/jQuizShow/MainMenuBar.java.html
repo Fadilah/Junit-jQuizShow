@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MainMenuBar.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">MainMenuBar.java</span></div><h1>MainMenuBar.java</h1><pre class="source lang-java linenums">/*
+ * MainMenuBar.java
+ *
+ * Created on January 17, 2004  6:51 PM
+ *
+ * $Id: MainMenuBar.java,v 1.2 2007/02/05 03:55:48 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2004  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: MainMenuBar.java,v $
+ *    Revision 1.2  2007/02/05 03:55:48  sdchen
+ *    Removed CR (Ctrl-M) from lines.
+ *
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *
+ */
+
+package jQuizShow;
+
+/**
+ *
+ * @author  Steven D. Chen
+ */
+
+import java.io.*;
+import java.net.*;
+import java.text.*;
+import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
+
+import jQuizShow.event.*;
+import jQuizShow.net.*;
+import jQuizShow.util.*;
+import jQuizShow.game.classic.*;
+import jQuizShow.quiz.*;
+
+public class MainMenuBar extends JMenuBar
+{
+    public MainMenuBar()
+<span class="fc" id="L67">    {</span>
+<span class="fc" id="L68">        initComponents();</span>
+        
+<span class="fc" id="L70">        m_mainSubset = MainSubset.getInstance();</span>
+<span class="fc" id="L71">    }</span>
+    
+
+    /** This method is called from within the constructor to preload the
+     * menubar with the standard menus (e.g. File, Help).
+     */
+    private void initComponents() {
+<span class="fc" id="L78">        mainMenuBar = new javax.swing.JMenuBar();</span>
+<span class="fc" id="L79">        fileMenu = new javax.swing.JMenu();</span>
+<span class="fc" id="L80">        newGame = new javax.swing.JMenuItem();</span>
+
+<span class="fc" id="L82">        styleMenu = new javax.swing.JMenu();</span>
+<span class="fc" id="L83">        classicStyle = new javax.swing.JMenuItem();</span>
+<span class="fc" id="L84">        customStyle = new javax.swing.JMenuItem();</span>
+<span class="fc" id="L85">        quizStyle = new javax.swing.JMenuItem();</span>
+        
+<span class="fc" id="L87">        randomPlayer = new javax.swing.JMenuItem();</span>
+<span class="fc" id="L88">        jSeparator2 = new javax.swing.JSeparator();</span>
+<span class="fc" id="L89">        addRemoteDisplay = new javax.swing.JMenuItem();</span>
+<span class="fc" id="L90">        loadQuestion = new javax.swing.JMenuItem();</span>
+<span class="fc" id="L91">        jSeparator1 = new javax.swing.JSeparator();</span>
+<span class="fc" id="L92">        exitGame = new javax.swing.JMenuItem();</span>
+
+<span class="fc" id="L94">        viewMenu = new javax.swing.JMenu();</span>
+<span class="fc" id="L95">        showMessages = new javax.swing.JMenuItem();</span>
+
+<span class="fc" id="L97">        helpMenu = new javax.swing.JMenu();</span>
+<span class="fc" id="L98">        usingJQS = new javax.swing.JMenuItem();</span>
+<span class="fc" id="L99">        jSeparator3 = new javax.swing.JSeparator();</span>
+<span class="fc" id="L100">        aboutJQS = new javax.swing.JMenuItem();</span>
+
+        /*
+         * File menu options
+         */
+<span class="fc" id="L105">        fileMenu.setText(Main.getMessage(&quot;menu_file&quot;));</span>
+
+<span class="fc" id="L107">        newGame.setText(Main.getMessage(&quot;menu_new_game&quot;));</span>
+<span class="fc" id="L108">        newGame.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L110">                newGameActionPerformed(evt);</span>
+<span class="nc" id="L111">            }</span>
+        });
+        
+<span class="fc" id="L114">        fileMenu.add(newGame);</span>
+        
+<span class="fc" id="L116">        styleMenu.setText(Main.getMessage(&quot;menu_select_style&quot;));</span>
+
+<span class="fc" id="L118">        classicStyle.setText(Main.getMessage(&quot;menu_classic_style&quot;));</span>
+<span class="fc" id="L119">        classicStyle.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L121">                classicStyleActionPerformed(evt);</span>
+<span class="nc" id="L122">            }</span>
+        });
+
+<span class="fc" id="L125">        styleMenu.add(classicStyle);</span>
+
+<span class="fc" id="L127">        quizStyle.setText(Main.getMessage(&quot;menu_quiz_style&quot;));</span>
+<span class="fc" id="L128">        quizStyle.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L130">                quizStyleActionPerformed(evt);</span>
+<span class="nc" id="L131">            }</span>
+        });
+
+<span class="fc" id="L134">        styleMenu.add(quizStyle);</span>
+
+<span class="fc" id="L136">        customStyle.setText(Main.getMessage(&quot;menu_custom_style&quot;));</span>
+<span class="fc" id="L137">        customStyle.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L139">                customStyleActionPerformed(evt);</span>
+<span class="nc" id="L140">            }</span>
+        });
+
+<span class="fc" id="L143">        styleMenu.add(customStyle);</span>
+        
+<span class="fc" id="L145">        fileMenu.add(styleMenu);</span>
+        
+<span class="fc" id="L147">        randomPlayer.setText(Main.getMessage(&quot;menu_random_player&quot;));</span>
+<span class="fc" id="L148">        randomPlayer.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L150">                randomPlayerActionPerformed(evt);</span>
+<span class="nc" id="L151">            }</span>
+        });
+        
+<span class="fc" id="L154">        fileMenu.add(randomPlayer);</span>
+        
+<span class="fc" id="L156">        fileMenu.add(jSeparator2);</span>
+        
+<span class="fc" id="L158">        addRemoteDisplay.setText(Main.getMessage(&quot;menu_add_remote&quot;));</span>
+<span class="fc" id="L159">        addRemoteDisplay.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L161">                addRemoteDisplayActionPerformed(evt);</span>
+<span class="nc" id="L162">            }</span>
+        });
+        
+<span class="fc" id="L165">        fileMenu.add(addRemoteDisplay);</span>
+        
+<span class="fc" id="L167">        loadQuestion.setText(Main.getMessage(&quot;menu_load_questions&quot;));</span>
+<span class="fc" id="L168">        loadQuestion.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L170">                loadQuestionActionPerformed(evt);</span>
+<span class="nc" id="L171">            }</span>
+        });
+        
+<span class="fc" id="L174">        fileMenu.add(loadQuestion);</span>
+        
+<span class="fc" id="L176">        fileMenu.add(jSeparator1);</span>
+        
+<span class="fc" id="L178">        exitGame.setText(Main.getMessage(&quot;menu_exit&quot;));</span>
+        
+<span class="fc" id="L180">        exitGame.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L182">                exitGameActionPerformed(evt);</span>
+<span class="nc" id="L183">            }</span>
+        });
+        
+<span class="fc" id="L186">        fileMenu.add(exitGame);</span>
+<span class="fc" id="L187">        add(fileMenu);</span>
+
+        /*
+         * View menu options
+         */
+<span class="fc" id="L192">        viewMenu.setText(Main.getMessage(&quot;menu_view&quot;));</span>
+<span class="fc" id="L193">        showMessages.setText(Main.getMessage(&quot;menu_show_msg_win&quot;));</span>
+<span class="fc" id="L194">        showMessages.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L196">                showMessagesActionPerformed(evt);</span>
+<span class="nc" id="L197">            }</span>
+        });
+        
+<span class="fc" id="L200">        viewMenu.add(showMessages);</span>
+<span class="fc" id="L201">        add(viewMenu);</span>
+
+        /*
+         * Help menu items
+         */
+<span class="fc" id="L206">        helpMenu.setText(Main.getMessage(&quot;menu_help&quot;));</span>
+<span class="fc" id="L207">        usingJQS.setText(Main.getMessage(&quot;menu_using_jqs&quot;));</span>
+<span class="fc" id="L208">        usingJQS.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L210">                usingJQSActionPerformed(evt);</span>
+<span class="nc" id="L211">            }</span>
+        });
+        
+<span class="fc" id="L214">        helpMenu.add(usingJQS);</span>
+<span class="fc" id="L215">        helpMenu.add(jSeparator3);</span>
+<span class="fc" id="L216">        aboutJQS.setText(Main.getMessage(&quot;menu_about&quot;));</span>
+<span class="fc" id="L217">        aboutJQS.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L219">                aboutJQSActionPerformed(evt);</span>
+<span class="nc" id="L220">            }</span>
+        });
+        
+<span class="fc" id="L223">        helpMenu.add(aboutJQS);</span>
+<span class="fc" id="L224">        mainMenuBar.add(helpMenu);        </span>
+<span class="fc" id="L225">    }</span>
+   
+
+    private void randomPlayerActionPerformed(java.awt.event.ActionEvent evt)
+    {
+<span class="nc" id="L230">	Main.showRandomPlayerSelector();</span>
+<span class="nc" id="L231">    }</span>
+
+    private void loadQuestionActionPerformed(java.awt.event.ActionEvent evt)
+    {
+<span class="nc" id="L235">        MainSubset.getInstance().loadQuestionDatabase();</span>
+<span class="nc" id="L236">    }</span>
+
+    private void usingJQSActionPerformed(java.awt.event.ActionEvent evt)
+    {
+<span class="nc bnc" id="L240" title="All 2 branches missed.">        if (m_helpFrame == null)</span>
+        {
+<span class="nc" id="L242">	    String  filename = m_gameConfig.getConfig(&quot;helpFile&quot;, &quot;JQSHelp.txt&quot;);</span>
+<span class="nc" id="L243">	    String  helpFilename = filename;</span>
+
+            
+<span class="nc" id="L246">            m_helpFrame = new JInternalFrame(&quot;Help&quot;, true, true, true, true);</span>
+<span class="nc" id="L247">            m_helpFrame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);</span>
+<span class="nc" id="L248">            m_helpFrame.setSize(600, 400);</span>
+            
+<span class="nc" id="L250">            m_helpPane = new JTextArea();</span>
+<span class="nc" id="L251">            m_helpPane.setDisabledTextColor(java.awt.Color.black);</span>
+<span class="nc" id="L252">            m_helpPane.setEnabled(false);</span>
+            
+<span class="nc" id="L254">            JScrollPane  jScrollPanel = new JScrollPane();</span>
+<span class="nc" id="L255">            jScrollPanel.setViewportView(m_helpPane);</span>
+
+<span class="nc" id="L257">            m_helpFrame.getContentPane().add(jScrollPanel);</span>
+            
+
+            // Locate and read the help file
+            try
+            {
+                String  line;
+
+<span class="nc" id="L265">		helpFilename = FileUtils.searchForFile(filename);</span>
+                
+<span class="nc" id="L267">                BufferedReader  fin = new BufferedReader(</span>
+                        new InputStreamReader(FileUtils.openFile(helpFilename)));
+                
+<span class="nc bnc" id="L270" title="All 2 branches missed.">                while ((line = fin.readLine()) != null)</span>
+                {
+
+<span class="nc" id="L273">                    m_helpPane.append(line + &quot;\n&quot;);</span>
+                }
+            }
+<span class="nc" id="L276">	    catch (FileNotFoundException  fnf_e)</span>
+	    {
+<span class="nc" id="L278">                m_helpPane.append(Main.getMessage(&quot;err_help_not_found&quot;));</span>
+<span class="nc" id="L279">                m_helpPane.append(fnf_e.getMessage());</span>
+	    }
+<span class="nc" id="L281">            catch (IOException  e)</span>
+            {
+<span class="nc" id="L283">		Object  args[] =</span>
+			{
+			    helpFilename
+			};
+
+<span class="nc" id="L288">                m_helpPane.append(Main.getMessage(&quot;err_help_file_io&quot;, args));</span>
+<span class="nc" id="L289">            }</span>
+        }
+
+<span class="nc" id="L292">        m_helpFrame.setVisible(true);</span>
+<span class="nc" id="L293">    }</span>
+
+    private void addRemoteDisplayActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L296">        m_connectionDialog.show();</span>
+<span class="nc" id="L297">    }</span>
+
+    private void showMessagesActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L300">        Main.showMessageDialog();</span>
+<span class="nc" id="L301">    }</span>
+
+    private void aboutJQSActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L304">        Main.showAboutJQSDialog();</span>
+<span class="nc" id="L305">    }</span>
+
+    private void exitGameActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L308">        Main.confirmProgramExit();</span>
+<span class="nc" id="L309">    }</span>
+
+    private void newGameActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L312">        m_mainSubset.startNewGame();</span>
+<span class="nc" id="L313">    }</span>
+
+    private void classicStyleActionPerformed(java.awt.event.ActionEvent evt) {
+        // Uninstall the current subset
+<span class="nc" id="L317">        m_mainSubset.uninstall();</span>
+
+        // Initialize the subset
+<span class="nc" id="L320">        MainClassicUI.initializeClass();</span>
+<span class="nc" id="L321">        m_mainSubset = MainSubset.getInstance();</span>
+
+        // Display this subset's name in the main window title
+<span class="nc" id="L324">        Main.setTitleString(&quot;Classic Mode&quot;);</span>
+        
+        // Initialize the game system.
+<span class="nc" id="L327">        m_mainSubset.initialize();</span>
+<span class="nc" id="L328">    }</span>
+
+    private void quizStyleActionPerformed(java.awt.event.ActionEvent evt) {
+        // Uninstall the current subset
+<span class="nc" id="L332">        m_mainSubset.uninstall();</span>
+
+        // Initialize the subset
+<span class="nc" id="L335">        MainQuizUI.initializeClass();</span>
+<span class="nc" id="L336">        m_mainSubset = MainSubset.getInstance();</span>
+
+        // Display this subset's name in the main window title
+<span class="nc" id="L339">        Main.setTitleString(&quot;Quiz Mode&quot;);</span>
+				   
+        // Initialize the game system.
+<span class="nc" id="L342">        m_mainSubset.initialize();</span>
+<span class="nc" id="L343">    }</span>
+
+    private void customStyleActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L346">    }</span>
+
+
+    private JMenuBar  mainMenuBar;
+    private JMenu  fileMenu;
+    private JMenuItem  newGame;
+    private JMenuItem  selectStyle;
+    private JMenu  styleMenu;
+    private JMenuItem  classicStyle;
+    private JMenuItem  quizStyle;
+    private JMenuItem  customStyle;
+    private JMenuItem  randomPlayer;
+    private JSeparator  jSeparator2;
+    private JMenuItem  addRemoteDisplay;
+    private JMenuItem  loadQuestion;
+    private JSeparator  jSeparator1;
+    private JMenuItem  exitGame;
+    private JMenu  viewMenu;
+    private JMenuItem  showMessages;
+    private JMenu  helpMenu;
+    private JMenuItem  usingJQS;
+    private JSeparator  jSeparator3;
+    private JMenuItem  aboutJQS;
+
+    private MainSubset  m_mainSubset;
+    
+    private ConnectionDialog  m_connectionDialog;
+
+    private GameConfig      m_gameConfig;
+       
+    private JInternalFrame  m_helpFrame;
+    private JTextArea  m_helpPane;
+    private JFileChooser  m_fileChooser;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>

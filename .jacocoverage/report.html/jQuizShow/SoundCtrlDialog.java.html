@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SoundCtrlDialog.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="right"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;Junit-jQuizShow&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.html" class="el_package">jQuizShow</a> &gt; <span class="el_source">SoundCtrlDialog.java</span></div><h1>SoundCtrlDialog.java</h1><pre class="source lang-java linenums">/*
+ * SoundCtrlDialog.java
+ *
+ * Created on May 25, 2001, 8:34 PM
+ *
+ * $Id: SoundCtrlDialog.java,v 1.1 2004/04/02 06:01:59 sdchen Exp $
+ *
+ *============================================================================
+ *
+ * Copyright (C) 2001  Steven D. Chen
+ *
+ * This file is part of jQuizShow.
+ *
+ * jQuizShow is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * jQuizShow is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License (GPL)
+ * along with jQuizShow; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *============================================================================
+ *
+ * Modifications:
+ *
+ *    $Log: SoundCtrlDialog.java,v $
+ *    Revision 1.1  2004/04/02 06:01:59  sdchen
+ *    Snapshot of jQuizShow 1.1 alpha06 development
+ *
+ *    Revision 1.2  2002/08/15 04:43:26  sdchen
+ *    Internationalization of source code.  Main.getMessage() is the primary
+ *    routine to get the localized message strings.
+ *
+ *    Revision 1.1.1.1  2002/04/13 17:01:31  sdchen
+ *    Initial import of the jQuizShow sources from local development directory.
+ *
+ *
+ */
+
+package jQuizShow;
+
+/**
+ *
+ * @author  Steven D. Chen
+ */
+
+import javax.swing.*;
+import javax.swing.event.*;
+
+import jQuizShow.util.*;
+
+public class SoundCtrlDialog extends javax.swing.JInternalFrame
+        implements ChangeListener
+{
+
+    /** Creates new form SoundCtrlDialog */
+    public SoundCtrlDialog() {
+<span class="fc" id="L64">        super(Main.getMessage(&quot;label_sound&quot;), true, true, false, true);</span>
+
+<span class="fc" id="L66">        setDefaultCloseOperation(javax.swing.WindowConstants.HIDE_ON_CLOSE);</span>
+
+<span class="fc" id="L68">        initComponents();</span>
+        
+<span class="fc" id="L70">        foregroundSlider.addChangeListener(this);</span>
+<span class="fc" id="L71">        backgroundSlider.addChangeListener(this);</span>
+
+<span class="fc" id="L73">        pack();</span>
+<span class="fc" id="L74">    }</span>
+
+    
+    /** Override the show() method so we can set the dialog to the
+     * current values.
+     */
+    public void show()
+    {
+<span class="nc" id="L82">        SoundPlayer  soundPlayer = SoundPlayer.getInstance();</span>
+
+<span class="nc" id="L84">        foregroundSlider.setValue(soundPlayer.getGain(SoundPlayer.FOREGROUND_CHANNEL));</span>
+<span class="nc" id="L85">        backgroundSlider.setValue(soundPlayer.getGain(SoundPlayer.BACKGROUND_CHANNEL));</span>
+
+<span class="nc" id="L87">        muteCheckBox.setSelected(soundPlayer.getMute());</span>
+
+        /*
+         * Bug workaround -- 2nd and subsequent sliders are not drawn properly
+         * (Java 1.3.1).
+         */
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (firstShow)</span>
+        {
+<span class="nc" id="L95">            foregroundSlider.updateUI();</span>
+<span class="nc" id="L96">            backgroundSlider.updateUI();</span>
+<span class="nc" id="L97">            firstShow = false;</span>
+        }
+        
+<span class="nc" id="L100">        super.show();</span>
+<span class="nc" id="L101">    }</span>
+
+    
+    /** Process the JSlider change event */
+    public void  stateChanged(ChangeEvent  e)
+    {
+<span class="nc" id="L107">        JSlider  source = (JSlider) e.getSource();</span>
+
+<span class="nc" id="L109">        SoundPlayer  soundPlayer = SoundPlayer.getInstance();</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (source == backgroundSlider)</span>
+        {
+<span class="nc" id="L113">            soundPlayer.setGain(SoundPlayer.BACKGROUND_CHANNEL, source.getValue());</span>
+        }
+        else
+        {
+<span class="nc" id="L117">            soundPlayer.setGain(SoundPlayer.FOREGROUND_CHANNEL, source.getValue());</span>
+<span class="nc" id="L118">            soundPlayer.setGain(SoundPlayer.EFFECTS_CHANNEL, source.getValue());</span>
+        }
+<span class="nc" id="L120">    }</span>
+   
+    
+    /** This method is called from within the constructor to
+     * initialize the form.
+     */
+    private void initComponents() {
+<span class="fc" id="L127">        buttonPane = new javax.swing.JPanel();</span>
+<span class="fc" id="L128">        closeButton = new javax.swing.JButton();</span>
+<span class="fc" id="L129">        centerPane = new javax.swing.JPanel();</span>
+<span class="fc" id="L130">        foregroundLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L131">        foregroundSlider = new javax.swing.JSlider();</span>
+<span class="fc" id="L132">        backgroundLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L133">        backgroundSlider = new javax.swing.JSlider();</span>
+<span class="fc" id="L134">        muteCheckBox = new javax.swing.JCheckBox();</span>
+        
+<span class="fc" id="L136">        getContentPane().setLayout(new java.awt.BorderLayout());</span>
+        
+<span class="fc" id="L138">        closeButton.setText(Main.getMessage(&quot;label_close&quot;));</span>
+<span class="fc" id="L139">        closeButton.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L141">                closeButtonActionPerformed(evt);</span>
+<span class="nc" id="L142">            }</span>
+        });
+        
+<span class="fc" id="L145">        buttonPane.add(closeButton);</span>
+        
+<span class="fc" id="L147">        getContentPane().add(buttonPane, java.awt.BorderLayout.SOUTH);</span>
+        
+<span class="fc" id="L149">        centerPane.setLayout(new javax.swing.BoxLayout(centerPane, javax.swing.BoxLayout.Y_AXIS));</span>
+        
+<span class="fc" id="L151">        centerPane.setBorder(new javax.swing.border.CompoundBorder(new javax.swing.border.BevelBorder(javax.swing.border.BevelBorder.LOWERED), new javax.swing.border.EmptyBorder(new java.awt.Insets(20, 20, 20, 20))));</span>
+<span class="fc" id="L152">        foregroundLabel.setText(Main.getMessage(&quot;label_foreground&quot;));</span>
+<span class="fc" id="L153">        foregroundLabel.setBorder(new javax.swing.border.EmptyBorder(new java.awt.Insets(10, 10, 10, 10)));</span>
+<span class="fc" id="L154">        centerPane.add(foregroundLabel);</span>
+        
+<span class="fc" id="L156">        foregroundSlider.setSnapToTicks(true);</span>
+<span class="fc" id="L157">        foregroundSlider.setMinorTickSpacing(5);</span>
+<span class="fc" id="L158">        foregroundSlider.setPaintLabels(true);</span>
+<span class="fc" id="L159">        foregroundSlider.setPaintTicks(true);</span>
+<span class="fc" id="L160">        foregroundSlider.setMajorTickSpacing(25);</span>
+<span class="fc" id="L161">        centerPane.add(foregroundSlider);</span>
+        
+<span class="fc" id="L163">        backgroundLabel.setText(Main.getMessage(&quot;label_background&quot;));</span>
+<span class="fc" id="L164">        backgroundLabel.setBorder(new javax.swing.border.EmptyBorder(new java.awt.Insets(10, 10, 10, 10)));</span>
+<span class="fc" id="L165">        backgroundLabel.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);</span>
+<span class="fc" id="L166">        centerPane.add(backgroundLabel);</span>
+        
+<span class="fc" id="L168">        backgroundSlider.setSnapToTicks(true);</span>
+<span class="fc" id="L169">        backgroundSlider.setMinorTickSpacing(5);</span>
+<span class="fc" id="L170">        backgroundSlider.setPaintLabels(true);</span>
+<span class="fc" id="L171">        backgroundSlider.setPaintTicks(true);</span>
+<span class="fc" id="L172">        backgroundSlider.setMajorTickSpacing(25);</span>
+<span class="fc" id="L173">        centerPane.add(backgroundSlider);</span>
+        
+<span class="fc" id="L175">        muteCheckBox.setText(Main.getMessage(&quot;label_mute&quot;));</span>
+<span class="fc" id="L176">        muteCheckBox.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L178">                muteCheckBoxActionPerformed(evt);</span>
+<span class="nc" id="L179">            }</span>
+        });
+        
+<span class="fc" id="L182">        centerPane.add(muteCheckBox);</span>
+        
+<span class="fc" id="L184">        getContentPane().add(centerPane, java.awt.BorderLayout.CENTER);</span>
+        
+<span class="fc" id="L186">        pack();</span>
+<span class="fc" id="L187">    }</span>
+
+    private void closeButtonActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L190">        setVisible(false);</span>
+<span class="nc" id="L191">    }</span>
+
+    private void muteCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L194">        JCheckBox  source = (JCheckBox) evt.getSource();</span>
+        
+<span class="nc" id="L196">        SoundPlayer  soundPlayer = SoundPlayer.getInstance();</span>
+<span class="nc" id="L197">        soundPlayer.setMute(source.isSelected());</span>
+<span class="nc" id="L198">    }</span>
+
+
+
+    // Variables declaration
+    private javax.swing.JPanel buttonPane;
+    private javax.swing.JButton closeButton;
+    private javax.swing.JPanel centerPane;
+    private javax.swing.JLabel foregroundLabel;
+    private javax.swing.JSlider foregroundSlider;
+    private javax.swing.JLabel backgroundLabel;
+    private javax.swing.JSlider backgroundSlider;
+    private javax.swing.JCheckBox muteCheckBox;
+
+<span class="fc" id="L212">    private boolean firstShow = true;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.6.3.201306030806</span></div></body></html>
